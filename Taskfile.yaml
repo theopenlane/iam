@@ -5,6 +5,9 @@ includes:
     taskfile: ./entfga/_examples/basic/
     dir: ./entfga/_examples/basic/
 
+env:
+  GODEBUG: gotypesalias=0 # remove once the backport fixes the types.Alias bug
+  
 tasks:
   generate:
     desc: generate the mock fga client

@@ -16,9 +16,9 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/theopenlane/iam/fgax"
 	"github.com/theopenlane/iam/entfga/_examples/basic/ent/organization"
 	"github.com/theopenlane/iam/entfga/_examples/basic/ent/orgmembership"
+	"github.com/theopenlane/iam/fgax"
 	"go.uber.org/zap"
 )
 

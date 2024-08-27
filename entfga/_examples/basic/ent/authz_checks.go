@@ -8,8 +8,8 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 
 	"github.com/theopenlane/iam/auth"
-	"github.com/theopenlane/iam/fgax"
 	"github.com/theopenlane/iam/entfga/_examples/basic/ent/organization"
+	"github.com/theopenlane/iam/fgax"
 )
 
 func (q *OrgMembershipQuery) CheckAccess(ctx context.Context) error {
