@@ -1,0 +1,23 @@
+version: '3'
+
+tasks:
+  ## Generate tasks
+  ent:
+    desc: runs go generate against ent schema - see the entc.go file and generates the fga mock client
+    cmds:
+      - go mod tidy
+      - go generate ./...
+
+  gqlgen:
+    desc: runs gqlgen and gqlgenc commands using gen_generate.go and entc
+    cmds:
+      - go mod tidy
+      - go run github.com/99designs/gqlgen generate --verbose
+      - go mod tidy
+      - go run ./gen_schema.go
+
+  generate:
+    desc: a combination of the ent, graph, and gqlgen tasks which are required to fully generate the necessary graph, server, resolvers, client, etc.
+    cmds:
+      - task: ent
+      - task: gqlgen

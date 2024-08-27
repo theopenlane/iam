@@ -1,0 +1,89 @@
+env:
+  APP_NAME: ${BUILDKITE_PIPELINE_SLUG}
+  SONAR_HOST: "https://sonarcloud.io"
+steps:
+  - group: ":knife: Pre-check"
+    key: "precheck"
+    steps:
+      - label: ":golang: go generate"
+        key: "generate"
+        plugins:
+          - docker#v5.11.0:
+              image: "ghcr.io/theopenlane/build-image:v0.1.2"
+              command: ["task", "ci"]
+              environment:
+                - "GOTOOLCHAIN=auto"
+  - group: ":test_tube: Tests"
+    key: "tests"
+    depends_on: "precheck"
+    steps:
+      - label: ":golangci-lint: lint :lint-roller:"
+        key: "lint"
+        plugins:
+          - docker#v5.11.0:
+              image: "registry.hub.docker.com/golangci/golangci-lint:latest-alpine"
+              cancel_on_build_failing: true
+              command: ["golangci-lint", "run", "-v"]
+              always-pull: true
+              environment:
+                - "GOTOOLCHAIN=auto"
+      - label: ":golang: go test"
+        key: "go_test"
+        plugins:
+          - docker#v5.11.0:
+              image: golang:1.23.0
+              command: ["go", "test", "-coverprofile=coverage.out", "./..."]
+        artifact_paths: ["coverage.out"]
+      - label: ":test_tube: generate example"
+        key: "example_generate"
+        plugins:
+          - docker#v5.11.0:
+              image: "ghcr.io/theopenlane/build-image:v0.1.2"
+              workdir: "/fgax"
+              command: ["task", "example:generate"]
+              environment:
+                - "GOTOOLCHAIN=auto"
+  - group: ":closed_lock_with_key: Security Checks"
+    depends_on: "tests"
+    key: "security"
+    steps:
+      - label: ":closed_lock_with_key: gosec"
+        key: "gosec"
+        plugins:
+          - docker#v5.11.0:
+              image: "registry.hub.docker.com/securego/gosec:2.20.0"
+              command: ["-no-fail", "-exclude-generated", "-fmt sonarqube", "-out", "results.txt", "./..."]
+              environment:
+                - "GOTOOLCHAIN=auto"
+        artifact_paths: ["results.txt"]
+      - label: ":github: upload PR reports"
+        key: "scan-upload-pr"
+        if: build.pull_request.id != null
+        depends_on: ["gosec", "go_test"]
+        plugins:
+          - artifacts#v1.9.4:
+              download: "results.txt"
+          - artifacts#v1.9.4:
+              download: "coverage.out"
+              step: "go_test"
+          - docker#v5.11.0:
+              image: "sonarsource/sonar-scanner-cli:5"
+              environment:
+                - "SONAR_TOKEN"
+                - "SONAR_HOST_URL=$SONAR_HOST"
+                - "SONAR_SCANNER_OPTS=-Dsonar.pullrequest.branch=$BUILDKITE_BRANCH -Dsonar.pullrequest.base=$BUILDKITE_PULL_REQUEST_BASE_BRANCH -Dsonar.pullrequest.key=$BUILDKITE_PULL_REQUEST"
+      - label: ":github: upload reports"
+        key: "scan-upload"
+        if: build.branch == "main"
+        depends_on: ["gosec", "go_test"]
+        plugins:
+          - artifacts#v1.9.4:
+              download: results.txt
+          - artifacts#v1.9.4:
+              download: coverage.out
+              step: "go_test"
+          - docker#v5.11.0:
+              image: "sonarsource/sonar-scanner-cli:5"
+              environment:
+                - "SONAR_TOKEN"
+                - "SONAR_HOST_URL=$SONAR_HOST"
