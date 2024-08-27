@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/theopenlane/utils/totp/testing/views"
+	"github.com/theopenlane/iam/totp/testing/views"
 )
 
 const (
