@@ -11,8 +11,8 @@ import (
 	"golang.org/x/oauth2"
 	google "google.golang.org/api/oauth2/v2"
 
-	oauth2Login "github.com/theopenlane/core/pkg/providers/oauth2"
 	"github.com/theopenlane/core/pkg/testutils"
+	oauth2Login "github.com/theopenlane/iam/providers/oauth2"
 )
 
 const (

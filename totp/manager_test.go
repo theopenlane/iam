@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/theopenlane/utils/totp"
+	"github.com/theopenlane/iam/totp"
 )
 
 func TestDefaultName(t *testing.T) {
