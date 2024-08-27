@@ -5,8 +5,9 @@ import (
 
 	echo "github.com/theopenlane/echox"
 
-	"github.com/theopenlane/core/pkg/middleware/echocontext"
 	"github.com/theopenlane/utils/ulids"
+
+	"github.com/theopenlane/core/pkg/middleware/echocontext"
 )
 
 type AuthenticationType string
@@ -272,6 +273,27 @@ func GetAuthzSubjectType(ctx context.Context) string {
 	}
 
 	return subjectType
+}
+
+// SetOrganizationIDInAuthContext sets the organization ID in the auth context
+// this should only be used when creating a new organization and subsequent updates
+// need to happen in the context of the new organization
+func SetOrganizationIDInAuthContext(ctx context.Context, orgID string) error {
+	au, err := GetAuthenticatedUserContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	au.OrganizationID = orgID
+
+	ec, err := echocontext.EchoContextFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	SetAuthenticatedUserContext(ec, au)
+
+	return nil
 }
 
 // AddOrganizationIDToContext appends an authorized organization ID to the context.
