@@ -7,8 +7,8 @@ package ent
 import (
 	"context"
 
-	"github.com/theopenlane/iam/fgax"
 	"github.com/theopenlane/iam/entfga"
+	"github.com/theopenlane/iam/fgax"
 )
 
 func (m *OrgMembershipMutation) CreateTuplesFromCreate(ctx context.Context) error {

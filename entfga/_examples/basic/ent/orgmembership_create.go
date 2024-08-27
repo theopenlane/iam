@@ -118,7 +118,7 @@ func (omc *OrgMembershipCreate) check() error {
 	if _, ok := omc.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "OrgMembership.user_id"`)}
 	}
-	if _, ok := omc.mutation.OrganizationID(); !ok {
+	if len(omc.mutation.OrganizationIDs()) == 0 {
 		return &ValidationError{Name: "organization", err: errors.New(`ent: missing required edge "OrgMembership.organization"`)}
 	}
 	return nil

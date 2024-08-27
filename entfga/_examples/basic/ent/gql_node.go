@@ -8,9 +8,9 @@ import (
 
 	"entgo.io/contrib/entgql"
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/hashicorp/go-multierror"
 	"github.com/theopenlane/iam/entfga/_examples/basic/ent/organization"
 	"github.com/theopenlane/iam/entfga/_examples/basic/ent/orgmembership"
-	"github.com/hashicorp/go-multierror"
 )
 
 // Noder wraps the basic Node method.

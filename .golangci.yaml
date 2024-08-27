@@ -38,6 +38,4 @@ issues:
   fix: true
   exclude-use-default: true
   exclude-dirs:
-    - mockery/*
-    - entfga/_examples/*
-    - entfga/templates/*
+    - totp/testing/*
