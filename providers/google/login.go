@@ -8,8 +8,8 @@ import (
 	google "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 
-	oauth2Login "github.com/theopenlane/core/pkg/providers/oauth2"
-	"github.com/theopenlane/core/pkg/sessions"
+	oauth2Login "github.com/theopenlane/iam/providers/oauth2"
+	"github.com/theopenlane/iam/sessions"
 )
 
 const (

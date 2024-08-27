@@ -6,7 +6,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/theopenlane/core/pkg/keygen"
-	"github.com/theopenlane/core/pkg/sessions"
+	"github.com/theopenlane/iam/sessions"
 )
 
 // StateHandler checks for a state cookie, if found, adds to context; if missing, a
