@@ -9,7 +9,7 @@ import (
 
 	ulids "github.com/theopenlane/utils/ulids"
 
-	"github.com/theopenlane/core/pkg/tokens"
+	"github.com/theopenlane/iam/tokens"
 )
 
 var rusty = "rusty.shackleford@gmail.com"

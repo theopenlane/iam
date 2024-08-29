@@ -8,7 +8,8 @@ import (
 	echo "github.com/theopenlane/echox"
 
 	"github.com/theopenlane/core/pkg/middleware/echocontext"
-	"github.com/theopenlane/core/pkg/tokens"
+
+	"github.com/theopenlane/iam/tokens"
 )
 
 // newValidClaims returns claims with a fake subject for testing purposes ONLY

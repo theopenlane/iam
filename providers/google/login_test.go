@@ -12,6 +12,7 @@ import (
 	google "google.golang.org/api/oauth2/v2"
 
 	"github.com/theopenlane/core/pkg/testutils"
+
 	oauth2Login "github.com/theopenlane/iam/providers/oauth2"
 )
 

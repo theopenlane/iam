@@ -7,7 +7,7 @@ import (
 
 	"github.com/theopenlane/utils/ulids"
 
-	"github.com/theopenlane/core/pkg/tokens"
+	"github.com/theopenlane/iam/tokens"
 )
 
 func TestClaimsParseOrgID(t *testing.T) {
