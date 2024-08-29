@@ -6,6 +6,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/theopenlane/core/pkg/keygen"
+
 	"github.com/theopenlane/iam/sessions"
 )
 

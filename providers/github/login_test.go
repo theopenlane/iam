@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/theopenlane/core/pkg/testutils"
+
 	oauth2Login "github.com/theopenlane/iam/providers/oauth2"
 
 	"github.com/google/go-github/v63/github"
