@@ -23,9 +23,9 @@ require (
 	github.com/samber/lo v1.47.0
 	github.com/stoewer/go-strcase v1.3.0
 	github.com/stretchr/testify v1.9.0
-	github.com/theopenlane/core v0.1.2-0.20240827193339-893d6eed110b
+	github.com/theopenlane/core v0.1.5
 	github.com/theopenlane/echox v0.1.0
-	github.com/theopenlane/utils v0.1.1
+	github.com/theopenlane/utils v0.1.3
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	go.uber.org/zap v1.27.0
 	golang.org/x/oauth2 v0.22.0
@@ -150,7 +150,7 @@ require (
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/theopenlane/dbx v0.1.0 // indirect
-	github.com/theopenlane/entx v0.1.3 // indirect
+	github.com/theopenlane/entx v0.1.4 // indirect
 	github.com/theopenlane/httpsling v0.1.0 // indirect
 	github.com/tursodatabase/libsql-client-go v0.0.0-20240812094001-348a4e45b535 // indirect
 	github.com/urfave/cli/v2 v2.27.4 // indirect
