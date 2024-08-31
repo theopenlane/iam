@@ -25,7 +25,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/theopenlane/core v0.1.5
 	github.com/theopenlane/echox v0.1.0
-	github.com/theopenlane/utils v0.1.3
+	github.com/theopenlane/utils v0.1.5
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	go.uber.org/zap v1.27.0
 	golang.org/x/oauth2 v0.22.0
