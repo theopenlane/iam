@@ -11,7 +11,7 @@ import (
 
 	oauth2Login "github.com/theopenlane/iam/providers/oauth2"
 
-	"github.com/google/go-github/v63/github"
+	"github.com/google/go-github/v64/github"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
 )
