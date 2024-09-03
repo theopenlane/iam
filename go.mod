@@ -122,7 +122,7 @@ require (
 	github.com/ogen-go/ogen v1.3.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
-	github.com/opencontainers/runc v1.1.13 // indirect
+	github.com/opencontainers/runc v1.1.14 // indirect
 	github.com/openfga/api/proto v0.0.0-20240807201305-c96ec773cae9 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
