@@ -7,6 +7,7 @@ includes:
 
 env:
   GODEBUG: gotypesalias=0 # remove once the backport fixes the types.Alias bug
+  GOFLAGS: -buildvcs=false
   
 tasks:
   generate:
@@ -24,6 +25,19 @@ tasks:
     cmds:
       - go test -v ./...
 
+  go:test:cover:
+    desc: runs and outputs results of created go tests with coverage
+    aliases: [cover]
+    cmds:
+      - go test -v ./... -coverprofile=coverage.out
+
+  go:test:cover:out:
+    desc: runs and outputs results of created go tests with coverage
+    aliases: [cover]
+    cmds:
+      - task: go:test:cover
+      - go tool cover -html=coverage.out
+    
   go:tidy:
     desc: runs go mod tidy on the backend
     aliases: [tidy]

@@ -9,7 +9,8 @@ steps:
         key: "generate"
         plugins:
           - docker#v5.11.0:
-              image: "ghcr.io/theopenlane/build-image:v0.1.2"
+              image: "ghcr.io/theopenlane/build-image:latest"
+              always-pull: true
               command: ["task", "ci"]
               environment:
                 - "GOTOOLCHAIN=auto"
@@ -21,24 +22,25 @@ steps:
         key: "lint"
         plugins:
           - docker#v5.11.0:
-              image: "registry.hub.docker.com/golangci/golangci-lint:latest-alpine"
-              cancel_on_build_failing: true
-              command: ["golangci-lint", "run", "-v"]
+              image: "ghcr.io/theopenlane/build-image:latest"
               always-pull: true
+              cancel_on_build_failing: true
+              command: ["task", "go:lint"]
               environment:
                 - "GOTOOLCHAIN=auto"
       - label: ":golang: go test"
         key: "go_test"
         plugins:
           - docker#v5.11.0:
-              image: golang:1.23.0
-              command: ["go", "test", "-coverprofile=coverage.out", "./..."]
+              image: "ghcr.io/theopenlane/build-image:latest"
+              always-pull: true
+              command: ["task", "go:test:cover"]
         artifact_paths: ["coverage.out"]
       - label: ":test_tube: generate example"
         key: "example_generate"
         plugins:
           - docker#v5.11.0:
-              image: "ghcr.io/theopenlane/build-image:v0.1.2"
+              image: "ghcr.io/theopenlane/build-image:latest"
               workdir: "/fgax"
               command: ["task", "example:generate"]
               environment:
@@ -52,7 +54,7 @@ steps:
         key: "gosec"
         plugins:
           - docker#v5.11.0:
-              image: "registry.hub.docker.com/securego/gosec:2.20.0"
+              image: "securego/gosec:2.20.0"
               command: ["-no-fail", "-exclude-generated", "-fmt sonarqube", "-out", "results.txt", "./..."]
               environment:
                 - "GOTOOLCHAIN=auto"
@@ -68,7 +70,7 @@ steps:
               download: "coverage.out"
               step: "go_test"
           - docker#v5.11.0:
-              image: "sonarsource/sonar-scanner-cli:5"
+              image: "sonarsource/sonar-scanner-cli:11"
               environment:
                 - "SONAR_TOKEN"
                 - "SONAR_HOST_URL=$SONAR_HOST"
@@ -84,7 +86,7 @@ steps:
               download: coverage.out
               step: "go_test"
           - docker#v5.11.0:
-              image: "sonarsource/sonar-scanner-cli:5"
+              image: "sonarsource/sonar-scanner-cli:11"
               environment:
                 - "SONAR_TOKEN"
                 - "SONAR_HOST_URL=$SONAR_HOST"
