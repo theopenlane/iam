@@ -7,9 +7,9 @@ import (
 
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent/entc/gen"
+	"github.com/rs/zerolog"
 	"github.com/theopenlane/iam/entfga"
 	"github.com/theopenlane/iam/fgax"
-	"go.uber.org/zap"
 
 	"entgo.io/ent/entc"
 )
@@ -47,7 +47,7 @@ func main() {
 		),
 		entc.Dependency(
 			entc.DependencyName("Logger"),
-			entc.DependencyType(zap.SugaredLogger{}),
+			entc.DependencyType(zerolog.Logger{}),
 		),
 		entc.Extensions(
 			gqlExt,

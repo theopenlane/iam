@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/theopenlane/core/pkg/testutils"
+	"github.com/theopenlane/utils/testutils"
 )
 
 // newGoogleTestServer creates a httptest.Server which mocks the Google

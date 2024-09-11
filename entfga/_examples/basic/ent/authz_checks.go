@@ -95,7 +95,7 @@ func (m *OrgMembershipMutation) CheckAccessForEdit(ctx context.Context) error {
 			reqCtx := privacy.DecisionContext(ctx, privacy.Allow)
 			ob, err := m.Client().OrgMembership.Get(reqCtx, id)
 			if err != nil {
-				m.Logger.Debugw("error getting object", "error", err)
+				m.Logger.Debug().Err(err).Msg("error getting object")
 
 				return err
 			}
@@ -111,7 +111,7 @@ func (m *OrgMembershipMutation) CheckAccessForEdit(ctx context.Context) error {
 		return privacy.Allowf("nil request, bypassing auth check")
 	}
 
-	m.Logger.Debugw("checking mutation access")
+	m.Logger.Debug().Msg("checking mutation access")
 
 	var err error
 	ac.SubjectID, err = auth.GetUserIDFromContext(ctx)
@@ -119,7 +119,7 @@ func (m *OrgMembershipMutation) CheckAccessForEdit(ctx context.Context) error {
 		return err
 	}
 
-	m.Logger.Infow("checking relationship tuples", "relation", ac.Relation, "object_id", ac.ObjectID)
+	m.Logger.Info().Str("relation", ac.Relation).Str("object_id", ac.ObjectID).Msg("checking relationship tuples")
 
 	access, err := m.Authz.CheckAccess(ctx, ac)
 	if err != nil {
@@ -127,7 +127,7 @@ func (m *OrgMembershipMutation) CheckAccessForEdit(ctx context.Context) error {
 	}
 
 	if access {
-		m.Logger.Debugw("access allowed", "relation", ac.Relation, "object_id", ac.ObjectID)
+		m.Logger.Debug().Str("relation", ac.Relation).Str("object_id", ac.ObjectID).Msg("access allowed")
 
 		return privacy.Allow
 	}
@@ -151,7 +151,7 @@ func (m *OrgMembershipMutation) CheckAccessForDelete(ctx context.Context) error 
 		return privacy.Allowf("nil request, bypassing auth check")
 	}
 
-	m.Logger.Debugw("checking mutation access")
+	m.Logger.Debug().Msg("checking mutation access")
 
 	var err error
 	ac.SubjectID, err = auth.GetUserIDFromContext(ctx)
@@ -159,7 +159,7 @@ func (m *OrgMembershipMutation) CheckAccessForDelete(ctx context.Context) error 
 		return err
 	}
 
-	m.Logger.Infow("checking relationship tuples", "relation", ac.Relation, "object_id", ac.ObjectID)
+	m.Logger.Info().Str("relation", ac.Relation).Str("object_id", ac.ObjectID).Msg("checking relationship tuples")
 
 	access, err := m.Authz.CheckAccess(ctx, ac)
 	if err != nil {
@@ -167,7 +167,7 @@ func (m *OrgMembershipMutation) CheckAccessForDelete(ctx context.Context) error 
 	}
 
 	if access {
-		m.Logger.Debugw("access allowed", "relation", ac.Relation, "object_id", ac.ObjectID)
+		m.Logger.Debug().Str("relation", ac.Relation).Str("object_id", ac.ObjectID).Msg("access allowed")
 
 		return privacy.Allow
 	}
@@ -274,7 +274,7 @@ func (m *OrganizationMutation) CheckAccessForEdit(ctx context.Context) error {
 		return privacy.Allowf("nil request, bypassing auth check")
 	}
 
-	m.Logger.Debugw("checking mutation access")
+	m.Logger.Debug().Msg("checking mutation access")
 
 	var err error
 	ac.SubjectID, err = auth.GetUserIDFromContext(ctx)
@@ -282,7 +282,7 @@ func (m *OrganizationMutation) CheckAccessForEdit(ctx context.Context) error {
 		return err
 	}
 
-	m.Logger.Infow("checking relationship tuples", "relation", ac.Relation, "object_id", ac.ObjectID)
+	m.Logger.Info().Str("relation", ac.Relation).Str("object_id", ac.ObjectID).Msg("checking relationship tuples")
 
 	access, err := m.Authz.CheckAccess(ctx, ac)
 	if err != nil {
@@ -290,7 +290,7 @@ func (m *OrganizationMutation) CheckAccessForEdit(ctx context.Context) error {
 	}
 
 	if access {
-		m.Logger.Debugw("access allowed", "relation", ac.Relation, "object_id", ac.ObjectID)
+		m.Logger.Debug().Str("relation", ac.Relation).Str("object_id", ac.ObjectID).Msg("access allowed")
 
 		return privacy.Allow
 	}
@@ -314,7 +314,7 @@ func (m *OrganizationMutation) CheckAccessForDelete(ctx context.Context) error {
 		return privacy.Allowf("nil request, bypassing auth check")
 	}
 
-	m.Logger.Debugw("checking mutation access")
+	m.Logger.Debug().Msg("checking mutation access")
 
 	var err error
 	ac.SubjectID, err = auth.GetUserIDFromContext(ctx)
@@ -322,7 +322,7 @@ func (m *OrganizationMutation) CheckAccessForDelete(ctx context.Context) error {
 		return err
 	}
 
-	m.Logger.Infow("checking relationship tuples", "relation", ac.Relation, "object_id", ac.ObjectID)
+	m.Logger.Info().Str("relation", ac.Relation).Str("object_id", ac.ObjectID).Msg("checking relationship tuples")
 
 	access, err := m.Authz.CheckAccess(ctx, ac)
 	if err != nil {
@@ -330,7 +330,7 @@ func (m *OrganizationMutation) CheckAccessForDelete(ctx context.Context) error {
 	}
 
 	if access {
-		m.Logger.Debugw("access allowed", "relation", ac.Relation, "object_id", ac.ObjectID)
+		m.Logger.Debug().Str("relation", ac.Relation).Str("object_id", ac.ObjectID).Msg("access allowed")
 
 		return privacy.Allow
 	}

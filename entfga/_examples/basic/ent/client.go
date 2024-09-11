@@ -16,10 +16,10 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/rs/zerolog"
 	"github.com/theopenlane/iam/entfga/_examples/basic/ent/organization"
 	"github.com/theopenlane/iam/entfga/_examples/basic/ent/orgmembership"
 	"github.com/theopenlane/iam/fgax"
-	"go.uber.org/zap"
 )
 
 // Client is the client that holds all ent builders.
@@ -77,7 +77,7 @@ type (
 		// interceptors to execute on queries.
 		inters *inters
 		Authz  fgax.Client
-		Logger zap.SugaredLogger
+		Logger zerolog.Logger
 	}
 	// Option function to configure the client.
 	Option func(*config)
@@ -129,7 +129,7 @@ func Authz(v fgax.Client) Option {
 }
 
 // Logger configures the Logger.
-func Logger(v zap.SugaredLogger) Option {
+func Logger(v zerolog.Logger) Option {
 	return func(c *config) {
 		c.Logger = v
 	}

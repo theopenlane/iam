@@ -27,7 +27,7 @@ func (c *Client) CreateModelFromFile(ctx context.Context, fn string, forceCreate
 	if !forceCreate {
 		if len(models.AuthorizationModels) > 0 {
 			modelID := models.GetAuthorizationModels()[0].Id
-			c.Logger.Infow("fga model exists", "model_id", modelID)
+			c.Logger.Info().Str("model_id", modelID).Msg("fga model exists")
 
 			return modelID, nil
 		}
@@ -67,7 +67,7 @@ func (c *Client) CreateModel(ctx context.Context, model ofgaclient.ClientWriteAu
 
 	modelID := resp.GetAuthorizationModelId()
 
-	c.Logger.Infow("fga model created", "model_id", modelID)
+	c.Logger.Info().Str("model_id", modelID).Msg("fga model created")
 
 	return modelID, nil
 }

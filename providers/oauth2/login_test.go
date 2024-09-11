@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
 
-	"github.com/theopenlane/core/pkg/testutils"
+	"github.com/theopenlane/utils/testutils"
 )
 
 const (

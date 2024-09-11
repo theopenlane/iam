@@ -66,7 +66,7 @@ func (c *Client) CheckAccess(ctx context.Context, ac AccessCheck) (bool, error) 
 		Identifier: ac.ObjectID,
 	}
 
-	c.Logger.Infow("checking relationship tuples", "relation", ac.Relation, "object", obj.String())
+	c.Logger.Info().Str("relation", ac.Relation).Str("object", obj.String()).Msg("checking relationship tuples")
 
 	checkReq := ofgaclient.ClientCheckRequest{
 		User:     sub.String(),
@@ -146,7 +146,7 @@ func (c *Client) CheckGroupAccess(ctx context.Context, ac AccessCheck) (bool, er
 func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckRequest) (bool, error) {
 	data, err := c.Ofga.Check(ctx).Body(check).Execute()
 	if err != nil {
-		c.Logger.Errorw("error checking tuple", "tuple", check, "error", err.Error())
+		c.Logger.Error().Err(err).Interface("tuple", check).Msg("error checking tuple")
 
 		return false, err
 	}

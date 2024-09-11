@@ -1,5 +1,9 @@
 version: '3'
 
+env:
+  GODEBUG: gotypesalias=0 # remove once the backport fixes the types.Alias bug
+  GOFLAGS: -buildvcs=false
+  
 tasks:
   ## Generate tasks
   ent:

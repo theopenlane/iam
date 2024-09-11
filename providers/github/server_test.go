@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/theopenlane/core/pkg/testutils"
+	"github.com/theopenlane/utils/testutils"
 )
 
 // newGithubTestServer mocks the GitHub user endpoint and a client

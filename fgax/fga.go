@@ -6,7 +6,7 @@ import (
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/openfga/go-sdk/credentials"
-	"go.uber.org/zap"
+	"github.com/rs/zerolog"
 )
 
 // Client is an ofga client with some configuration
@@ -16,7 +16,7 @@ type Client struct {
 	// Config is the client configuration
 	Config ofgaclient.ClientConfiguration
 	// Logger is the provided Logger
-	Logger *zap.SugaredLogger
+	Logger zerolog.Logger
 }
 
 // Config configures the openFGA setup
@@ -91,7 +91,7 @@ func (c *Client) GetModelID() string {
 }
 
 // WithLogger sets logger
-func WithLogger(l *zap.SugaredLogger) Option {
+func WithLogger(l zerolog.Logger) Option {
 	return func(c *Client) {
 		c.Logger = l
 	}
@@ -152,7 +152,7 @@ func WithToken(token string) Option {
 }
 
 // CreateFGAClientWithStore returns a Client with a store and model configured
-func CreateFGAClientWithStore(ctx context.Context, c Config, l *zap.SugaredLogger) (*Client, error) {
+func CreateFGAClientWithStore(ctx context.Context, c Config, l zerolog.Logger) (*Client, error) {
 	// initialize options with logger
 	opts := []Option{
 		WithLogger(l),
@@ -238,7 +238,7 @@ func (c *Client) CreateStore(ctx context.Context, storeName string) (string, err
 	// Only create a new test store if one does not exist
 	if len(stores.GetStores()) > 0 {
 		storeID := stores.GetStores()[0].Id
-		c.Logger.Infow("fga store exists", "store_id", storeID)
+		c.Logger.Info().Str("store_id", storeID).Msg("fga store exists")
 
 		return storeID, nil
 	}
@@ -255,7 +255,7 @@ func (c *Client) CreateStore(ctx context.Context, storeName string) (string, err
 
 	storeID := resp.GetId()
 
-	c.Logger.Infow("fga store created", "store_id", storeID)
+	c.Logger.Info().Str("store_id", storeID).Msg("fga store created")
 
 	return storeID, nil
 }

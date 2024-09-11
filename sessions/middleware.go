@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/rs/zerolog"
 	echo "github.com/theopenlane/echox"
 	"github.com/theopenlane/echox/middleware"
-	"go.uber.org/zap"
 )
 
 // SessionConfig is used to configure session management
@@ -27,7 +27,7 @@ type SessionConfig struct {
 	// RedisClient establishes a connection to a Redis server and perform operations such as storing and retrieving data
 	RedisClient *redis.Client
 	// Logger is used to log errors in the middleware
-	Logger *zap.SugaredLogger
+	Logger zerolog.Logger
 }
 
 // Option allows users to optionally supply configuration to the session middleware.
@@ -37,7 +37,7 @@ type Option func(opts *SessionConfig)
 func NewSessionConfig(sm Store[map[string]any], opts ...Option) (c SessionConfig) {
 	c = SessionConfig{
 		Skipper:        middleware.DefaultSkipper, // default skipper always returns false
-		Logger:         zap.NewNop().Sugar(),      // default logger if none is provided is a no-op
+		Logger:         zerolog.New(nil),          // default logger if none is provided is a no-op
 		SessionManager: sm,                        // session manager should always be provided
 	}
 
@@ -59,8 +59,8 @@ func WithPersistence(client *redis.Client) Option {
 	}
 }
 
-// WithLogger allows the user to specify a zap logger for the middleware
-func WithLogger(l *zap.SugaredLogger) Option {
+// WithLogger allows the user to specify a logger for the middleware
+func WithLogger(l zerolog.Logger) Option {
 	return func(opts *SessionConfig) {
 		opts.Logger = l
 	}
@@ -150,7 +150,7 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 			// get session from request cookies
 			session, err := config.SessionManager.Get(c.Request(), config.CookieConfig.Name)
 			if err != nil {
-				config.Logger.Errorw("unable to get session", "error", err)
+				config.Logger.Error().Err(err).Msg("unable to get session")
 
 				return err
 			}
@@ -165,13 +165,17 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 			// lookup userID in cache to ensure tokens match
 			userID, err := config.RedisStore.GetSession(c.Request().Context(), sessionID)
 			if err != nil {
-				config.Logger.Errorw("unable to get session from store", "error", err)
+				config.Logger.Error().Err(err).Msg("unable to get session from store")
 
 				return err
 			}
 
 			if userIDFromCookie != userID {
-				config.Logger.Errorw("sessions do not match", "cookie", userIDFromCookie, "store", userID)
+				config.Logger.Error().
+					Err(err).
+					Interface("cookie", userIDFromCookie).
+					Str("store", userID).
+					Msg("sessions do not match")
 
 				return err
 			}
@@ -183,7 +187,7 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 			c.Response().Before(func() {
 				// refresh and save session cookie
 				if err := config.CreateAndStoreSession(c, sessionID); err != nil {
-					config.Logger.Errorw("unable to create and store new session", "error", err)
+					config.Logger.Error().Err(err).Msg("unable to create and store new session")
 
 					panic(err)
 				}
