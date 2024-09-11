@@ -1,6 +1,6 @@
 module github.com/theopenlane/iam
 
-go 1.23.0
+go 1.23.1
 
 require (
 	entgo.io/ent v0.14.1
@@ -23,7 +23,7 @@ require (
 	github.com/samber/lo v1.47.0
 	github.com/stoewer/go-strcase v1.3.0
 	github.com/stretchr/testify v1.9.0
-	github.com/theopenlane/core v0.1.8
+	github.com/theopenlane/core v0.1.9
 	github.com/theopenlane/echox v0.1.0
 	github.com/theopenlane/utils v0.1.5
 	github.com/vmihailenco/msgpack/v5 v5.4.1
@@ -131,7 +131,7 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.57.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/ravilushqa/otelgqlgen v0.16.0 // indirect
+	github.com/ravilushqa/otelgqlgen v0.17.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.6.0 // indirect
@@ -149,7 +149,7 @@ require (
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/theopenlane/dbx v0.1.2 // indirect
-	github.com/theopenlane/entx v0.1.5 // indirect
+	github.com/theopenlane/entx v0.1.7 // indirect
 	github.com/theopenlane/httpsling v0.2.0 // indirect
 	github.com/tursodatabase/libsql-client-go v0.0.0-20240902231107-85af5b9d094d // indirect
 	github.com/urfave/cli/v2 v2.27.4 // indirect
@@ -186,10 +186,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/gc/v3 v3.0.0-20240801135723-a856999a2e4a // indirect
-	modernc.org/libc v1.60.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
-	modernc.org/sqlite v1.32.0 // indirect
+	modernc.org/sqlite v1.33.0 // indirect
 	modernc.org/strutil v1.2.0 // indirect
 	modernc.org/token v1.1.0 // indirect
 )
