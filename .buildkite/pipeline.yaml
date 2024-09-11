@@ -41,6 +41,7 @@ steps:
         plugins:
           - docker#v5.11.0:
               image: "ghcr.io/theopenlane/build-image:latest"
+              always-pull: true
               workdir: "/fgax"
               command: ["task", "example:generate"]
               environment:
