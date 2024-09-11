@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 
+	_ "entgo.io/contrib/entgql"
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
 )

@@ -2,7 +2,10 @@ module github.com/theopenlane/iam
 
 go 1.23.1
 
+godebug gotypesalias=0
+
 require (
+	entgo.io/contrib v0.6.0
 	entgo.io/ent v0.14.1
 	github.com/99designs/gqlgen v0.17.49
 	github.com/Yamashou/gqlgenc v0.25.0

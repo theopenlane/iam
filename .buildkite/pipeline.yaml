@@ -46,7 +46,6 @@ steps:
               command: ["task", "example:generate"]
               environment:
                 - "GOTOOLCHAIN=auto"
-                - "GODEBUG=gotypesalias=0"
   - group: ":closed_lock_with_key: Security Checks"
     depends_on: "tests"
     key: "security"

@@ -6,7 +6,6 @@ includes:
     dir: ./entfga/_examples/basic/
 
 env:
-  GODEBUG: gotypesalias=0 # remove once the backport fixes the types.Alias bug
   GOFLAGS: -buildvcs=false
   
 tasks:
