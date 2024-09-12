@@ -7,10 +7,9 @@ package ent
 import (
 	"context"
 
+	"github.com/rs/zerolog/log"
 	"github.com/theopenlane/iam/entfga"
 	"github.com/theopenlane/iam/fgax"
-
-	"github.com/rs/zerolog/log"
 )
 
 func (m *OrgMembershipMutation) CreateTuplesFromCreate(ctx context.Context) error {
