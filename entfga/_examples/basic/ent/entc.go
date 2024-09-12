@@ -7,7 +7,6 @@ import (
 
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent/entc/gen"
-	"github.com/rs/zerolog"
 	"github.com/theopenlane/iam/entfga"
 	"github.com/theopenlane/iam/fgax"
 
@@ -44,10 +43,6 @@ func main() {
 		entc.Dependency(
 			entc.DependencyName("Authz"),
 			entc.DependencyType(fgax.Client{}),
-		),
-		entc.Dependency(
-			entc.DependencyName("Logger"),
-			entc.DependencyType(zerolog.Logger{}),
 		),
 		entc.Extensions(
 			gqlExt,

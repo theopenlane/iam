@@ -9,8 +9,8 @@ import (
 	ofgaclient "github.com/openfga/go-sdk/client"
 	language "github.com/openfga/language/pkg/go/transformer"
 	typesystem "github.com/openfga/openfga/pkg/typesystem"
-
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -27,7 +27,7 @@ func (c *Client) CreateModelFromFile(ctx context.Context, fn string, forceCreate
 	if !forceCreate {
 		if len(models.AuthorizationModels) > 0 {
 			modelID := models.GetAuthorizationModels()[0].Id
-			c.Logger.Info().Str("model_id", modelID).Msg("fga model exists")
+			log.Info().Str("model_id", modelID).Msg("fga model exists")
 
 			return modelID, nil
 		}
@@ -67,7 +67,7 @@ func (c *Client) CreateModel(ctx context.Context, model ofgaclient.ClientWriteAu
 
 	modelID := resp.GetAuthorizationModelId()
 
-	c.Logger.Info().Str("model_id", modelID).Msg("fga model created")
+	log.Info().Str("model_id", modelID).Msg("fga model created")
 
 	return modelID, nil
 }

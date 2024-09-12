@@ -6,7 +6,7 @@ import (
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/openfga/go-sdk/credentials"
-	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 // Client is an ofga client with some configuration
@@ -15,8 +15,6 @@ type Client struct {
 	Ofga ofgaclient.SdkClient
 	// Config is the client configuration
 	Config ofgaclient.ClientConfiguration
-	// Logger is the provided Logger
-	Logger zerolog.Logger
 }
 
 // Config configures the openFGA setup
@@ -90,13 +88,6 @@ func (c *Client) GetModelID() string {
 	return c.Config.AuthorizationModelId
 }
 
-// WithLogger sets logger
-func WithLogger(l zerolog.Logger) Option {
-	return func(c *Client) {
-		c.Logger = l
-	}
-}
-
 // WithStoreID sets the store IDs, not needed when calling `CreateStore` or `ListStores`
 func WithStoreID(storeID string) Option {
 	return func(c *Client) {
@@ -152,11 +143,8 @@ func WithToken(token string) Option {
 }
 
 // CreateFGAClientWithStore returns a Client with a store and model configured
-func CreateFGAClientWithStore(ctx context.Context, c Config, l zerolog.Logger) (*Client, error) {
-	// initialize options with logger
-	opts := []Option{
-		WithLogger(l),
-	}
+func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
+	opts := []Option{}
 
 	// set credentials if provided
 	if c.Credentials.APIToken != "" {
@@ -238,7 +226,7 @@ func (c *Client) CreateStore(ctx context.Context, storeName string) (string, err
 	// Only create a new test store if one does not exist
 	if len(stores.GetStores()) > 0 {
 		storeID := stores.GetStores()[0].Id
-		c.Logger.Info().Str("store_id", storeID).Msg("fga store exists")
+		log.Info().Str("store_id", storeID).Msg("fga store exists")
 
 		return storeID, nil
 	}
@@ -255,7 +243,7 @@ func (c *Client) CreateStore(ctx context.Context, storeName string) (string, err
 
 	storeID := resp.GetId()
 
-	c.Logger.Info().Str("store_id", storeID).Msg("fga store created")
+	log.Info().Str("store_id", storeID).Msg("fga store created")
 
 	return storeID, nil
 }

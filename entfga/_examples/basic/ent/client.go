@@ -77,7 +77,6 @@ type (
 		// interceptors to execute on queries.
 		inters *inters
 		Authz  fgax.Client
-		Logger zerolog.Logger
 	}
 	// Option function to configure the client.
 	Option func(*config)
@@ -125,13 +124,6 @@ func Driver(driver dialect.Driver) Option {
 func Authz(v fgax.Client) Option {
 	return func(c *config) {
 		c.Authz = v
-	}
-}
-
-// Logger configures the Logger.
-func Logger(v zerolog.Logger) Option {
-	return func(c *config) {
-		c.Logger = v
 	}
 }
 

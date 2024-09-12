@@ -7,6 +7,7 @@ import (
 
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
+	"github.com/rs/zerolog/log"
 )
 
 // setup relations for use in creating tuples
@@ -168,14 +169,14 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 
 	resp, err := c.Ofga.Write(ctx).Body(body).Options(opts).Execute()
 	if err != nil {
-		c.Logger.Info().Err(err).Interface("user", resp.Writes).Msg("error writing relationship tuples")
+		log.Info().Err(err).Interface("user", resp.Writes).Msg("error writing relationship tuples")
 
 		return resp, err
 	}
 
 	for _, writes := range resp.Writes {
 		if writes.Error != nil {
-			c.Logger.Error().Err(writes.Error).
+			log.Error().Err(writes.Error).
 				Str("user", writes.TupleKey.User).
 				Str("relation", writes.TupleKey.Relation).
 				Str("object", writes.TupleKey.Object).
@@ -187,7 +188,7 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 
 	for _, deletes := range resp.Deletes {
 		if deletes.Error != nil {
-			c.Logger.Error().Err(deletes.Error).
+			log.Error().Err(deletes.Error).
 				Str("user", deletes.TupleKey.User).
 				Str("relation", deletes.TupleKey.Relation).
 				Str("object", deletes.TupleKey.Object).
@@ -210,14 +211,14 @@ func (c *Client) deleteRelationshipTuple(ctx context.Context, tuples []openfga.T
 
 	resp, err := c.Ofga.DeleteTuples(ctx).Body(tuples).Options(opts).Execute()
 	if err != nil {
-		c.Logger.Error().Err(err).Msg("error deleting relationship tuples")
+		log.Error().Err(err).Msg("error deleting relationship tuples")
 
 		return resp, err
 	}
 
 	for _, del := range resp.Deletes {
 		if del.Error != nil {
-			c.Logger.Error().Err(del.Error).
+			log.Error().Err(del.Error).
 				Str("user", del.TupleKey.User).
 				Str("relation", del.TupleKey.Relation).
 				Str("object", del.TupleKey.Object).
@@ -245,7 +246,7 @@ func (c *Client) getAllTuples(ctx context.Context) ([]openfga.Tuple, error) {
 	for notComplete {
 		resp, err := c.Ofga.Read(ctx).Options(opts).Execute()
 		if err != nil {
-			c.Logger.Error().Err(err).Msg("error getting relationship tuples")
+			log.Error().Err(err).Msg("error getting relationship tuples")
 
 			return nil, err
 		}

@@ -6,6 +6,7 @@ import (
 
 	fgasdk "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
+	"github.com/rs/zerolog/log"
 )
 
 // ListRequest is the fields needed to list objects or users
@@ -40,7 +41,7 @@ func (c *Client) ListObjectsRequest(ctx context.Context, req ListRequest) (*ofga
 		Type:     req.ObjectType,
 	}
 
-	c.Logger.Debug().Str("relation", req.Relation).
+	log.Debug().Str("relation", req.Relation).
 		Str("subject", sub.String()).
 		Str("type", req.ObjectType).
 		Msg("listing objects")
@@ -67,7 +68,7 @@ func (c *Client) ListUserRequest(ctx context.Context, req ListRequest) (*ofgacli
 		UserFilters: []fgasdk.UserTypeFilter{{Type: req.SubjectType}},
 	}
 
-	c.Logger.Debug().Str("relation", req.Relation).
+	log.Debug().Str("relation", req.Relation).
 		Str("object", obj.Id).
 		Str("type", obj.Type).
 		Msg("listing users")
@@ -79,7 +80,7 @@ func (c *Client) ListUserRequest(ctx context.Context, req ListRequest) (*ofgacli
 func (c *Client) listObjects(ctx context.Context, req ofgaclient.ClientListObjectsRequest) (*ofgaclient.ClientListObjectsResponse, error) {
 	list, err := c.Ofga.ListObjects(ctx).Body(req).Execute()
 	if err != nil {
-		c.Logger.Error().Err(err).
+		log.Error().Err(err).
 			Str("user", req.User).
 			Str("relation", req.Relation).
 			Str("type", req.Type).
@@ -95,7 +96,7 @@ func (c *Client) listObjects(ctx context.Context, req ofgaclient.ClientListObjec
 func (c *Client) listUsers(ctx context.Context, req ofgaclient.ClientListUsersRequest) (*ofgaclient.ClientListUsersResponse, error) {
 	list, err := c.Ofga.ListUsers(ctx).Body(req).Execute()
 	if err != nil {
-		c.Logger.Error().Err(err).
+		log.Error().Err(err).
 			Str("object", req.Object.Id).
 			Str("type", req.Object.Type).
 			Str("relation", req.Relation).

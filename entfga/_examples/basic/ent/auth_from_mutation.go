@@ -9,6 +9,8 @@ import (
 
 	"github.com/theopenlane/iam/entfga"
 	"github.com/theopenlane/iam/fgax"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (m *OrgMembershipMutation) CreateTuplesFromCreate(ctx context.Context) error {
@@ -29,12 +31,12 @@ func (m *OrgMembershipMutation) CreateTuplesFromCreate(ctx context.Context) erro
 	tuple := fgax.GetTupleKey(req)
 
 	if _, err := m.Authz.WriteTupleKeys(ctx, []fgax.TupleKey{tuple}, nil); err != nil {
-		m.Logger.Error().Err(err).Msg("failed to create relationship tuple")
+		log.Error().Err(err).Msg("failed to create relationship tuple")
 
 		return err
 	}
 
-	m.Logger.Debug().Str("relation", role.String()).Str("object", tuple.Object.String()).Msg("created relationship tuple")
+	log.Debug().Str("relation", role.String()).Str("object", tuple.Object.String()).Msg("created relationship tuple")
 
 	return nil
 }
@@ -63,7 +65,7 @@ func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) erro
 	}
 
 	if oldRole == newRole {
-		m.Logger.Debug().
+		log.Debug().
 			Str("old_role", oldRole.String()).
 			Str("new_role", newRole.String()).
 			Msg("nothing to update, roles are the same")
@@ -95,13 +97,13 @@ func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) erro
 		writes = append(writes, w)
 
 		if len(writes) == 0 && len(deletes) == 0 {
-			m.Logger.Debug().Msg("no relationships to create or delete")
+			log.Debug().Msg("no relationships to create or delete")
 
 			return nil
 		}
 
 		if _, err := m.Authz.WriteTupleKeys(ctx, writes, deletes); err != nil {
-			m.Logger.Error().Err(err).Msg("failed to update relationship tuple")
+			log.Error().Err(err).Msg("failed to update relationship tuple")
 
 			return err
 		}
@@ -142,12 +144,12 @@ func (m *OrgMembershipMutation) CreateTuplesFromDelete(ctx context.Context) erro
 
 	if len(tuples) > 0 {
 		if _, err := m.Authz.WriteTupleKeys(ctx, nil, tuples); err != nil {
-			m.Logger.Error().Err(err).Msg("failed to delete relationship tuple")
+			log.Error().Err(err).Msg("failed to delete relationship tuple")
 
 			return err
 		}
 
-		m.Logger.Debug().Msg("deleted relationship tuples")
+		log.Debug().Msg("deleted relationship tuples")
 	}
 
 	return nil
