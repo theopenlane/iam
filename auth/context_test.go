@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/theopenlane/utils/echocontext"
+	"github.com/theopenlane/echox/middleware/echocontext"
 	"github.com/theopenlane/utils/ulids"
 
 	"github.com/theopenlane/iam/auth"

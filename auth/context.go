@@ -7,7 +7,7 @@ import (
 
 	"github.com/theopenlane/utils/ulids"
 
-	"github.com/theopenlane/utils/echocontext"
+	"github.com/theopenlane/echox/middleware/echocontext"
 )
 
 type AuthenticationType string

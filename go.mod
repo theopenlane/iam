@@ -27,7 +27,7 @@ require (
 	github.com/samber/lo v1.47.0
 	github.com/stoewer/go-strcase v1.3.0
 	github.com/stretchr/testify v1.9.0
-	github.com/theopenlane/echox v0.1.0
+	github.com/theopenlane/echox v0.2.0
 	github.com/theopenlane/utils v0.1.6-0.20240911214559-3e4455ffe31f
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.23.0
