@@ -34,8 +34,8 @@ github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 h1:TngWCqHvy9oXAN6lEV
 github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5/go.mod h1:lmUJ/7eu/Q8D7ML55dXQrVaamCz2vxCfdQBasLZfHKk=
 github.com/XSAM/otelsql v0.33.0 h1:8ZgVGFMG78Gd7BcCkxZ+lBTybWrnOtQv5sn4sLWb0+w=
 github.com/XSAM/otelsql v0.33.0/go.mod h1:TIaqdCA0m+GP0TJ4axwMSLunVfMFsxf1x1UU8MlUvAY=
-github.com/Yamashou/gqlgenc v0.24.0 h1:Aeufjb2zF0XxkeSTAVQ+DfiHL+ney/M2ovShZozBmHw=
-github.com/Yamashou/gqlgenc v0.24.0/go.mod h1:3QQD8ZoeEyVXuzqcMDsl8OfCCCTk+ulaxkvFFQDupIA=
+github.com/Yamashou/gqlgenc v0.25.0 h1:wb4CKKpnklmK9R+RQ68yoSdhqlK+MPflYT/hsMOE1+I=
+github.com/Yamashou/gqlgenc v0.25.0/go.mod h1:KheDl3KZUFmnGCLHCHPQ6hodwWbggc889vwwaf0VqH8=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/agnivade/levenshtein v1.1.1 h1:QY8M92nrzkmr798gCo3kmMyqXFzdQVpxLlGPRBij0P8=

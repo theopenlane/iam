@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	entgo.io/ent v0.14.1
 	github.com/99designs/gqlgen v0.17.49
-	github.com/Yamashou/gqlgenc v0.24.0
+	github.com/Yamashou/gqlgenc v0.25.0
 	github.com/alicebob/miniredis/v2 v2.33.0
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/go-webauthn/webauthn v0.11.2
