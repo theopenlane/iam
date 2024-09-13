@@ -16,7 +16,7 @@ require (
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/openfga/go-sdk v0.6.0
 	github.com/openfga/language/pkg/go v0.2.0-beta.2
-	github.com/openfga/openfga v1.6.0
+	github.com/openfga/openfga v1.6.1
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0
 	github.com/redis/go-redis/v9 v9.6.1
@@ -122,7 +122,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opencontainers/runc v1.1.14 // indirect
-	github.com/openfga/api/proto v0.0.0-20240905181937-3583905f61a6 // indirect
+	github.com/openfga/api/proto v0.0.0-20240906203051-102620ef2a66 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
