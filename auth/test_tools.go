@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	echo "github.com/theopenlane/echox"
 
-	"github.com/theopenlane/core/pkg/middleware/echocontext"
+	"github.com/theopenlane/echox/middleware/echocontext"
 
 	"github.com/theopenlane/iam/tokens"
 )

@@ -5,7 +5,6 @@ import (
 
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
-	"go.uber.org/zap"
 
 	mock_fga "github.com/theopenlane/iam/fgax/mockery"
 )
@@ -19,8 +18,7 @@ func NewMockFGAClient(t *testing.T, c *mock_fga.MockSdkClient) *Client {
 			AuthorizationModelId: *openfga.PtrString("test-model-id"),
 			StoreId:              *openfga.PtrString("test-store-id"),
 		},
-		Ofga:   c,
-		Logger: zap.NewNop().Sugar(),
+		Ofga: c,
 	}
 
 	return &client

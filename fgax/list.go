@@ -6,6 +6,7 @@ import (
 
 	fgasdk "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
+	"github.com/rs/zerolog/log"
 )
 
 // ListRequest is the fields needed to list objects or users
@@ -40,7 +41,10 @@ func (c *Client) ListObjectsRequest(ctx context.Context, req ListRequest) (*ofga
 		Type:     req.ObjectType,
 	}
 
-	c.Logger.Debugw("listing objects", "relation", req.SubjectType, sub.String(), req.Relation, "type", req.ObjectType)
+	log.Debug().Str("relation", req.Relation).
+		Str("subject", sub.String()).
+		Str("type", req.ObjectType).
+		Msg("listing objects")
 
 	return c.listObjects(ctx, listReq)
 }
@@ -64,7 +68,10 @@ func (c *Client) ListUserRequest(ctx context.Context, req ListRequest) (*ofgacli
 		UserFilters: []fgasdk.UserTypeFilter{{Type: req.SubjectType}},
 	}
 
-	c.Logger.Debugw("listing users", "relation", req.Relation, "object", obj.Id, "type", obj.Type)
+	log.Debug().Str("relation", req.Relation).
+		Str("object", obj.Id).
+		Str("type", obj.Type).
+		Msg("listing users")
 
 	return c.listUsers(ctx, listReq)
 }
@@ -73,11 +80,11 @@ func (c *Client) ListUserRequest(ctx context.Context, req ListRequest) (*ofgacli
 func (c *Client) listObjects(ctx context.Context, req ofgaclient.ClientListObjectsRequest) (*ofgaclient.ClientListObjectsResponse, error) {
 	list, err := c.Ofga.ListObjects(ctx).Body(req).Execute()
 	if err != nil {
-		c.Logger.Errorw("error listing objects",
-			"user", req.User,
-			"relation", req.Relation,
-			"type", req.Type,
-			"error", err.Error())
+		log.Error().Err(err).
+			Str("user", req.User).
+			Str("relation", req.Relation).
+			Str("type", req.Type).
+			Msg("error listing objects")
 
 		return nil, err
 	}
@@ -89,11 +96,11 @@ func (c *Client) listObjects(ctx context.Context, req ofgaclient.ClientListObjec
 func (c *Client) listUsers(ctx context.Context, req ofgaclient.ClientListUsersRequest) (*ofgaclient.ClientListUsersResponse, error) {
 	list, err := c.Ofga.ListUsers(ctx).Body(req).Execute()
 	if err != nil {
-		c.Logger.Errorw("error listing users",
-			"object", req.Object.Id,
-			"type", req.Object.Type,
-			"relation", req.Relation,
-			"error", err.Error())
+		log.Error().Err(err).
+			Str("object", req.Object.Id).
+			Str("type", req.Object.Type).
+			Str("relation", req.Relation).
+			Msg("error listing users")
 
 		return nil, err
 	}

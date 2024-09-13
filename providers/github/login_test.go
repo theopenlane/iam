@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/theopenlane/core/pkg/testutils"
+	"github.com/theopenlane/utils/testutils"
 
 	oauth2Login "github.com/theopenlane/iam/providers/oauth2"
 

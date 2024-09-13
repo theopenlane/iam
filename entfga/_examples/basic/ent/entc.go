@@ -9,7 +9,6 @@ import (
 	"entgo.io/ent/entc/gen"
 	"github.com/theopenlane/iam/entfga"
 	"github.com/theopenlane/iam/fgax"
-	"go.uber.org/zap"
 
 	"entgo.io/ent/entc"
 )
@@ -44,10 +43,6 @@ func main() {
 		entc.Dependency(
 			entc.DependencyName("Authz"),
 			entc.DependencyType(fgax.Client{}),
-		),
-		entc.Dependency(
-			entc.DependencyName("Logger"),
-			entc.DependencyType(zap.SugaredLogger{}),
 		),
 		entc.Extensions(
 			gqlExt,
