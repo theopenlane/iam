@@ -7,7 +7,7 @@ includes:
 
 env:
   GOFLAGS: -buildvcs=false
-  
+
 tasks:
   generate:
     desc: generate the mock fga client
@@ -36,7 +36,7 @@ tasks:
     cmds:
       - task: go:test:cover
       - go tool cover -html=coverage.out
-    
+
   go:tidy:
     desc: runs go mod tidy on the backend
     aliases: [tidy]

@@ -50,16 +50,4 @@ See the [README](./entfga/README.md) for details
 
 ## Contributing
 
-Please read the [contributing](.github/CONTRIBUTING.md) guide as well as the [Developer Certificate of Origin](https://developercertificate.org/). You will be required to sign all commits to the OpenLane project, so if you're unfamiliar with how to set that up, see [github's documentation](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification).
-
-## Security
-
-We take the security of our software products and services seriously, including all of the open source code repositories managed through our Github Organizations, such as [theopenlane](https://github.com/theopenlane). If you believe you have found a security vulnerability in any of our repositories, please report it to us through coordinated disclosure.
-
-**Please do NOT report security vulnerabilities through public github issues, discussions, or pull requests!**
-
-Instead, please send an email to `security@OpenLane.net` with as much information as possible to best help us understand and resolve the issues. See the security policy attached to this repository for more details.
-
-## Questions?
-
-Open a github issue on this repository and we'll respond as soon as we're able!
+Please read the [contributing](.github/CONTRIBUTING.md) guide.
