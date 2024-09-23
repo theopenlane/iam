@@ -17,7 +17,7 @@ require (
 	github.com/gorilla/securecookie v1.1.2
 	github.com/lestrrat-go/jwx/v2 v2.1.1
 	github.com/oklog/ulid/v2 v2.1.0
-	github.com/openfga/go-sdk v0.6.0
+	github.com/openfga/go-sdk v0.6.1
 	github.com/openfga/language/pkg/go v0.2.0-beta.2
 	github.com/openfga/openfga v1.6.1
 	github.com/pkg/errors v0.9.1
