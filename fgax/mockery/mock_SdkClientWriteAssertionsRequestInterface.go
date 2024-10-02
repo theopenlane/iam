@@ -24,7 +24,7 @@ func (_m *MockSdkClientWriteAssertionsRequestInterface) EXPECT() *MockSdkClientW
 }
 
 // Body provides a mock function with given fields: body
-func (_m *MockSdkClientWriteAssertionsRequestInterface) Body(body []client.ClientAssertion) client.SdkClientWriteAssertionsRequestInterface {
+func (_m *MockSdkClientWriteAssertionsRequestInterface) Body(body client.ClientWriteAssertionsRequest) client.SdkClientWriteAssertionsRequestInterface {
 	ret := _m.Called(body)
 
 	if len(ret) == 0 {
@@ -32,7 +32,7 @@ func (_m *MockSdkClientWriteAssertionsRequestInterface) Body(body []client.Clien
 	}
 
 	var r0 client.SdkClientWriteAssertionsRequestInterface
-	if rf, ok := ret.Get(0).(func([]client.ClientAssertion) client.SdkClientWriteAssertionsRequestInterface); ok {
+	if rf, ok := ret.Get(0).(func(client.ClientWriteAssertionsRequest) client.SdkClientWriteAssertionsRequestInterface); ok {
 		r0 = rf(body)
 	} else {
 		if ret.Get(0) != nil {
@@ -49,14 +49,14 @@ type MockSdkClientWriteAssertionsRequestInterface_Body_Call struct {
 }
 
 // Body is a helper method to define mock.On call
-//   - body []client.ClientAssertion
+//   - body client.ClientWriteAssertionsRequest
 func (_e *MockSdkClientWriteAssertionsRequestInterface_Expecter) Body(body interface{}) *MockSdkClientWriteAssertionsRequestInterface_Body_Call {
 	return &MockSdkClientWriteAssertionsRequestInterface_Body_Call{Call: _e.mock.On("Body", body)}
 }
 
-func (_c *MockSdkClientWriteAssertionsRequestInterface_Body_Call) Run(run func(body []client.ClientAssertion)) *MockSdkClientWriteAssertionsRequestInterface_Body_Call {
+func (_c *MockSdkClientWriteAssertionsRequestInterface_Body_Call) Run(run func(body client.ClientWriteAssertionsRequest)) *MockSdkClientWriteAssertionsRequestInterface_Body_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].([]client.ClientAssertion))
+		run(args[0].(client.ClientWriteAssertionsRequest))
 	})
 	return _c
 }
@@ -66,7 +66,7 @@ func (_c *MockSdkClientWriteAssertionsRequestInterface_Body_Call) Return(_a0 cli
 	return _c
 }
 
-func (_c *MockSdkClientWriteAssertionsRequestInterface_Body_Call) RunAndReturn(run func([]client.ClientAssertion) client.SdkClientWriteAssertionsRequestInterface) *MockSdkClientWriteAssertionsRequestInterface_Body_Call {
+func (_c *MockSdkClientWriteAssertionsRequestInterface_Body_Call) RunAndReturn(run func(client.ClientWriteAssertionsRequest) client.SdkClientWriteAssertionsRequestInterface) *MockSdkClientWriteAssertionsRequestInterface_Body_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -176,19 +176,19 @@ func (_c *MockSdkClientWriteAssertionsRequestInterface_GetAuthorizationModelIdOv
 }
 
 // GetBody provides a mock function with given fields:
-func (_m *MockSdkClientWriteAssertionsRequestInterface) GetBody() *[]client.ClientAssertion {
+func (_m *MockSdkClientWriteAssertionsRequestInterface) GetBody() *client.ClientWriteAssertionsRequest {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetBody")
 	}
 
-	var r0 *[]client.ClientAssertion
-	if rf, ok := ret.Get(0).(func() *[]client.ClientAssertion); ok {
+	var r0 *client.ClientWriteAssertionsRequest
+	if rf, ok := ret.Get(0).(func() *client.ClientWriteAssertionsRequest); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*[]client.ClientAssertion)
+			r0 = ret.Get(0).(*client.ClientWriteAssertionsRequest)
 		}
 	}
 
@@ -212,12 +212,12 @@ func (_c *MockSdkClientWriteAssertionsRequestInterface_GetBody_Call) Run(run fun
 	return _c
 }
 
-func (_c *MockSdkClientWriteAssertionsRequestInterface_GetBody_Call) Return(_a0 *[]client.ClientAssertion) *MockSdkClientWriteAssertionsRequestInterface_GetBody_Call {
+func (_c *MockSdkClientWriteAssertionsRequestInterface_GetBody_Call) Return(_a0 *client.ClientWriteAssertionsRequest) *MockSdkClientWriteAssertionsRequestInterface_GetBody_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *MockSdkClientWriteAssertionsRequestInterface_GetBody_Call) RunAndReturn(run func() *[]client.ClientAssertion) *MockSdkClientWriteAssertionsRequestInterface_GetBody_Call {
+func (_c *MockSdkClientWriteAssertionsRequestInterface_GetBody_Call) RunAndReturn(run func() *client.ClientWriteAssertionsRequest) *MockSdkClientWriteAssertionsRequestInterface_GetBody_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -24,7 +24,7 @@ func (_m *MockSdkClientBatchCheckRequestInterface) EXPECT() *MockSdkClientBatchC
 }
 
 // Body provides a mock function with given fields: body
-func (_m *MockSdkClientBatchCheckRequestInterface) Body(body []client.ClientCheckRequest) client.SdkClientBatchCheckRequestInterface {
+func (_m *MockSdkClientBatchCheckRequestInterface) Body(body client.ClientBatchCheckBody) client.SdkClientBatchCheckRequestInterface {
 	ret := _m.Called(body)
 
 	if len(ret) == 0 {
@@ -32,7 +32,7 @@ func (_m *MockSdkClientBatchCheckRequestInterface) Body(body []client.ClientChec
 	}
 
 	var r0 client.SdkClientBatchCheckRequestInterface
-	if rf, ok := ret.Get(0).(func([]client.ClientCheckRequest) client.SdkClientBatchCheckRequestInterface); ok {
+	if rf, ok := ret.Get(0).(func(client.ClientBatchCheckBody) client.SdkClientBatchCheckRequestInterface); ok {
 		r0 = rf(body)
 	} else {
 		if ret.Get(0) != nil {
@@ -49,14 +49,14 @@ type MockSdkClientBatchCheckRequestInterface_Body_Call struct {
 }
 
 // Body is a helper method to define mock.On call
-//   - body []client.ClientCheckRequest
+//   - body client.ClientBatchCheckBody
 func (_e *MockSdkClientBatchCheckRequestInterface_Expecter) Body(body interface{}) *MockSdkClientBatchCheckRequestInterface_Body_Call {
 	return &MockSdkClientBatchCheckRequestInterface_Body_Call{Call: _e.mock.On("Body", body)}
 }
 
-func (_c *MockSdkClientBatchCheckRequestInterface_Body_Call) Run(run func(body []client.ClientCheckRequest)) *MockSdkClientBatchCheckRequestInterface_Body_Call {
+func (_c *MockSdkClientBatchCheckRequestInterface_Body_Call) Run(run func(body client.ClientBatchCheckBody)) *MockSdkClientBatchCheckRequestInterface_Body_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].([]client.ClientCheckRequest))
+		run(args[0].(client.ClientBatchCheckBody))
 	})
 	return _c
 }
@@ -66,29 +66,29 @@ func (_c *MockSdkClientBatchCheckRequestInterface_Body_Call) Return(_a0 client.S
 	return _c
 }
 
-func (_c *MockSdkClientBatchCheckRequestInterface_Body_Call) RunAndReturn(run func([]client.ClientCheckRequest) client.SdkClientBatchCheckRequestInterface) *MockSdkClientBatchCheckRequestInterface_Body_Call {
+func (_c *MockSdkClientBatchCheckRequestInterface_Body_Call) RunAndReturn(run func(client.ClientBatchCheckBody) client.SdkClientBatchCheckRequestInterface) *MockSdkClientBatchCheckRequestInterface_Body_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Execute provides a mock function with given fields:
-func (_m *MockSdkClientBatchCheckRequestInterface) Execute() (*[]client.ClientBatchCheckSingleResponse, error) {
+func (_m *MockSdkClientBatchCheckRequestInterface) Execute() (*client.ClientBatchCheckResponse, error) {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for Execute")
 	}
 
-	var r0 *[]client.ClientBatchCheckSingleResponse
+	var r0 *client.ClientBatchCheckResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func() (*[]client.ClientBatchCheckSingleResponse, error)); ok {
+	if rf, ok := ret.Get(0).(func() (*client.ClientBatchCheckResponse, error)); ok {
 		return rf()
 	}
-	if rf, ok := ret.Get(0).(func() *[]client.ClientBatchCheckSingleResponse); ok {
+	if rf, ok := ret.Get(0).(func() *client.ClientBatchCheckResponse); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*[]client.ClientBatchCheckSingleResponse)
+			r0 = ret.Get(0).(*client.ClientBatchCheckResponse)
 		}
 	}
 
@@ -118,12 +118,12 @@ func (_c *MockSdkClientBatchCheckRequestInterface_Execute_Call) Run(run func()) 
 	return _c
 }
 
-func (_c *MockSdkClientBatchCheckRequestInterface_Execute_Call) Return(_a0 *[]client.ClientBatchCheckSingleResponse, _a1 error) *MockSdkClientBatchCheckRequestInterface_Execute_Call {
+func (_c *MockSdkClientBatchCheckRequestInterface_Execute_Call) Return(_a0 *client.ClientBatchCheckResponse, _a1 error) *MockSdkClientBatchCheckRequestInterface_Execute_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockSdkClientBatchCheckRequestInterface_Execute_Call) RunAndReturn(run func() (*[]client.ClientBatchCheckSingleResponse, error)) *MockSdkClientBatchCheckRequestInterface_Execute_Call {
+func (_c *MockSdkClientBatchCheckRequestInterface_Execute_Call) RunAndReturn(run func() (*client.ClientBatchCheckResponse, error)) *MockSdkClientBatchCheckRequestInterface_Execute_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -176,19 +176,19 @@ func (_c *MockSdkClientBatchCheckRequestInterface_GetAuthorizationModelIdOverrid
 }
 
 // GetBody provides a mock function with given fields:
-func (_m *MockSdkClientBatchCheckRequestInterface) GetBody() *[]client.ClientCheckRequest {
+func (_m *MockSdkClientBatchCheckRequestInterface) GetBody() *client.ClientBatchCheckBody {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetBody")
 	}
 
-	var r0 *[]client.ClientCheckRequest
-	if rf, ok := ret.Get(0).(func() *[]client.ClientCheckRequest); ok {
+	var r0 *client.ClientBatchCheckBody
+	if rf, ok := ret.Get(0).(func() *client.ClientBatchCheckBody); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*[]client.ClientCheckRequest)
+			r0 = ret.Get(0).(*client.ClientBatchCheckBody)
 		}
 	}
 
@@ -212,12 +212,12 @@ func (_c *MockSdkClientBatchCheckRequestInterface_GetBody_Call) Run(run func()) 
 	return _c
 }
 
-func (_c *MockSdkClientBatchCheckRequestInterface_GetBody_Call) Return(_a0 *[]client.ClientCheckRequest) *MockSdkClientBatchCheckRequestInterface_GetBody_Call {
+func (_c *MockSdkClientBatchCheckRequestInterface_GetBody_Call) Return(_a0 *client.ClientBatchCheckBody) *MockSdkClientBatchCheckRequestInterface_GetBody_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *MockSdkClientBatchCheckRequestInterface_GetBody_Call) RunAndReturn(run func() *[]client.ClientCheckRequest) *MockSdkClientBatchCheckRequestInterface_GetBody_Call {
+func (_c *MockSdkClientBatchCheckRequestInterface_GetBody_Call) RunAndReturn(run func() *client.ClientBatchCheckBody) *MockSdkClientBatchCheckRequestInterface_GetBody_Call {
 	_c.Call.Return(run)
 	return _c
 }
