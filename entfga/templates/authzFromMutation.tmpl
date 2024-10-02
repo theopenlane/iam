@@ -6,6 +6,13 @@
     {{ $pkg := base $.Config.Package }}
     {{ template "header" $ }}
 
+    {{/* Add imports so the correct packages are imported */}}
+    import (
+        "github.com/theopenlane/iam/fgax"
+        "github.com/theopenlane/iam/entfga"
+        "github.com/theopenlane/entx"
+    )
+
     {{/* Add Check for Soft Delete See: AuthzConfig.SoftDeletes */}}
     {{ $softDeletes := $.Annotations.AuthzConfig.SoftDeletes }}
 
