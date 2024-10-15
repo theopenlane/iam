@@ -22,8 +22,8 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 h1:TngWCqHvy9oXAN6lEVMRuU21PR1EtLVZJmdB18Gu3Rw=
 github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5/go.mod h1:lmUJ/7eu/Q8D7ML55dXQrVaamCz2vxCfdQBasLZfHKk=
-github.com/Yamashou/gqlgenc v0.25.2 h1:4VoeXuI/8M7njUYiOsTSkkEit13rXWOjoK39AG31jPo=
-github.com/Yamashou/gqlgenc v0.25.2/go.mod h1:G0g1N81xpIklVdnyboW1zwOHcj/n4hNfhTwfN29Rjig=
+github.com/Yamashou/gqlgenc v0.25.3 h1:mVV8/Ho8EDZUQKQZbQqqXGNq8jc8aQfPpHhZOnTkMNE=
+github.com/Yamashou/gqlgenc v0.25.3/go.mod h1:G0g1N81xpIklVdnyboW1zwOHcj/n4hNfhTwfN29Rjig=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/agnivade/levenshtein v1.1.1 h1:QY8M92nrzkmr798gCo3kmMyqXFzdQVpxLlGPRBij0P8=

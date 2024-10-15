@@ -8,7 +8,7 @@ require (
 	entgo.io/contrib v0.6.0
 	entgo.io/ent v0.14.1
 	github.com/99designs/gqlgen v0.17.55
-	github.com/Yamashou/gqlgenc v0.25.2
+	github.com/Yamashou/gqlgenc v0.25.3
 	github.com/alicebob/miniredis/v2 v2.33.0
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/go-webauthn/webauthn v0.11.2
