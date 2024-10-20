@@ -142,6 +142,32 @@ func ListUsers(t *testing.T, c *MockSdkClient, allowedUsers []openfga.User, err 
 	c.EXPECT().ListUsers(mock.Anything).Return(lr).Once()
 }
 
+// ListUsersAny mocks a list request any number of times with a allowed users and error if provided
+func ListUsersAny(t *testing.T, c *MockSdkClient, allowedUsers []string, err error) {
+	lr := NewMockSdkClientListUsersRequestInterface(t)
+
+	resp := ofgaclient.ClientListUsersResponse{}
+
+	userResp := []openfga.User{}
+
+	for _, user := range allowedUsers {
+		userResp = append(userResp, openfga.User{
+			Object: &openfga.FgaObject{
+				Type: "user",
+				Id:   user,
+			},
+		})
+	}
+
+	resp.SetUsers(userResp)
+
+	lr.EXPECT().Execute().Return(&resp, err)
+
+	lr.EXPECT().Body(mock.Anything).Return(lr)
+
+	c.EXPECT().ListUsers(mock.Anything).Return(lr)
+}
+
 // ListTimes mocks a list request for the specified number of times in a test
 func ListTimes(t *testing.T, c *MockSdkClient, allowedObjects []string, times int) {
 	lr := NewMockSdkClientListObjectsRequestInterface(t)
