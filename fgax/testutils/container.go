@@ -12,43 +12,45 @@ import (
 )
 
 // Option is a functional configuration option for openFGA client
-type Option func(c *OpenFGAConfig)
+type Option func(c *OpenFGATestFixture)
 
-// OpenFGAConfig configures the openFGA setup
-type OpenFGAConfig struct {
+// OpenFGATestFixture configures the openFGA setup for testing
+type OpenFGATestFixture struct {
 	// openFGAVersion is the version of the openFGA container to run, default to latest
 	openFGAVersion string
 	// modelFile is the path to the model file
 	modelFile string
 	// storeName of the FGA Store, defaults to a random name if not provided
 	storeName string
+	// tf is the openFGA test fixture
+	tf *openfga.OpenFGAContainer
 }
 
 // WithModelFile sets the model file path for the openFGA client
 func WithModelFile(modelFile string) Option {
-	return func(c *OpenFGAConfig) {
+	return func(c *OpenFGATestFixture) {
 		c.modelFile = modelFile
 	}
 }
 
 // WithStoreName sets the store name for the openFGA client
 func WithStoreName(storeName string) Option {
-	return func(c *OpenFGAConfig) {
+	return func(c *OpenFGATestFixture) {
 		c.storeName = storeName
 	}
 }
 
 // WithVersion sets the version of the openFGA container to run
 func WithVersion(version string) Option {
-	return func(c *OpenFGAConfig) {
+	return func(c *OpenFGATestFixture) {
 		c.openFGAVersion = version
 	}
 }
 
-// NewTestFGAClient creates a new fga client with the provided context and options
-func NewTestFGAClient(ctx context.Context, opts ...Option) (*fgax.Client, *openfga.OpenFGAContainer, error) {
+// NewFGATestcontainer creates a new test container with the provided context and options
+func NewFGATestcontainer(ctx context.Context, opts ...Option) *OpenFGATestFixture {
 	// setup the default config
-	c := &OpenFGAConfig{
+	c := &OpenFGATestFixture{
 		openFGAVersion: "latest",        // default to latest
 		storeName:      gofakeit.Name(), // add a random store name used if not provided
 	}
@@ -63,25 +65,17 @@ func NewTestFGAClient(ctx context.Context, opts ...Option) (*fgax.Client, *openf
 
 	openfgaContainer, err := openfga.Run(ctx, container)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to run openfga container")
-
-		return nil, nil, err
+		log.Fatal().Err(err).Msg("failed to run openfga container")
 	}
 
-	// create the fga client
-	client, err := c.newFgaClient(ctx, openfgaContainer)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to create fga client")
+	c.tf = openfgaContainer
 
-		return nil, nil, err
-	}
-
-	return client, openfgaContainer, nil
+	return c
 }
 
 // newFgaClient creates a new fga client with the provided test container
-func (o *OpenFGAConfig) newFgaClient(ctx context.Context, tc *openfga.OpenFGAContainer) (*fgax.Client, error) {
-	host, err := tc.HttpEndpoint(ctx)
+func (o *OpenFGATestFixture) NewFgaClient(ctx context.Context) (*fgax.Client, error) {
+	host, err := o.tf.HttpEndpoint(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to get host")
 
@@ -104,7 +98,7 @@ func (o *OpenFGAConfig) newFgaClient(ctx context.Context, tc *openfga.OpenFGACon
 	return c, nil
 }
 
-// TeardownContainer terminates the openFGA container
-func TeardownContainer(tc *openfga.OpenFGAContainer) error {
-	return testcontainers.TerminateContainer(tc)
+// TeardownFixture terminates the openFGA container
+func (o *OpenFGATestFixture) TeardownFixture() error {
+	return testcontainers.TerminateContainer(o.tf.Container)
 }
