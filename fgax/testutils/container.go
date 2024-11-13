@@ -11,26 +11,34 @@ import (
 	"github.com/theopenlane/iam/fgax"
 )
 
+// Option is a functional configuration option for openFGA client
 type Option func(c *OpenFGAConfig)
 
+// OpenFGAConfig configures the openFGA setup
 type OpenFGAConfig struct {
+	// openFGAVersion is the version of the openFGA container to run, default to latest
 	openFGAVersion string
-	modelFile      string
-	storeName      string
+	// modelFile is the path to the model file
+	modelFile string
+	// storeName of the FGA Store, defaults to a random name if not provided
+	storeName string
 }
 
+// WithModelFile sets the model file path for the openFGA client
 func WithModelFile(modelFile string) Option {
 	return func(c *OpenFGAConfig) {
 		c.modelFile = modelFile
 	}
 }
 
+// WithStoreName sets the store name for the openFGA client
 func WithStoreName(storeName string) Option {
 	return func(c *OpenFGAConfig) {
 		c.storeName = storeName
 	}
 }
 
+// WithVersion sets the version of the openFGA container to run
 func WithVersion(version string) Option {
 	return func(c *OpenFGAConfig) {
 		c.openFGAVersion = version
@@ -96,6 +104,7 @@ func (o *OpenFGAConfig) newFgaClient(ctx context.Context, tc *openfga.OpenFGACon
 	return c, nil
 }
 
+// TeardownContainer terminates the openFGA container
 func TeardownContainer(tc *openfga.OpenFGAContainer) error {
 	return testcontainers.TerminateContainer(tc)
 }
