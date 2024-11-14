@@ -11,6 +11,10 @@ import (
     "github.com/theopenlane/iam/auth"
 )
 
+var (
+	ErrPermissionDenied = errors.New("you are not authorized to perform this action")
+)
+
 {{- $nodes := .Graph.Nodes }}
 
 {{- range $n := $nodes }}
@@ -190,8 +194,8 @@ import (
             return privacy.Allow
         }
 
-        // deny if it was a mutation is not allowed
-        return privacy.Deny
+        // return error if the action is not allowed
+        return ErrPermissionDenied
     }
 
     func (m *{{ $mutator }}) CheckAccessForDelete(ctx context.Context) error {
@@ -230,8 +234,8 @@ import (
             return privacy.Allow
         }
 
-        // deny if it was a mutation is not allowed
-        return privacy.Deny
+        // return error if the action is not allowed
+        return ErrPermissionDenied
     }
     {{- end }}
     {{- end }}
