@@ -6,8 +6,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	echo "github.com/theopenlane/echox"
-
 	"github.com/theopenlane/echox/middleware/echocontext"
+	"github.com/theopenlane/utils/ulids"
 
 	"github.com/theopenlane/iam/tokens"
 )
@@ -99,8 +99,40 @@ func NewTestEchoContextWithOrgID(sub, orgID string) (echo.Context, error) {
 	return ec, nil
 }
 
+// NewTestContextWithOrgID creates a context with a fake orgID for testing purposes only (why all caps jeez keep it down)
 func NewTestContextWithOrgID(sub, orgID string) (context.Context, error) {
 	ec, err := NewTestEchoContextWithOrgID(sub, orgID)
+	if err != nil {
+		return nil, err
+	}
+
+	reqCtx := context.WithValue(ec.Request().Context(), echocontext.EchoContextKey, ec)
+
+	ec.SetRequest(ec.Request().WithContext(reqCtx))
+
+	return reqCtx, nil
+}
+
+// NewTestEchoContextWithOrgID creates an echo context with a fake orgID for testing purposes ONLY
+func NewTestEchoContextWithSubscription(subscription bool) (echo.Context, error) {
+	ec := echocontext.NewTestEchoContext()
+
+	claims := newValidClaimsOrgID(ulids.New().String(), ulids.New().String())
+
+	SetAuthenticatedUserContext(ec, &AuthenticatedUser{
+		SubjectID:          claims.UserID,
+		OrganizationID:     claims.OrgID,
+		OrganizationIDs:    []string{claims.OrgID},
+		AuthenticationType: "jwt",
+		ActiveSubscription: subscription,
+	})
+
+	return ec, nil
+}
+
+// NewTestContextWithOrgID creates a context with a fake orgID for testing purposes only (why all caps jeez keep it down)
+func NewTestContextWithSubscription(subscription bool) (context.Context, error) {
+	ec, err := NewTestEchoContextWithSubscription(subscription)
 	if err != nil {
 		return nil, err
 	}
