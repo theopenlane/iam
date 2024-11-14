@@ -73,7 +73,7 @@ func NewFGATestcontainer(ctx context.Context, opts ...Option) *OpenFGATestFixtur
 	return c
 }
 
-// newFgaClient creates a new fga client with the provided test container
+// NewFgaClient creates a new fga client with the provided test container
 func (o *OpenFGATestFixture) NewFgaClient(ctx context.Context) (*fgax.Client, error) {
 	host, err := o.tf.HttpEndpoint(ctx)
 	if err != nil {
