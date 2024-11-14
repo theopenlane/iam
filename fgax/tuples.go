@@ -3,6 +3,7 @@ package fgax
 import (
 	"context"
 	"regexp"
+	"slices"
 	"strings"
 
 	openfga "github.com/openfga/go-sdk"
@@ -263,7 +264,7 @@ func (c *Client) getAllTuples(ctx context.Context) ([]openfga.Tuple, error) {
 }
 
 // DeleteAllObjectRelations deletes all the relationship tuples for a given object
-func (c *Client) DeleteAllObjectRelations(ctx context.Context, object string) error {
+func (c *Client) DeleteAllObjectRelations(ctx context.Context, object string, excludeRelations []string) error {
 	// validate object is not empty
 	if object == "" {
 		return ErrMissingObjectOnDeletion
@@ -284,6 +285,11 @@ func (c *Client) DeleteAllObjectRelations(ctx context.Context, object string) er
 	// check all the tuples for the object
 	for _, t := range tuples {
 		if t.Key.Object == object {
+			// if the relation is in the exclude list, skip it
+			if slices.Contains(excludeRelations, t.Key.Relation) {
+				continue
+			}
+
 			k := openfga.TupleKeyWithoutCondition{
 				User:     t.Key.User,
 				Relation: t.Key.Relation,
