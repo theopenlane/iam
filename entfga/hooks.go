@@ -25,17 +25,16 @@ func authzHookCreate[T Mutation]() ent.Hook {
 				return nil, err
 			}
 
-			value, err := next.Mutate(ctx, m)
+			retVal, err := next.Mutate(ctx, m)
 			if err != nil {
 				return nil, err
 			}
 
-			err = mutation.CreateTuplesFromCreate(ctx)
-			if err != nil {
+			if err = mutation.CreateTuplesFromCreate(ctx); err != nil {
 				return nil, err
 			}
 
-			return value, nil
+			return retVal, nil
 		})
 	}
 }
@@ -49,11 +48,16 @@ func authzHookUpdate[T Mutation]() ent.Hook {
 				return nil, err
 			}
 
+			retVal, err := next.Mutate(ctx, m)
+			if err != nil {
+				return nil, err
+			}
+
 			if err = mutation.CreateTuplesFromUpdate(ctx); err != nil {
 				return nil, err
 			}
 
-			return next.Mutate(ctx, m)
+			return retVal, err
 		})
 	}
 }
@@ -67,11 +71,16 @@ func authzHookDelete[T Mutation]() ent.Hook {
 				return nil, err
 			}
 
+			retVal, err := next.Mutate(ctx, m)
+			if err != nil {
+				return nil, err
+			}
+
 			if err = mutation.CreateTuplesFromDelete(ctx); err != nil {
 				return nil, err
 			}
 
-			return next.Mutate(ctx, m)
+			return retVal, nil
 		})
 	}
 }
