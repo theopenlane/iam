@@ -236,8 +236,7 @@ func (c *Client) getAllTuples(ctx context.Context) ([]openfga.Tuple, error) {
 	var tuples []openfga.Tuple
 
 	opts := ofgaclient.ClientReadOptions{
-		PageSize:          openfga.PtrInt32(defaultPageSize),
-		ContinuationToken: openfga.PtrString(" "),
+		PageSize: openfga.PtrInt32(defaultPageSize),
 	}
 
 	notComplete := true

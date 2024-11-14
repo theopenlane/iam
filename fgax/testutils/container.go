@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/openfga"
+
 	"github.com/theopenlane/iam/fgax"
 )
 
