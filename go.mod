@@ -10,7 +10,7 @@ require (
 	github.com/99designs/gqlgen v0.17.56
 	github.com/Yamashou/gqlgenc v0.25.4
 	github.com/alicebob/miniredis/v2 v2.33.0
-	github.com/brianvoe/gofakeit/v7 v7.0.4
+	github.com/brianvoe/gofakeit/v7 v7.1.2
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/go-webauthn/webauthn v0.11.2
 	github.com/golang-jwt/jwt/v5 v5.2.1
