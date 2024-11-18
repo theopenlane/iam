@@ -129,3 +129,55 @@ func TestGetOrganizationIDFromContext(t *testing.T) {
 		})
 	}
 }
+
+func TestGetSubscriptionFromContext(t *testing.T) {
+	validsubscription := true
+	invalidsubscription := false
+
+	ec := echocontext.NewTestEchoContext()
+
+	basicContext := context.WithValue(ec.Request().Context(), echocontext.EchoContextKey, ec)
+
+	ec.SetRequest(ec.Request().WithContext(basicContext))
+
+	invalidCtx, err := auth.NewTestContextWithValidUser(ulids.Null.String())
+	if err != nil {
+		t.Fatal()
+	}
+
+	validCtx, err := auth.NewTestContextWithValidUser(ulids.New().String())
+	if err != nil {
+		t.Fatal()
+	}
+
+	if err := auth.AddSubscriptionToContext(validCtx, true); err != nil {
+		t.Fatal(err)
+	}
+
+	testCases := []struct {
+		name   string
+		ctx    context.Context
+		expect bool
+	}{
+		{
+			name:   "happy path",
+			ctx:    invalidCtx,
+			expect: invalidsubscription,
+		},
+		{
+			name:   "MITB BABBYYYYY",
+			ctx:    validCtx,
+			expect: validsubscription,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run("Get "+tc.name, func(t *testing.T) {
+			got, err := auth.GetSubscriptionFromContext(tc.ctx)
+
+			assert.NoError(t, err)
+
+			assert.Equal(t, tc.expect, got)
+		})
+	}
+}

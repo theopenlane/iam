@@ -52,6 +52,8 @@ type AuthenticatedUser struct {
 	OrganizationIDs []string
 	// AuthenticationType is the type of authentication used to authenticate the user (JWT, PAT, API Token)
 	AuthenticationType AuthenticationType
+	// ActiveSubscription is the active subscription for the user
+	ActiveSubscription bool
 }
 
 // GetContextName returns the name of the context key
@@ -310,7 +312,7 @@ func AddOrganizationIDToContext(ctx context.Context, orgID string) error {
 	return addOrganizationIDsToEchoContext(ec, orgID)
 }
 
-// getOrganizationIDsFromEchoContext appends an authorized organization ID to the echo context
+// addOrganizationIDsToEchoContext appends an authorized organization ID to the echo context
 func addOrganizationIDsToEchoContext(c echo.Context, orgID string) error {
 	if v := c.Get(ContextAuthenticatedUser.name); v != nil {
 		a, ok := v.(*AuthenticatedUser)
@@ -369,4 +371,54 @@ func GetRefreshTokenContext(c context.Context) (string, error) {
 	}
 
 	return token, nil
+}
+
+// AddSubscriptionToContext appends a subscription to the context
+func AddSubscriptionToContext(ctx context.Context, subscription bool) error {
+	ec, err := echocontext.EchoContextFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return addSubscriptionToEchoContext(ec, subscription)
+}
+
+// addSubscriptionToEchoContext appends a subscription to the echo context
+func addSubscriptionToEchoContext(c echo.Context, subscription bool) error {
+	if v := c.Get(ContextAuthenticatedUser.name); v != nil {
+		a, ok := v.(*AuthenticatedUser)
+		if !ok {
+			return ErrNoAuthUser
+		}
+
+		a.ActiveSubscription = subscription
+
+		return nil
+	}
+
+	return ErrNoAuthUser
+}
+
+// getSubscriptionFromContext returns the active subscription from the echo context
+func getSubscriptionFromContext(c echo.Context) (bool, error) {
+	if v := c.Get(ContextAuthenticatedUser.name); v != nil {
+		a, ok := v.(*AuthenticatedUser)
+		if !ok {
+			return false, ErrNoAuthUser
+		}
+
+		return a.ActiveSubscription, nil
+	}
+
+	return false, nil
+}
+
+// GetSubscriptionFromContext returns the active subscription from the context
+func GetSubscriptionFromContext(ctx context.Context) (bool, error) {
+	ec, err := echocontext.EchoContextFromContext(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	return getSubscriptionFromContext(ec)
 }
