@@ -177,13 +177,7 @@ func TestGetSubscriptionFromContext(t *testing.T) {
 
 			assert.NoError(t, err)
 
-			if tc.expect == validsubscription {
-				assert.Equal(t, validsubscription, got)
-			}
-
-			if tc.expect == invalidsubscription {
-				assert.Equal(t, invalidsubscription, got)
-			}
+			assert.Equal(t, tc.expect, got)
 		})
 	}
 }
