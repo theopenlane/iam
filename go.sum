@@ -378,8 +378,8 @@ github.com/testcontainers/testcontainers-go/modules/openfga v0.34.0 h1:Y5ZFzu6eA
 github.com/testcontainers/testcontainers-go/modules/openfga v0.34.0/go.mod h1:0IWpmPSJOXpAUCHLgbhiE1fTOR69XJ/rnbdiQfkwLfc=
 github.com/theopenlane/echox v0.2.0 h1:s9DJJrsLOSPsXVfgmQxgXmSVtxzztBnSmcVX4ax7tIM=
 github.com/theopenlane/echox v0.2.0/go.mod h1:nfxwQpwvqYYI/pFHJKDs3/HLvjYKEGCih4XDgLSma64=
-github.com/theopenlane/utils v0.3.1 h1:CCRre2rpuj35Qij2hWgro0Urg94KJq6aAo2pdaWkziI=
-github.com/theopenlane/utils v0.3.1/go.mod h1:sAvism3Vv8pb0kRj2lYQBYUaAKKRJSwULYoQzzLTTJw=
+github.com/theopenlane/utils v0.4.0 h1:k0DNZFjp1hpwfqObwXb2XgaO0jJ6ULJuJH06c9Ekquk=
+github.com/theopenlane/utils v0.4.0/go.mod h1:sAvism3Vv8pb0kRj2lYQBYUaAKKRJSwULYoQzzLTTJw=
 github.com/tklauser/go-sysconf v0.3.12 h1:0QaGUFOdQaIVdPgfITYzaTegZvdCjmYO52cSFAEVmqU=
 github.com/tklauser/go-sysconf v0.3.12/go.mod h1:Ho14jnntGE1fpdOqQEEaiKRpvIavV0hSfmBq8nJbHYI=
 github.com/tklauser/numcpus v0.6.1 h1:ng9scYS7az0Bk4OZLvrNXNSAO2Pxr1XXRAPyjhIx+Fk=
