@@ -1,6 +1,6 @@
 module github.com/theopenlane/iam
 
-go 1.23.1
+go 1.23.3
 
 godebug gotypesalias=0
 
@@ -31,11 +31,11 @@ require (
 	github.com/testcontainers/testcontainers-go v0.34.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.34.0
 	github.com/theopenlane/echox v0.2.0
-	github.com/theopenlane/utils v0.3.1
+	github.com/theopenlane/utils v0.4.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.24.0
 	golang.org/x/tools v0.27.0
-	google.golang.org/api v0.206.0
+	google.golang.org/api v0.207.0
 	google.golang.org/protobuf v1.35.2
 )
 
@@ -186,7 +186,7 @@ require (
 	golang.org/x/time v0.8.0 // indirect
 	gonum.org/v1/gonum v0.15.1 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241104194629-dd2ea8efbc28 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241104194629-dd2ea8efbc28 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241113202542-65e8d215514f // indirect
 	google.golang.org/grpc v1.67.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
