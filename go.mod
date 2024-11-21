@@ -8,7 +8,7 @@ require (
 	entgo.io/contrib v0.6.0
 	entgo.io/ent v0.14.1
 	github.com/99designs/gqlgen v0.17.56
-	github.com/Yamashou/gqlgenc v0.26.1
+	github.com/Yamashou/gqlgenc v0.26.2
 	github.com/alicebob/miniredis/v2 v2.33.0
 	github.com/brianvoe/gofakeit/v7 v7.1.2
 	github.com/coreos/go-oidc/v3 v3.11.0
@@ -189,7 +189,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241113202542-65e8d215514f // indirect
 	google.golang.org/grpc v1.67.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/gc/v3 v3.0.0-20240107210532-573471604cb6 // indirect
 	modernc.org/libc v1.55.3 // indirect
