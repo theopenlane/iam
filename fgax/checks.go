@@ -177,8 +177,8 @@ func (c *Client) batchCheckTuples(ctx context.Context, checks []ofgaclient.Clien
 func (c *Client) CheckSystemAdminRole(ctx context.Context, userID string) (bool, error) {
 	ac := AccessCheck{
 		ObjectType:  roleObject,
-		ObjectID:    SystemAdminRole,
-		Relation:    RoleRelation,
+		ObjectID:    SystemAdminRelation,
+		Relation:    AssigneeRelation,
 		SubjectID:   userID,
 		SubjectType: userSubject, // admin roles are always user roles, never an API token
 	}

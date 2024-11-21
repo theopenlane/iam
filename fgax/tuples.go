@@ -13,24 +13,41 @@ import (
 
 // setup relations for use in creating tuples
 const (
-	// SystemAdminRole is the role for system admins that have the highest level of access
-	SystemAdminRole = "system_admin"
+	// SystemAdminRelation is the relation for system admins that have the highest level of access
+	SystemAdminRelation = "system_admin"
 	// MemberRelation is the relation for members of an entity
 	MemberRelation = "member"
 	// AdminRelation is the relation for admins of an entity
 	AdminRelation = "admin"
 	// OwnerRelation is the relation for owners of an entity
 	OwnerRelation = "owner"
+	// AuditorRelation is the relation for auditors of an entity
+	AuditorRelation = "auditor"
+	// CollaboratorRelation is the relation for collaborators of an entity
+	CollaboratorRelation = "collaborator"
+
+	// SelfRelation is the relation for the object to itself, usually for user relations
+	SelfRelation = "_self"
 	// ParentRelation is the relation for parents of an entity
 	ParentRelation = "parent"
-	// AssigneeRoleRelation is the relation for assignees of an entity
-	RoleRelation = "assignee"
+	// EditorRelation is the relation to assign editors to an entity
+	EditorRelation = "editor"
+	// BlockedRelation is the relation to block access to an entity
+	BlockedRelation = "blocked"
+
+	// AssigneeRelation is the relation for assignee of an entity
+	AssigneeRelation = "assignee"
+
 	// CanView is the relation for viewing an entity
 	CanView = "can_view"
 	// CanEdit is the relation for editing an entity
 	CanEdit = "can_edit"
 	// CanDelete is the relation for deleting an entity
 	CanDelete = "can_delete"
+	// CanInviteMembers is the relation for inviting members to an entity
+	CanInviteMembers = "can_invite_members"
+	// CanInviteAdmins is the relation for inviting admins to an entity
+	CanInviteAdmins = "can_invite_admins"
 )
 
 const (
