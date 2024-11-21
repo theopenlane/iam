@@ -484,6 +484,32 @@ func TestGetTupleKey(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "happy path with tuple set relations",
+			req: TupleRequest{
+				SubjectID:       "HIITSME",
+				SubjectType:     "user",
+				SubjectRelation: "member",
+				ObjectType:      "organization",
+				ObjectID:        "MIDNIGHTSAFTERNOON",
+				ObjectRelation:  "member",
+				Relation:        "member",
+			},
+			want: TupleKey{
+				Subject: Entity{
+					Kind:       "user",
+					Identifier: "HIITSME",
+					Relation:   "member",
+				},
+				Relation: "member",
+				Object: Entity{
+					Kind:       "organization",
+					Identifier: "MIDNIGHTSAFTERNOON",
+					Relation:   "member",
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

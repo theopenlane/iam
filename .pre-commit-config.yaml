@@ -5,6 +5,7 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: jsonschema/api-docs.md
       - id: detect-private-key
   - repo: https://github.com/google/yamlfmt
     rev: v0.14.0
