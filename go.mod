@@ -2,8 +2,6 @@ module github.com/theopenlane/iam
 
 go 1.23.3
 
-godebug gotypesalias=0
-
 require (
 	entgo.io/contrib v0.6.0
 	entgo.io/ent v0.14.1

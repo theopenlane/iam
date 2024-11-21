@@ -74,10 +74,14 @@ type TupleRequest struct {
 	ObjectID string
 	// ObjectType is the type of object that the subject is related to
 	ObjectType string
+	// ObjectRelation is the tuple set relation for the object (e.g #member)
+	ObjectRelation string
 	// SubjectID is the identifier of the subject that is related to the object
 	SubjectID string
 	// SubjectType is the type of subject that is related to the object
 	SubjectType string
+	// SubjectRelation is the tuple set relation for the subject (e.g #member)
+	SubjectRelation string
 	// Relation is the relationship between the subject and object
 	Relation string
 }
@@ -340,9 +344,17 @@ func GetTupleKey(req TupleRequest) TupleKey {
 		Identifier: req.SubjectID,
 	}
 
+	if req.SubjectRelation != "" {
+		sub.Relation = Relation(req.SubjectRelation)
+	}
+
 	object := Entity{
 		Kind:       Kind(req.ObjectType),
 		Identifier: req.ObjectID,
+	}
+
+	if req.ObjectRelation != "" {
+		object.Relation = Relation(req.ObjectRelation)
 	}
 
 	return TupleKey{
