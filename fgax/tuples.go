@@ -34,6 +34,8 @@ const (
 	EditorRelation = "editor"
 	// BlockedRelation is the relation to block access to an entity
 	BlockedRelation = "blocked"
+	// ViewerRelation is the relation to assign viewers to an entity
+	ViewerRelation = "viewer"
 
 	// AssigneeRelation is the relation for assignee of an entity
 	AssigneeRelation = "assignee"
