@@ -22,7 +22,7 @@
         {{/* Only include nodes with the Authz annotation with hooks. See: Annotation.Name */}}
         {{ if and ($n.Annotations.Authz) ($n.Annotations.Authz.IncludeHooks) }}
 
-            {{ $objectType := extractObjectType $n.Annotations.Authz.ObjectType }}
+            {{- $objectType := extractObjectType $n.Annotations.Authz.ObjectType }}
             func (m *{{ $mutator }}) CreateTuplesFromCreate(ctx context.Context) error {
                 {{ $includeHooks := extractIncludeHooks $n.Annotations.Authz.IncludeHooks }}
                 // Get fields for tuple creation
@@ -38,15 +38,16 @@
                     ObjectType: "{{ $objectType | ToLower }}",
                     Relation: role.String(),
                 }
+
                 tuple := fgax.GetTupleKey(req)
 
                 if _, err := m.Authz.WriteTupleKeys(ctx, []fgax.TupleKey{tuple}, nil); err != nil {
-                    log.Error().Err(err).Msg("failed to create relationship tuple")
+                    log.Error().Err(err)..Interface("writes", tuple).Msg("failed to create relationship tuple")
 
                     return err
                 }
 
-                log.Debug().Str("relation", role.String()).Str("object", tuple.Object.String()).Msg("created relationship tuple")
+                log.Debug().Interface("tuple_request", tuple).Msg("created relationship tuple")
 
                 return nil
             }
@@ -105,13 +106,13 @@
                         ObjectType: "{{ $objectType | ToLower }}",
                         Relation: oldRole.String(),
                     }
-                    d := fgax.GetTupleKey(req)
 
+                    d := fgax.GetTupleKey(req)
                     deletes = append(deletes, d)
 
                     req.Relation = newRole.String()
-                    w := fgax.GetTupleKey(req)
 
+                    w := fgax.GetTupleKey(req)
                     writes = append(writes, w)
 
                     if len(writes) == 0 && len(deletes) == 0 {
@@ -121,7 +122,7 @@
                     }
 
                     if _, err := m.Authz.WriteTupleKeys(ctx, writes, deletes); err != nil {
-                        log.Error().Err(err).Msg("failed to update relationship tuple")
+                        log.Error().Err(err).Interface("writes", writes).Interface("deletes", deletes).Msg("failed to update relationship tuple")
 
                         return err
                     }
@@ -163,14 +164,14 @@
                         ObjectType: "{{ $objectType | ToLower }}",
                         Relation: members.Role.String(),
                     }
-                    t := fgax.GetTupleKey(req)
 
+                    t := fgax.GetTupleKey(req)
                     tuples = append(tuples, t)
                 }
 
                 if len(tuples) > 0 {
                     if _, err := m.Authz.WriteTupleKeys(ctx, nil, tuples); err != nil {
-                        log.Error().Err(err).Msg("failed to delete relationship tuple")
+                        log.Error().Err(err).Interface("deletes", tuples).Msg("failed to delete relationship tuple")
 
                         return err
                     }

@@ -19,103 +19,109 @@ var (
 
 {{- range $n := $nodes }}
     {{- $name := $n.Name }}
+    {{- $defaultObjectType := extractDefaultObjectType $n.Name }}
     {{- $mutator := $n.MutationName }}
     {{- $querier := $n.QueryName }}
 
     {{/* Only include nodes with the Authz check anntoation. See: Annotations.Name */}}
     {{- if $n.Annotations.Authz }}
 
-    {{- $objectType := extractObjectType $n.Annotations.Authz.ObjectType }}
-    {{- $idField := extractIDField $n.Annotations.Authz.IDField  }}
+    {{- $objectType := or (extractObjectType $n.Annotations.Authz.ObjectType) $defaultObjectType }}
+    {{- $idField := extractIDField $n.Annotations.Authz.IDField }}
     {{- $nillable := extractNillableIDField $n.Annotations.Authz.NillableIDField  }}
     {{- $orgOwned := extractOrgOwnedField $n.Annotations.Authz.OrgOwnedField  }}
 
     func (q *{{ $querier }}) CheckAccess(ctx context.Context) error {
         gCtx := graphql.GetFieldContext(ctx)
 
-        if gCtx != nil {
-            ac := fgax.AccessCheck{
-                Relation: fgax.CanView,
-                ObjectType:  "{{ $objectType | ToLower }}",
-                SubjectType: auth.GetAuthzSubjectType(ctx),
-            }
+        if gCtx == nil {
+            // Skip to the next privacy rule (equivalent to return nil)
+            // if this is not a graphql request
+            return privacy.Skipf("not a graphql request, no context to check")
+        }
 
-            // check id from graphql arg context
-            // when all objects are requested, the interceptor will check object access
-            // check the where input first
-            whereArg := gCtx.Args["where"]
-            if whereArg != nil {
-                where, ok := whereArg.(*{{ $name }}WhereInput)
-                if ok && where != nil && where.{{ $idField }} != nil {
-                    ac.ObjectID = *where.{{ $idField }}
-                }
-            }
+        subjectID, err := auth.GetUserIDFromContext(ctx)
+        if err != nil {
+            log.Error().Err(err).Msg("unable to get user id from context")
 
-            // if that doesn't work, check for the id in the args
-            if ac.ObjectID == "" {
-                ac.ObjectID, _ = gCtx.Args["{{ $idField | ToLower }}"].(string)
-            }
+            return err
+        }
 
-            // if we still don't have an object id, run the query and grab the object ID
-            // from the result
-            // this happens on join tables where we have the join ID (for updates and deletes)
-            // and not the actual object id
-            if ac.ObjectID == "" && "id" !=  "{{ $idField | ToLower }}" {
-                // allow this query to run
-                reqCtx := privacy.DecisionContext(ctx, privacy.Allow)
-                ob, err := q.Clone().Only(reqCtx)
-                if err != nil {
-                    return privacy.Allowf("nil request, bypassing auth check")
-                }
-                ac.ObjectID = ob.{{ $idField }}
-            }
+        var objectID string
 
-            // request is for a list objects, will get filtered in interceptors
-            if ac.ObjectID == ""  {
+        // check id from graphql arg context
+        // when all objects are requested, the interceptor will check object access
+        // check the where input first
+        whereArg := gCtx.Args["where"]
+        if whereArg != nil {
+            where, ok := whereArg.(*{{ $name }}WhereInput)
+            if ok && where != nil && where.{{ $idField }} != nil {
+                objectID = *where.{{ $idField }}
+            }
+        }
+
+        // if that doesn't work, check for the id in the request args
+        if objectID == "" {
+            objectID, _ = gCtx.Args["{{ $idField | ToLower }}"].(string)
+        }
+
+        {{ if ne $idField "ID" }}
+        // if we still don't have an object id, run the query and grab the object ID
+        // from the result
+        // this happens on join tables where we have the join ID (for updates and deletes)
+        // and not the actual object id
+        if objectID == "" {
+            // allow this query to run
+            reqCtx := privacy.DecisionContext(ctx, privacy.Allow)
+
+            ob, err := q.Clone().Only(reqCtx)
+            if err != nil {
                 return privacy.Allowf("nil request, bypassing auth check")
             }
 
-            var err error
-            ac.SubjectID, err = auth.GetUserIDFromContext(ctx)
-            if err != nil {
-                return err
-            }
+            objectID = ob.{{ $idField }}
+        }
+        {{- end }}
 
+        // request is for a list objects, will get filtered in interceptors
+        if objectID == ""  {
+            return privacy.Allowf("nil request, bypassing auth check")
+        }
 
-            access, err := q.Authz.CheckAccess(ctx, ac)
-            if err != nil {
-                return privacy.Skipf("unable to check access, %s", err.Error())
-            }
+        // check if the user has access to the object requested
+        ac := fgax.AccessCheck{
+            Relation: fgax.CanView,
+            ObjectType:  "{{ $objectType | ToLower }}",
+            SubjectType: auth.GetAuthzSubjectType(ctx),
+            SubjectID: subjectID,
+            ObjectID: objectID,
+        }
 
-            if access {
-                return privacy.Allow
-            }
+        access, err := q.Authz.CheckAccess(ctx, ac)
+        if err == nil && access {
+            return privacy.Allow
         }
 
         // Skip to the next privacy rule (equivalent to return nil)
         return privacy.Skip
     }
 
-    {{- if $n.Annotations.EntGQL | hasMutationInputSet }}
+    {{ if $n.Annotations.EntGQL | hasMutationInputSet }}
     func (m *{{ $mutator }}) CheckAccessForEdit(ctx context.Context) error {
-        ac := fgax.AccessCheck{
-            Relation: fgax.CanEdit,
-            ObjectType:  "{{ $objectType | ToLower }}",
-            SubjectType: auth.GetAuthzSubjectType(ctx),
-        }
+        var objectID string
 
-        {{- if $orgOwned }}
-        orgID, oErr := auth.GetOrganizationIDFromContext(ctx)
-
-        // if we still don't have an object id, run the query and grab the object ID
-        // from the result
-        // this happens when using a personal access token since it is authorized for multiple orgs
-        if orgID == ""  || oErr != nil {
+        {{ if $orgOwned }}
+        orgID, err := auth.GetOrganizationIDFromContext(ctx)
+        if orgID == ""  || err != nil {
+            // if we still don't have an object id, run the query and grab the object ID
+            // from the result
+            // this happens when using a personal access token since it is authorized for multiple orgs
             id, _ := m.ID()
 
             if id != "" {
                 // allow this query to run
                 reqCtx := privacy.DecisionContext(ctx, privacy.Allow)
+
                 ob, err := m.Client().{{ $name }}.Get(reqCtx, id)
                 if err != nil {
                     log.Debug().Err(err).Msg("error getting object")
@@ -127,10 +133,15 @@ var (
             }
         }
 
-        ac.ObjectID = orgID
+        objectID = orgID
         {{ else }}
 
         gCtx := graphql.GetFieldContext(ctx)
+        if gCtx == nil {
+            // Skip to the next privacy rule (equivalent to return nil)
+            // if this is not a graphql request
+            return privacy.Skipf("not a graphql request, no context to check")
+        }
 
         {{ if hasCreateID $n.Annotations.Authz.IDField }}
         // get the input from the context
@@ -140,21 +151,22 @@ var (
         input, ok := gInput.(Create{{ $name }}Input)
         if ok {
             {{- if $nillable }}
-            ac.ObjectID = *input.{{ $idField }}
+            objectID = *input.{{ $idField }}
             {{ else }}
-            ac.ObjectID = input.{{ $idField }}
+            objectID = input.{{ $idField }}
             {{ end }}
         }
         {{- end }}
 
         // check the id from the args
-        if ac.ObjectID == "" {
-            ac.ObjectID, _ = gCtx.Args["{{ $idField | ToLower }}"].(string)
+        if objectID == "" {
+            objectID, _ = gCtx.Args["{{ $idField | ToLower }}"].(string)
         }
 
+        {{- if ne $idField "ID" }}
         // if this is still empty, we need to query the object to get the object id
         // this happens on join tables where we have the join ID (for updates and deletes)
-        if ac.ObjectID == "" && "id" !=  "{{ $idField | ToLower }}" {
+        if objectID == "" {
             id, ok := gCtx.Args["id"].(string)
             if ok {
                 // allow this query to run
@@ -163,76 +175,81 @@ var (
                 if err != nil {
                     return privacy.Skipf("nil request, skipping auth check")
                 }
-                ac.ObjectID = ob.{{ $idField }}
+                objectID = ob.{{ $idField }}
             }
         }
         {{- end }}
+        {{- end }}
 
         // request is for a list objects, will get filtered in interceptors
-        if ac.ObjectID == ""  {
+        if objectID == ""  {
             return privacy.Allowf("nil request, bypassing auth check")
         }
 
-        log.Debug().Msg("checking mutation access")
-
-        var err error
-        ac.SubjectID, err = auth.GetUserIDFromContext(ctx)
+        subjectID, err := auth.GetUserIDFromContext(ctx)
         if err != nil {
             return err
         }
 
-        log.Info().Str("relation", ac.Relation).Str("object_id", ac.ObjectID).Msg("checking relationship tuples")
+        ac := fgax.AccessCheck{
+            Relation: fgax.CanEdit,
+            ObjectType:  "{{ $objectType | ToLower }}",
+            ObjectID: objectID,
+            SubjectType: auth.GetAuthzSubjectType(ctx),
+            SubjectID: subjectID,
+        }
+
+        log.Debug().Interface("access_check", ac).Msg("checking relationship tuples")
 
         access, err := m.Authz.CheckAccess(ctx, ac)
-        if err != nil {
-            return privacy.Skipf("unable to check access, %s", err.Error())
-        }
-
-        if access {
-            log.Debug().Str("relation", ac.Relation).Str("object_id", ac.ObjectID).Msg("access allowed")
-
+        if err == nil && access {
             return privacy.Allow
         }
+
+        log.Error().Interface("access_check", ac).Bool("access_result", access).Msg("access denied")
 
         // return error if the action is not allowed
         return ErrPermissionDenied
     }
 
     func (m *{{ $mutator }}) CheckAccessForDelete(ctx context.Context) error {
-        ac := fgax.AccessCheck{
-            Relation: fgax.CanDelete,
-            ObjectType:  "{{ $objectType | ToLower }}",
-            SubjectType: auth.GetAuthzSubjectType(ctx),
+        gCtx := graphql.GetFieldContext(ctx)
+        if gCtx == nil {
+            // Skip to the next privacy rule (equivalent to return nil)
+            // if this is not a graphql request
+            return privacy.Skipf("not a graphql request, no context to check")
         }
 
-        gCtx := graphql.GetFieldContext(ctx)
-
-        var ok bool
-        ac.ObjectID, ok = gCtx.Args["id"].(string)
+        objectID, ok := gCtx.Args["id"].(string)
         if !ok {
+            log.Info().Msg("no id found in args, skipping auth check, will be filtered in hooks")
+
             return privacy.Allowf("nil request, bypassing auth check")
         }
 
-        log.Debug().Msg("checking mutation access")
-
-        var err error
-        ac.SubjectID, err = auth.GetUserIDFromContext(ctx)
+        subjectID, err := auth.GetUserIDFromContext(ctx)
         if err != nil {
+            log.Error().Err(err).Msg("unable to get user id from context")
+
             return err
         }
 
-        log.Info().Str("relation", ac.Relation).Str("object_id", ac.ObjectID).Msg("checking relationship tuples")
+        ac := fgax.AccessCheck{
+            Relation: fgax.CanDelete,
+            ObjectType:  "{{ $objectType | ToLower }}",
+            ObjectID: objectID,
+            SubjectType: auth.GetAuthzSubjectType(ctx),
+            SubjectID: subjectID,
+        }
+
+        log.Debug().Interface("access_check", ac).Msg("checking relationship tuples")
 
         access, err := m.Authz.CheckAccess(ctx, ac)
-        if err != nil {
-            return privacy.Skipf("unable to check access, %s", err.Error())
-        }
-
-        if access {
-            log.Debug().Str("relation", ac.Relation).Str("object_id", ac.ObjectID).Msg("access allowed")
-
+        if err == nil && access {
             return privacy.Allow
         }
+
+        log.Error().Interface("access_check", ac).Bool("access_result", access).Msg("access denied")
 
         // return error if the action is not allowed
         return ErrPermissionDenied

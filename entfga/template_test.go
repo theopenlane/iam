@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_hasMutationInputSet(t *testing.T) {
+func TestHasMutationInputSet(t *testing.T) {
 	testCases := []struct {
 		name     string
 		input    any
@@ -37,6 +37,52 @@ func Test_hasMutationInputSet(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := hasMutationInputSet(tc.input)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
+
+func TestExtractDefaultObjectType(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    any
+		expected string
+	}{
+		{
+			name:     "valid schema name",
+			input:    "UserHistory",
+			expected: "user",
+		},
+		{
+			name:     "valid schema name, lowercase",
+			input:    "userhistory",
+			expected: "user",
+		},
+		{
+			name:     "schema name without history",
+			input:    "User",
+			expected: "user",
+		},
+		{
+			name:     "nil input",
+			input:    nil,
+			expected: "",
+		},
+		{
+			name:     "invalid input type",
+			input:    123,
+			expected: "",
+		},
+		{
+			name:     "empty string input",
+			input:    "",
+			expected: "",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := extractDefaultObjectType(tc.input)
 			assert.Equal(t, tc.expected, result)
 		})
 	}
