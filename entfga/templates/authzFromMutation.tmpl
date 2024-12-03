@@ -42,7 +42,7 @@
                 tuple := fgax.GetTupleKey(req)
 
                 if _, err := m.Authz.WriteTupleKeys(ctx, []fgax.TupleKey{tuple}, nil); err != nil {
-                    log.Error().Err(err)..Interface("writes", tuple).Msg("failed to create relationship tuple")
+                    log.Error().Err(err).Interface("writes", tuple).Msg("failed to create relationship tuple")
 
                     return err
                 }

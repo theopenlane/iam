@@ -8,7 +8,7 @@ import (
 
 // AuthzHooks returns a list of authorization hooks for create, update, and delete
 // operations on a specific type of mutation.
-func AuthzHooks[T Mutation]() []ent.Hook {
+func AuthzHooks[T MutationForHooks]() []ent.Hook {
 	return []ent.Hook{
 		On(authzHookCreate[T](), ent.OpCreate),
 		On(authzHookUpdate[T](), ent.OpUpdate|ent.OpUpdateOne),
@@ -17,20 +17,15 @@ func AuthzHooks[T Mutation]() []ent.Hook {
 }
 
 // authzHookCreate creates tuple relations in FGA after the mutation is executed
-func authzHookCreate[T Mutation]() ent.Hook {
+func authzHookCreate[T MutationForHooks]() ent.Hook {
 	return func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-			mutation, err := getTypedMutation[T](m)
-			if err != nil {
-				return nil, err
-			}
-
 			retVal, err := next.Mutate(ctx, m)
 			if err != nil {
 				return nil, err
 			}
 
-			if err = mutation.CreateTuplesFromCreate(ctx); err != nil {
+			if err = m.(T).CreateTuplesFromCreate(ctx); err != nil {
 				return nil, err
 			}
 
@@ -40,20 +35,15 @@ func authzHookCreate[T Mutation]() ent.Hook {
 }
 
 // authzHookUpdate updates (involving a delete and create) tuple relations in FGA after the mutation is executed
-func authzHookUpdate[T Mutation]() ent.Hook {
+func authzHookUpdate[T MutationForHooks]() ent.Hook {
 	return func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-			mutation, err := getTypedMutation[T](m)
-			if err != nil {
-				return nil, err
-			}
-
 			retVal, err := next.Mutate(ctx, m)
 			if err != nil {
 				return nil, err
 			}
 
-			if err = mutation.CreateTuplesFromUpdate(ctx); err != nil {
+			if err = m.(T).CreateTuplesFromUpdate(ctx); err != nil {
 				return nil, err
 			}
 
@@ -63,20 +53,15 @@ func authzHookUpdate[T Mutation]() ent.Hook {
 }
 
 // authzHookDelete removes tuple relations in FGA after the mutation is executed
-func authzHookDelete[T Mutation]() ent.Hook {
+func authzHookDelete[T MutationForHooks]() ent.Hook {
 	return func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-			mutation, err := getTypedMutation[T](m)
-			if err != nil {
-				return nil, err
-			}
-
 			retVal, err := next.Mutate(ctx, m)
 			if err != nil {
 				return nil, err
 			}
 
-			if err = mutation.CreateTuplesFromDelete(ctx); err != nil {
+			if err = m.(T).CreateTuplesFromDelete(ctx); err != nil {
 				return nil, err
 			}
 
