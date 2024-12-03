@@ -68,12 +68,3 @@ func SettingsChecks(object string) Annotations {
 		NillableIDField: true,
 	}
 }
-
-// HistorySchemaChecks returns an annotation for permission checks
-// on history schemas which inherit their permissions from the main schema
-// for example the UserHistorySchema would inherit from the UserSchema (object type: user)
-func HistorySchemaChecks() Annotations {
-	return Annotations{
-		IDField: "Ref",
-	}
-}
