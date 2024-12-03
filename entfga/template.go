@@ -18,12 +18,33 @@ const (
 
 // extractObjectType gets the key that is used for the object type
 func extractObjectType(val any) string {
+	if val == nil {
+		return ""
+	}
+
 	objectType, ok := val.(string)
 	if !ok {
 		return ""
 	}
 
 	return objectType
+}
+
+// extractDefaultObjectType gets the key that is used for the object type
+// based on the schema name
+func extractDefaultObjectType(val any) string {
+	if val == nil {
+		return ""
+	}
+
+	schemaName, ok := val.(string)
+	if !ok {
+		return ""
+	}
+
+	schemaName = strings.ToLower(schemaName)
+
+	return strings.ReplaceAll(schemaName, "history", "")
 }
 
 // extractIDField gets the key that is used for the id field
@@ -143,13 +164,14 @@ func parseAuthzChecksTemplate(info templateInfo) error {
 
 	t := template.New(name)
 	t.Funcs(template.FuncMap{
-		"extractObjectType":      extractObjectType,
-		"extractIDField":         extractIDField,
-		"extractOrgOwnedField":   extractOrgOwnedField,
-		"extractNillableIDField": extractNillableIDField,
-		"hasCreateID":            hasCreateID,
-		"hasMutationInputSet":    hasMutationInputSet,
-		"ToLower":                strings.ToLower,
+		"extractObjectType":        extractObjectType,
+		"extractDefaultObjectType": extractDefaultObjectType,
+		"extractIDField":           extractIDField,
+		"extractOrgOwnedField":     extractOrgOwnedField,
+		"extractNillableIDField":   extractNillableIDField,
+		"hasCreateID":              hasCreateID,
+		"hasMutationInputSet":      hasMutationInputSet,
+		"ToLower":                  strings.ToLower,
 	})
 
 	// parse the template

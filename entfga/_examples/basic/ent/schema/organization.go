@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"context"
-
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
 	"entgo.io/ent/schema"
@@ -44,10 +42,7 @@ func (Organization) Indexes() []ent.Index {
 func (Organization) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entgql.Mutations(entgql.MutationCreate(), entgql.MutationUpdate()),
-		entfga.Annotations{
-			ObjectType:   "organization",
-			IncludeHooks: false,
-		},
+		entfga.SelfAccessChecks(),
 	}
 }
 
@@ -55,9 +50,7 @@ func (Organization) Annotations() []schema.Annotation {
 func (Organization) Policy() ent.Policy {
 	return privacy.Policy{
 		Query: privacy.QueryPolicy{
-			privacy.OrganizationQueryRuleFunc(func(ctx context.Context, q *generated.OrganizationQuery) error {
-				return q.CheckAccess(ctx)
-			}),
+			entfga.CheckReadAccess[*generated.OrganizationQuery](),
 			privacy.AlwaysDenyRule(), // Deny all other users
 		},
 	}

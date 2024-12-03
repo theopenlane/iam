@@ -27,15 +27,16 @@ func (m *OrgMembershipMutation) CreateTuplesFromCreate(ctx context.Context) erro
 		ObjectType:  "organization",
 		Relation:    role.String(),
 	}
+
 	tuple := fgax.GetTupleKey(req)
 
 	if _, err := m.Authz.WriteTupleKeys(ctx, []fgax.TupleKey{tuple}, nil); err != nil {
-		log.Error().Err(err).Msg("failed to create relationship tuple")
+		log.Error().Err(err).Interface("writes", tuple).Msg("failed to create relationship tuple")
 
 		return err
 	}
 
-	log.Debug().Str("relation", role.String()).Str("object", tuple.Object.String()).Msg("created relationship tuple")
+	log.Debug().Interface("tuple_request", tuple).Msg("created relationship tuple")
 
 	return nil
 }
@@ -86,13 +87,13 @@ func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) erro
 			ObjectType:  "organization",
 			Relation:    oldRole.String(),
 		}
-		d := fgax.GetTupleKey(req)
 
+		d := fgax.GetTupleKey(req)
 		deletes = append(deletes, d)
 
 		req.Relation = newRole.String()
-		w := fgax.GetTupleKey(req)
 
+		w := fgax.GetTupleKey(req)
 		writes = append(writes, w)
 
 		if len(writes) == 0 && len(deletes) == 0 {
@@ -102,7 +103,7 @@ func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) erro
 		}
 
 		if _, err := m.Authz.WriteTupleKeys(ctx, writes, deletes); err != nil {
-			log.Error().Err(err).Msg("failed to update relationship tuple")
+			log.Error().Err(err).Interface("writes", writes).Interface("deletes", deletes).Msg("failed to update relationship tuple")
 
 			return err
 		}
@@ -136,14 +137,14 @@ func (m *OrgMembershipMutation) CreateTuplesFromDelete(ctx context.Context) erro
 			ObjectType:  "organization",
 			Relation:    members.Role.String(),
 		}
-		t := fgax.GetTupleKey(req)
 
+		t := fgax.GetTupleKey(req)
 		tuples = append(tuples, t)
 	}
 
 	if len(tuples) > 0 {
 		if _, err := m.Authz.WriteTupleKeys(ctx, nil, tuples); err != nil {
-			log.Error().Err(err).Msg("failed to delete relationship tuple")
+			log.Error().Err(err).Interface("deletes", tuples).Msg("failed to delete relationship tuple")
 
 			return err
 		}

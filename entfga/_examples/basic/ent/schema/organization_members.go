@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"context"
-
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
 	"entgo.io/ent/schema"
@@ -50,12 +48,7 @@ func (OrgMembership) Edges() []ent.Edge {
 func (OrgMembership) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entgql.Mutations(entgql.MutationCreate(), entgql.MutationUpdate()),
-		entfga.Annotations{
-			ObjectType:    "organization",
-			IncludeHooks:  true,
-			OrgOwnedField: true,
-			IDField:       "OrganizationID",
-		},
+		entfga.MembershipChecks("organization"),
 	}
 }
 
@@ -70,15 +63,11 @@ func (OrgMembership) Indexes() []ent.Index {
 func (OrgMembership) Policy() ent.Policy {
 	return privacy.Policy{
 		Mutation: privacy.MutationPolicy{
-			privacy.OrgMembershipMutationRuleFunc(func(ctx context.Context, m *generated.OrgMembershipMutation) error {
-				return m.CheckAccessForEdit(ctx)
-			}),
+			entfga.CheckEditAccess[*generated.OrgMembershipMutation](),
 			privacy.AlwaysDenyRule(),
 		},
 		Query: privacy.QueryPolicy{
-			privacy.OrgMembershipQueryRuleFunc(func(ctx context.Context, q *generated.OrgMembershipQuery) error {
-				return q.CheckAccess(ctx)
-			}),
+			entfga.CheckReadAccess[*generated.OrgMembershipQuery](),
 			privacy.AlwaysDenyRule(),
 		},
 	}
