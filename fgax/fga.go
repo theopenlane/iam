@@ -32,7 +32,7 @@ type Config struct {
 	// CreateNewModel force creates a new model, even if one already exists
 	CreateNewModel bool `json:"createNewModel" koanf:"createNewModel" jsonschema:"description=force create a new model, even if one already exists" default:"false"`
 	// ModelFile is the path to the model file
-	ModelFile string `json:"modelFile" koanf:"modelFile" jsonschema:"description=path to the fga model file" default:"fga/model/openlane.fga"`
+	ModelFile string `json:"modelFile" koanf:"modelFile" jsonschema:"description=path to the fga model file" default:"fga/model/model.fga"`
 	// Credentials for the client
 	Credentials Credentials `json:"credentials" koanf:"credentials" jsonschema:"description=credentials for the openFGA client"`
 }
