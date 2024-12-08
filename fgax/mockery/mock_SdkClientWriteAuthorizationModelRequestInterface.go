@@ -71,7 +71,7 @@ func (_c *MockSdkClientWriteAuthorizationModelRequestInterface_Body_Call) RunAnd
 	return _c
 }
 
-// Execute provides a mock function with given fields:
+// Execute provides a mock function with no fields
 func (_m *MockSdkClientWriteAuthorizationModelRequestInterface) Execute() (*client.ClientWriteAuthorizationModelResponse, error) {
 	ret := _m.Called()
 
@@ -128,7 +128,7 @@ func (_c *MockSdkClientWriteAuthorizationModelRequestInterface_Execute_Call) Run
 	return _c
 }
 
-// GetBody provides a mock function with given fields:
+// GetBody provides a mock function with no fields
 func (_m *MockSdkClientWriteAuthorizationModelRequestInterface) GetBody() *client.ClientWriteAuthorizationModelRequest {
 	ret := _m.Called()
 
@@ -175,7 +175,7 @@ func (_c *MockSdkClientWriteAuthorizationModelRequestInterface_GetBody_Call) Run
 	return _c
 }
 
-// GetContext provides a mock function with given fields:
+// GetContext provides a mock function with no fields
 func (_m *MockSdkClientWriteAuthorizationModelRequestInterface) GetContext() context.Context {
 	ret := _m.Called()
 
@@ -222,7 +222,7 @@ func (_c *MockSdkClientWriteAuthorizationModelRequestInterface_GetContext_Call) 
 	return _c
 }
 
-// GetOptions provides a mock function with given fields:
+// GetOptions provides a mock function with no fields
 func (_m *MockSdkClientWriteAuthorizationModelRequestInterface) GetOptions() *client.ClientWriteAuthorizationModelOptions {
 	ret := _m.Called()
 
@@ -269,7 +269,7 @@ func (_c *MockSdkClientWriteAuthorizationModelRequestInterface_GetOptions_Call) 
 	return _c
 }
 
-// GetStoreIdOverride provides a mock function with given fields:
+// GetStoreIdOverride provides a mock function with no fields
 func (_m *MockSdkClientWriteAuthorizationModelRequestInterface) GetStoreIdOverride() *string {
 	ret := _m.Called()
 

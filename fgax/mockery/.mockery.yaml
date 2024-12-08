@@ -4,3 +4,5 @@ all: true
 disable-version-string: true
 packages:
   github.com/openfga/go-sdk/client:
+resolve-type-alias: false
+issue-845-fix: true

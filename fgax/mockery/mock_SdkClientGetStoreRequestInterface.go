@@ -23,7 +23,7 @@ func (_m *MockSdkClientGetStoreRequestInterface) EXPECT() *MockSdkClientGetStore
 	return &MockSdkClientGetStoreRequestInterface_Expecter{mock: &_m.Mock}
 }
 
-// Execute provides a mock function with given fields:
+// Execute provides a mock function with no fields
 func (_m *MockSdkClientGetStoreRequestInterface) Execute() (*client.ClientGetStoreResponse, error) {
 	ret := _m.Called()
 
@@ -80,7 +80,7 @@ func (_c *MockSdkClientGetStoreRequestInterface_Execute_Call) RunAndReturn(run f
 	return _c
 }
 
-// GetContext provides a mock function with given fields:
+// GetContext provides a mock function with no fields
 func (_m *MockSdkClientGetStoreRequestInterface) GetContext() context.Context {
 	ret := _m.Called()
 
@@ -127,7 +127,7 @@ func (_c *MockSdkClientGetStoreRequestInterface_GetContext_Call) RunAndReturn(ru
 	return _c
 }
 
-// GetOptions provides a mock function with given fields:
+// GetOptions provides a mock function with no fields
 func (_m *MockSdkClientGetStoreRequestInterface) GetOptions() *client.ClientGetStoreOptions {
 	ret := _m.Called()
 
@@ -174,7 +174,7 @@ func (_c *MockSdkClientGetStoreRequestInterface_GetOptions_Call) RunAndReturn(ru
 	return _c
 }
 
-// GetStoreIdOverride provides a mock function with given fields:
+// GetStoreIdOverride provides a mock function with no fields
 func (_m *MockSdkClientGetStoreRequestInterface) GetStoreIdOverride() *string {
 	ret := _m.Called()
 

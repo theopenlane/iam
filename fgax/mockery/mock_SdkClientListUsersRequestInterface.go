@@ -71,7 +71,7 @@ func (_c *MockSdkClientListUsersRequestInterface_Body_Call) RunAndReturn(run fun
 	return _c
 }
 
-// Execute provides a mock function with given fields:
+// Execute provides a mock function with no fields
 func (_m *MockSdkClientListUsersRequestInterface) Execute() (*client.ClientListUsersResponse, error) {
 	ret := _m.Called()
 
@@ -128,7 +128,7 @@ func (_c *MockSdkClientListUsersRequestInterface_Execute_Call) RunAndReturn(run 
 	return _c
 }
 
-// GetAuthorizationModelIdOverride provides a mock function with given fields:
+// GetAuthorizationModelIdOverride provides a mock function with no fields
 func (_m *MockSdkClientListUsersRequestInterface) GetAuthorizationModelIdOverride() *string {
 	ret := _m.Called()
 
@@ -175,7 +175,7 @@ func (_c *MockSdkClientListUsersRequestInterface_GetAuthorizationModelIdOverride
 	return _c
 }
 
-// GetBody provides a mock function with given fields:
+// GetBody provides a mock function with no fields
 func (_m *MockSdkClientListUsersRequestInterface) GetBody() *client.ClientListUsersRequest {
 	ret := _m.Called()
 
@@ -222,7 +222,7 @@ func (_c *MockSdkClientListUsersRequestInterface_GetBody_Call) RunAndReturn(run 
 	return _c
 }
 
-// GetContext provides a mock function with given fields:
+// GetContext provides a mock function with no fields
 func (_m *MockSdkClientListUsersRequestInterface) GetContext() context.Context {
 	ret := _m.Called()
 
@@ -269,7 +269,7 @@ func (_c *MockSdkClientListUsersRequestInterface_GetContext_Call) RunAndReturn(r
 	return _c
 }
 
-// GetOptions provides a mock function with given fields:
+// GetOptions provides a mock function with no fields
 func (_m *MockSdkClientListUsersRequestInterface) GetOptions() *client.ClientListUsersOptions {
 	ret := _m.Called()
 
@@ -316,7 +316,7 @@ func (_c *MockSdkClientListUsersRequestInterface_GetOptions_Call) RunAndReturn(r
 	return _c
 }
 
-// GetStoreIdOverride provides a mock function with given fields:
+// GetStoreIdOverride provides a mock function with no fields
 func (_m *MockSdkClientListUsersRequestInterface) GetStoreIdOverride() *string {
 	ret := _m.Called()
 

@@ -71,7 +71,7 @@ func (_c *MockSdkClientReadAuthorizationModelRequestInterface_Body_Call) RunAndR
 	return _c
 }
 
-// Execute provides a mock function with given fields:
+// Execute provides a mock function with no fields
 func (_m *MockSdkClientReadAuthorizationModelRequestInterface) Execute() (*client.ClientReadAuthorizationModelResponse, error) {
 	ret := _m.Called()
 
@@ -128,7 +128,7 @@ func (_c *MockSdkClientReadAuthorizationModelRequestInterface_Execute_Call) RunA
 	return _c
 }
 
-// GetAuthorizationModelIdOverride provides a mock function with given fields:
+// GetAuthorizationModelIdOverride provides a mock function with no fields
 func (_m *MockSdkClientReadAuthorizationModelRequestInterface) GetAuthorizationModelIdOverride() *string {
 	ret := _m.Called()
 
@@ -175,7 +175,7 @@ func (_c *MockSdkClientReadAuthorizationModelRequestInterface_GetAuthorizationMo
 	return _c
 }
 
-// GetBody provides a mock function with given fields:
+// GetBody provides a mock function with no fields
 func (_m *MockSdkClientReadAuthorizationModelRequestInterface) GetBody() *client.ClientReadAuthorizationModelRequest {
 	ret := _m.Called()
 
@@ -222,7 +222,7 @@ func (_c *MockSdkClientReadAuthorizationModelRequestInterface_GetBody_Call) RunA
 	return _c
 }
 
-// GetContext provides a mock function with given fields:
+// GetContext provides a mock function with no fields
 func (_m *MockSdkClientReadAuthorizationModelRequestInterface) GetContext() context.Context {
 	ret := _m.Called()
 
@@ -269,7 +269,7 @@ func (_c *MockSdkClientReadAuthorizationModelRequestInterface_GetContext_Call) R
 	return _c
 }
 
-// GetOptions provides a mock function with given fields:
+// GetOptions provides a mock function with no fields
 func (_m *MockSdkClientReadAuthorizationModelRequestInterface) GetOptions() *client.ClientReadAuthorizationModelOptions {
 	ret := _m.Called()
 
@@ -316,7 +316,7 @@ func (_c *MockSdkClientReadAuthorizationModelRequestInterface_GetOptions_Call) R
 	return _c
 }
 
-// GetStoreIdOverride provides a mock function with given fields:
+// GetStoreIdOverride provides a mock function with no fields
 func (_m *MockSdkClientReadAuthorizationModelRequestInterface) GetStoreIdOverride() *string {
 	ret := _m.Called()
 

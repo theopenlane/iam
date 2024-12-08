@@ -71,7 +71,7 @@ func (_c *MockSdkClientDeleteTuplesRequestInterface_Body_Call) RunAndReturn(run 
 	return _c
 }
 
-// Execute provides a mock function with given fields:
+// Execute provides a mock function with no fields
 func (_m *MockSdkClientDeleteTuplesRequestInterface) Execute() (*client.ClientWriteResponse, error) {
 	ret := _m.Called()
 
@@ -128,7 +128,7 @@ func (_c *MockSdkClientDeleteTuplesRequestInterface_Execute_Call) RunAndReturn(r
 	return _c
 }
 
-// GetBody provides a mock function with given fields:
+// GetBody provides a mock function with no fields
 func (_m *MockSdkClientDeleteTuplesRequestInterface) GetBody() *client.ClientDeleteTuplesBody {
 	ret := _m.Called()
 
@@ -175,7 +175,7 @@ func (_c *MockSdkClientDeleteTuplesRequestInterface_GetBody_Call) RunAndReturn(r
 	return _c
 }
 
-// GetContext provides a mock function with given fields:
+// GetContext provides a mock function with no fields
 func (_m *MockSdkClientDeleteTuplesRequestInterface) GetContext() context.Context {
 	ret := _m.Called()
 
@@ -222,7 +222,7 @@ func (_c *MockSdkClientDeleteTuplesRequestInterface_GetContext_Call) RunAndRetur
 	return _c
 }
 
-// GetOptions provides a mock function with given fields:
+// GetOptions provides a mock function with no fields
 func (_m *MockSdkClientDeleteTuplesRequestInterface) GetOptions() *client.ClientWriteOptions {
 	ret := _m.Called()
 
