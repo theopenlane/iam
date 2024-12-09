@@ -6,7 +6,7 @@ import (
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 
-	mock_fga "github.com/theopenlane/iam/fgax/mockery"
+	mock_fga "github.com/theopenlane/iam/fgax/internal/mockery"
 )
 
 // NewMockFGAClient is a mock client based on the mockery testing framework

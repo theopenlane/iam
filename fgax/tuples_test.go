@@ -8,7 +8,7 @@ import (
 	openfga "github.com/openfga/go-sdk"
 	"github.com/stretchr/testify/assert"
 
-	mock_fga "github.com/theopenlane/iam/fgax/mockery"
+	mock_fga "github.com/theopenlane/iam/fgax/internal/mockery"
 )
 
 func TestEntityString(t *testing.T) {
