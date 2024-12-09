@@ -23,7 +23,7 @@ func (_m *MockSdkClientReadLatestAuthorizationModelRequestInterface) EXPECT() *M
 	return &MockSdkClientReadLatestAuthorizationModelRequestInterface_Expecter{mock: &_m.Mock}
 }
 
-// Execute provides a mock function with given fields:
+// Execute provides a mock function with no fields
 func (_m *MockSdkClientReadLatestAuthorizationModelRequestInterface) Execute() (*client.ClientReadAuthorizationModelResponse, error) {
 	ret := _m.Called()
 
@@ -80,7 +80,7 @@ func (_c *MockSdkClientReadLatestAuthorizationModelRequestInterface_Execute_Call
 	return _c
 }
 
-// GetContext provides a mock function with given fields:
+// GetContext provides a mock function with no fields
 func (_m *MockSdkClientReadLatestAuthorizationModelRequestInterface) GetContext() context.Context {
 	ret := _m.Called()
 
@@ -127,7 +127,7 @@ func (_c *MockSdkClientReadLatestAuthorizationModelRequestInterface_GetContext_C
 	return _c
 }
 
-// GetOptions provides a mock function with given fields:
+// GetOptions provides a mock function with no fields
 func (_m *MockSdkClientReadLatestAuthorizationModelRequestInterface) GetOptions() *client.ClientReadLatestAuthorizationModelOptions {
 	ret := _m.Called()
 
@@ -174,7 +174,7 @@ func (_c *MockSdkClientReadLatestAuthorizationModelRequestInterface_GetOptions_C
 	return _c
 }
 
-// GetStoreIdOverride provides a mock function with given fields:
+// GetStoreIdOverride provides a mock function with no fields
 func (_m *MockSdkClientReadLatestAuthorizationModelRequestInterface) GetStoreIdOverride() *string {
 	ret := _m.Called()
 

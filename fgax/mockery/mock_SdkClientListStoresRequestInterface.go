@@ -23,7 +23,7 @@ func (_m *MockSdkClientListStoresRequestInterface) EXPECT() *MockSdkClientListSt
 	return &MockSdkClientListStoresRequestInterface_Expecter{mock: &_m.Mock}
 }
 
-// Execute provides a mock function with given fields:
+// Execute provides a mock function with no fields
 func (_m *MockSdkClientListStoresRequestInterface) Execute() (*client.ClientListStoresResponse, error) {
 	ret := _m.Called()
 
@@ -80,7 +80,7 @@ func (_c *MockSdkClientListStoresRequestInterface_Execute_Call) RunAndReturn(run
 	return _c
 }
 
-// GetContext provides a mock function with given fields:
+// GetContext provides a mock function with no fields
 func (_m *MockSdkClientListStoresRequestInterface) GetContext() context.Context {
 	ret := _m.Called()
 
@@ -127,7 +127,7 @@ func (_c *MockSdkClientListStoresRequestInterface_GetContext_Call) RunAndReturn(
 	return _c
 }
 
-// GetOptions provides a mock function with given fields:
+// GetOptions provides a mock function with no fields
 func (_m *MockSdkClientListStoresRequestInterface) GetOptions() *client.ClientListStoresOptions {
 	ret := _m.Called()
 

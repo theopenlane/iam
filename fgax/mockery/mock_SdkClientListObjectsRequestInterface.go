@@ -71,7 +71,7 @@ func (_c *MockSdkClientListObjectsRequestInterface_Body_Call) RunAndReturn(run f
 	return _c
 }
 
-// Execute provides a mock function with given fields:
+// Execute provides a mock function with no fields
 func (_m *MockSdkClientListObjectsRequestInterface) Execute() (*client.ClientListObjectsResponse, error) {
 	ret := _m.Called()
 
@@ -128,7 +128,7 @@ func (_c *MockSdkClientListObjectsRequestInterface_Execute_Call) RunAndReturn(ru
 	return _c
 }
 
-// GetAuthorizationModelIdOverride provides a mock function with given fields:
+// GetAuthorizationModelIdOverride provides a mock function with no fields
 func (_m *MockSdkClientListObjectsRequestInterface) GetAuthorizationModelIdOverride() *string {
 	ret := _m.Called()
 
@@ -175,7 +175,7 @@ func (_c *MockSdkClientListObjectsRequestInterface_GetAuthorizationModelIdOverri
 	return _c
 }
 
-// GetBody provides a mock function with given fields:
+// GetBody provides a mock function with no fields
 func (_m *MockSdkClientListObjectsRequestInterface) GetBody() *client.ClientListObjectsRequest {
 	ret := _m.Called()
 
@@ -222,7 +222,7 @@ func (_c *MockSdkClientListObjectsRequestInterface_GetBody_Call) RunAndReturn(ru
 	return _c
 }
 
-// GetContext provides a mock function with given fields:
+// GetContext provides a mock function with no fields
 func (_m *MockSdkClientListObjectsRequestInterface) GetContext() context.Context {
 	ret := _m.Called()
 
@@ -269,7 +269,7 @@ func (_c *MockSdkClientListObjectsRequestInterface_GetContext_Call) RunAndReturn
 	return _c
 }
 
-// GetOptions provides a mock function with given fields:
+// GetOptions provides a mock function with no fields
 func (_m *MockSdkClientListObjectsRequestInterface) GetOptions() *client.ClientListObjectsOptions {
 	ret := _m.Called()
 
@@ -316,7 +316,7 @@ func (_c *MockSdkClientListObjectsRequestInterface_GetOptions_Call) RunAndReturn
 	return _c
 }
 
-// GetStoreIdOverride provides a mock function with given fields:
+// GetStoreIdOverride provides a mock function with no fields
 func (_m *MockSdkClientListObjectsRequestInterface) GetStoreIdOverride() *string {
 	ret := _m.Called()
 

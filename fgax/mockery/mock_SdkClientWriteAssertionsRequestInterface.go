@@ -71,7 +71,7 @@ func (_c *MockSdkClientWriteAssertionsRequestInterface_Body_Call) RunAndReturn(r
 	return _c
 }
 
-// Execute provides a mock function with given fields:
+// Execute provides a mock function with no fields
 func (_m *MockSdkClientWriteAssertionsRequestInterface) Execute() (*client.ClientWriteAssertionsResponse, error) {
 	ret := _m.Called()
 
@@ -128,7 +128,7 @@ func (_c *MockSdkClientWriteAssertionsRequestInterface_Execute_Call) RunAndRetur
 	return _c
 }
 
-// GetAuthorizationModelIdOverride provides a mock function with given fields:
+// GetAuthorizationModelIdOverride provides a mock function with no fields
 func (_m *MockSdkClientWriteAssertionsRequestInterface) GetAuthorizationModelIdOverride() *string {
 	ret := _m.Called()
 
@@ -175,7 +175,7 @@ func (_c *MockSdkClientWriteAssertionsRequestInterface_GetAuthorizationModelIdOv
 	return _c
 }
 
-// GetBody provides a mock function with given fields:
+// GetBody provides a mock function with no fields
 func (_m *MockSdkClientWriteAssertionsRequestInterface) GetBody() *client.ClientWriteAssertionsRequest {
 	ret := _m.Called()
 
@@ -222,7 +222,7 @@ func (_c *MockSdkClientWriteAssertionsRequestInterface_GetBody_Call) RunAndRetur
 	return _c
 }
 
-// GetContext provides a mock function with given fields:
+// GetContext provides a mock function with no fields
 func (_m *MockSdkClientWriteAssertionsRequestInterface) GetContext() context.Context {
 	ret := _m.Called()
 
@@ -269,7 +269,7 @@ func (_c *MockSdkClientWriteAssertionsRequestInterface_GetContext_Call) RunAndRe
 	return _c
 }
 
-// GetOptions provides a mock function with given fields:
+// GetOptions provides a mock function with no fields
 func (_m *MockSdkClientWriteAssertionsRequestInterface) GetOptions() *client.ClientWriteAssertionsOptions {
 	ret := _m.Called()
 
@@ -316,7 +316,7 @@ func (_c *MockSdkClientWriteAssertionsRequestInterface_GetOptions_Call) RunAndRe
 	return _c
 }
 
-// GetStoreIdOverride provides a mock function with given fields:
+// GetStoreIdOverride provides a mock function with no fields
 func (_m *MockSdkClientWriteAssertionsRequestInterface) GetStoreIdOverride() *string {
 	ret := _m.Called()
 

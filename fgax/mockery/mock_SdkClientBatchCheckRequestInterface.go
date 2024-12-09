@@ -71,7 +71,7 @@ func (_c *MockSdkClientBatchCheckRequestInterface_Body_Call) RunAndReturn(run fu
 	return _c
 }
 
-// Execute provides a mock function with given fields:
+// Execute provides a mock function with no fields
 func (_m *MockSdkClientBatchCheckRequestInterface) Execute() (*client.ClientBatchCheckResponse, error) {
 	ret := _m.Called()
 
@@ -128,7 +128,7 @@ func (_c *MockSdkClientBatchCheckRequestInterface_Execute_Call) RunAndReturn(run
 	return _c
 }
 
-// GetAuthorizationModelIdOverride provides a mock function with given fields:
+// GetAuthorizationModelIdOverride provides a mock function with no fields
 func (_m *MockSdkClientBatchCheckRequestInterface) GetAuthorizationModelIdOverride() *string {
 	ret := _m.Called()
 
@@ -175,7 +175,7 @@ func (_c *MockSdkClientBatchCheckRequestInterface_GetAuthorizationModelIdOverrid
 	return _c
 }
 
-// GetBody provides a mock function with given fields:
+// GetBody provides a mock function with no fields
 func (_m *MockSdkClientBatchCheckRequestInterface) GetBody() *client.ClientBatchCheckBody {
 	ret := _m.Called()
 
@@ -222,7 +222,7 @@ func (_c *MockSdkClientBatchCheckRequestInterface_GetBody_Call) RunAndReturn(run
 	return _c
 }
 
-// GetContext provides a mock function with given fields:
+// GetContext provides a mock function with no fields
 func (_m *MockSdkClientBatchCheckRequestInterface) GetContext() context.Context {
 	ret := _m.Called()
 
@@ -269,7 +269,7 @@ func (_c *MockSdkClientBatchCheckRequestInterface_GetContext_Call) RunAndReturn(
 	return _c
 }
 
-// GetOptions provides a mock function with given fields:
+// GetOptions provides a mock function with no fields
 func (_m *MockSdkClientBatchCheckRequestInterface) GetOptions() *client.ClientBatchCheckOptions {
 	ret := _m.Called()
 
@@ -316,7 +316,7 @@ func (_c *MockSdkClientBatchCheckRequestInterface_GetOptions_Call) RunAndReturn(
 	return _c
 }
 
-// GetStoreIdOverride provides a mock function with given fields:
+// GetStoreIdOverride provides a mock function with no fields
 func (_m *MockSdkClientBatchCheckRequestInterface) GetStoreIdOverride() *string {
 	ret := _m.Called()
 

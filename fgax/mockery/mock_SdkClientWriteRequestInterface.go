@@ -71,7 +71,7 @@ func (_c *MockSdkClientWriteRequestInterface_Body_Call) RunAndReturn(run func(cl
 	return _c
 }
 
-// Execute provides a mock function with given fields:
+// Execute provides a mock function with no fields
 func (_m *MockSdkClientWriteRequestInterface) Execute() (*client.ClientWriteResponse, error) {
 	ret := _m.Called()
 
@@ -128,7 +128,7 @@ func (_c *MockSdkClientWriteRequestInterface_Execute_Call) RunAndReturn(run func
 	return _c
 }
 
-// GetAuthorizationModelIdOverride provides a mock function with given fields:
+// GetAuthorizationModelIdOverride provides a mock function with no fields
 func (_m *MockSdkClientWriteRequestInterface) GetAuthorizationModelIdOverride() *string {
 	ret := _m.Called()
 
@@ -175,7 +175,7 @@ func (_c *MockSdkClientWriteRequestInterface_GetAuthorizationModelIdOverride_Cal
 	return _c
 }
 
-// GetBody provides a mock function with given fields:
+// GetBody provides a mock function with no fields
 func (_m *MockSdkClientWriteRequestInterface) GetBody() *client.ClientWriteRequest {
 	ret := _m.Called()
 
@@ -222,7 +222,7 @@ func (_c *MockSdkClientWriteRequestInterface_GetBody_Call) RunAndReturn(run func
 	return _c
 }
 
-// GetContext provides a mock function with given fields:
+// GetContext provides a mock function with no fields
 func (_m *MockSdkClientWriteRequestInterface) GetContext() context.Context {
 	ret := _m.Called()
 
@@ -269,7 +269,7 @@ func (_c *MockSdkClientWriteRequestInterface_GetContext_Call) RunAndReturn(run f
 	return _c
 }
 
-// GetOptions provides a mock function with given fields:
+// GetOptions provides a mock function with no fields
 func (_m *MockSdkClientWriteRequestInterface) GetOptions() *client.ClientWriteOptions {
 	ret := _m.Called()
 
@@ -316,7 +316,7 @@ func (_c *MockSdkClientWriteRequestInterface_GetOptions_Call) RunAndReturn(run f
 	return _c
 }
 
-// GetStoreIdOverride provides a mock function with given fields:
+// GetStoreIdOverride provides a mock function with no fields
 func (_m *MockSdkClientWriteRequestInterface) GetStoreIdOverride() *string {
 	ret := _m.Called()
 
