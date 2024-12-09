@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	mock_fga "github.com/theopenlane/iam/fgax/mockery"
+	mock_fga "github.com/theopenlane/iam/fgax/internal/mockery"
 )
 
 func TestListContains(t *testing.T) {

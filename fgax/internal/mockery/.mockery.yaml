@@ -1,0 +1,26 @@
+with-expecter: true
+dir: .
+all: false
+disable-version-string: true
+packages:
+  github.com/openfga/go-sdk/client:
+    config:
+    interfaces:
+      SdkClient:
+        config:
+      SdkClientWriteRequestInterface:
+        config:
+      SdkClientReadRequestInterface:
+        config:
+      SdkClientListUsersRequestInterface:
+        config:
+      SdkClientCheckRequestInterface:
+        config:
+      SdkClientBatchCheckRequestInterface:
+        config:
+      SdkClientDeleteTuplesRequestInterface:
+        config:
+      SdkClientListObjectsRequestInterface:
+        config:
+resolve-type-alias: false
+issue-845-fix: true

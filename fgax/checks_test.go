@@ -7,7 +7,7 @@ import (
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/stretchr/testify/assert"
 
-	mock_fga "github.com/theopenlane/iam/fgax/mockery"
+	mock_fga "github.com/theopenlane/iam/fgax/internal/mockery"
 )
 
 func TestCheckTuple(t *testing.T) {
