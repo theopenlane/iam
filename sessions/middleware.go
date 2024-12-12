@@ -94,7 +94,7 @@ func (sc *SessionConfig) SaveAndStoreSession(ctx context.Context, w http.Respons
 	session.Set(sessionID, sessionMap)
 
 	// Add session to context
-	c := session.newAddSessionDataToContext(ctx)
+	c := session.addSessionDataToContext(ctx)
 
 	if err := session.Save(w); err != nil {
 		return c, err
@@ -171,7 +171,7 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 			}
 
 			// Add session to context to be used in request paths
-			ctx := session.newAddSessionDataToContext(c.Request().Context())
+			ctx := session.addSessionDataToContext(c.Request().Context())
 			c.SetRequest(c.Request().WithContext(ctx))
 
 			c.Response().Before(func() {

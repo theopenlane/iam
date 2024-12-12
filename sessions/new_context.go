@@ -2,7 +2,6 @@ package sessions
 
 import (
 	"context"
-	"strings"
 
 	"github.com/pkg/errors"
 
@@ -53,9 +52,11 @@ func NewUserIDFromContext(ctx context.Context) (string, error) {
 	return userID, nil
 }
 
+type UserID string
+
 // ContextWithUserID returns a copy of ctx that stores the user ID
-func NewContextWithUserID(ctx context.Context, userID string) context.Context {
-	if strings.TrimSpace(userID) == "" {
+func NewContextWithUserID(ctx context.Context, userID UserID) context.Context {
+	if userID == "" {
 		return ctx
 	}
 
@@ -76,7 +77,7 @@ func NewSessionToken(ctx context.Context) (string, error) {
 }
 
 // addSessionDataToContext adds session data to the context
-func (s *Session[P]) newAddSessionDataToContext(ctx context.Context) context.Context {
+func (s *Session[P]) NewAddSessionDataToContext(ctx context.Context) context.Context {
 	return contextx.With(ctx, s)
 }
 

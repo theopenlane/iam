@@ -53,10 +53,10 @@ func TestNewUserIDFromContext_MissingSession(t *testing.T) {
 
 func TestNewContextWithUserID(t *testing.T) {
 	ctx := context.Background()
-	userID := "test_user"
+	userID := sessions.UserID("test_user")
 
 	ctx = sessions.NewContextWithUserID(ctx, userID)
-	retrievedUserID, ok := contextx.From[string](ctx)
+	retrievedUserID, ok := contextx.From[sessions.UserID](ctx)
 
 	assert.True(t, ok)
 	assert.Equal(t, userID, retrievedUserID)
@@ -64,11 +64,11 @@ func TestNewContextWithUserID(t *testing.T) {
 
 func TestNewContextWithUserID_EmptyUserID(t *testing.T) {
 	ctx := context.Background()
-	userID := ""
+	userID := sessions.UserID("")
 
 	ctx = sessions.NewContextWithUserID(ctx, userID)
-	retrievedUserID, ok := contextx.From[string](ctx)
+	retrievedUserID, ok := contextx.From[sessions.UserID](ctx)
 
 	assert.False(t, ok)
-	assert.Equal(t, "", retrievedUserID)
+	assert.Equal(t, sessions.UserID(""), retrievedUserID)
 }
