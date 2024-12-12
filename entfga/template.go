@@ -42,9 +42,9 @@ func extractDefaultObjectType(val any) string {
 		return ""
 	}
 
-	schemaName = strings.ToLower(schemaName)
+	schemaName = strcase.SnakeCase(schemaName)
 
-	return strings.ReplaceAll(schemaName, "history", "")
+	return strings.Trim(strings.ReplaceAll(schemaName, "history", ""), "_")
 }
 
 // extractIDField gets the key that is used for the id field

@@ -54,6 +54,11 @@ func TestExtractDefaultObjectType(t *testing.T) {
 			expected: "user",
 		},
 		{
+			name:     "valid schema name",
+			input:    "ControlObjective",
+			expected: "control_objective",
+		},
+		{
 			name:     "valid schema name, lowercase",
 			input:    "userhistory",
 			expected: "user",
