@@ -33,16 +33,16 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.24.0
 	golang.org/x/tools v0.28.0
-	google.golang.org/api v0.211.0
+	google.golang.org/api v0.212.0
 	google.golang.org/protobuf v1.36.0
 )
 
 require (
 	ariga.io/atlas v0.26.1 // indirect
 	cel.dev/expr v0.18.0 // indirect
-	cloud.google.com/go/auth v0.12.1 // indirect
+	cloud.google.com/go/auth v0.13.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
-	cloud.google.com/go/compute/metadata v0.5.2 // indirect
+	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
