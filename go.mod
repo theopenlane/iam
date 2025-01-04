@@ -31,7 +31,7 @@ require (
 	github.com/theopenlane/echox v0.2.0
 	github.com/theopenlane/utils v0.4.2
 	github.com/vmihailenco/msgpack/v5 v5.4.1
-	golang.org/x/oauth2 v0.24.0
+	golang.org/x/oauth2 v0.25.0
 	golang.org/x/tools v0.28.0
 	google.golang.org/api v0.214.0
 	google.golang.org/protobuf v1.36.1
