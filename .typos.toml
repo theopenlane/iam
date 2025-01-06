@@ -1,5 +1,5 @@
 [files]
-extend-exclude = ["db","internal/ent/generated/**","go.mod","go.sum","pkg/testutils/","pkg/passwd/","pkg/tokens/testdata/","pkg/tokens/expires_test.go","internal/graphapi/tools_test.go","internal/httpserve/handlers/tools_test.go","pkg/keygen/auth_test.go","pkg/utils/oas/","pkg/keygen/crypto_test.go","pkg/auth/auth_test.go"]
+extend-exclude = ["tokens/testdata/**","go.mod","go.sum"]
 ignore-hidden = true
 ignore-files = true
 ignore-dot = true

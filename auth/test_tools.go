@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	echo "github.com/theopenlane/echox"
 	"github.com/theopenlane/echox/middleware/echocontext"
+	"github.com/theopenlane/utils/contextx"
 	"github.com/theopenlane/utils/ulids"
 
 	"github.com/theopenlane/iam/tokens"
@@ -55,7 +56,7 @@ func NewTestContextWithValidUser(subject string) (context.Context, error) {
 		return nil, err
 	}
 
-	reqCtx := context.WithValue(ec.Request().Context(), echocontext.EchoContextKey, ec)
+	reqCtx := contextx.With(ec.Request().Context(), ec)
 
 	ec.SetRequest(ec.Request().WithContext(reqCtx))
 
@@ -106,7 +107,7 @@ func NewTestContextWithOrgID(sub, orgID string) (context.Context, error) {
 		return nil, err
 	}
 
-	reqCtx := context.WithValue(ec.Request().Context(), echocontext.EchoContextKey, ec)
+	reqCtx := contextx.With(ec.Request().Context(), ec)
 
 	ec.SetRequest(ec.Request().WithContext(reqCtx))
 
@@ -137,7 +138,7 @@ func NewTestContextWithSubscription(subscription bool) (context.Context, error) 
 		return nil, err
 	}
 
-	reqCtx := context.WithValue(ec.Request().Context(), echocontext.EchoContextKey, ec)
+	reqCtx := contextx.With(ec.Request().Context(), ec)
 
 	ec.SetRequest(ec.Request().WithContext(reqCtx))
 
