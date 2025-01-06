@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/theopenlane/echox/middleware/echocontext"
+	"github.com/theopenlane/utils/contextx"
 	"github.com/theopenlane/utils/ulids"
 
 	"github.com/theopenlane/iam/auth"
@@ -16,7 +17,7 @@ func TestGetSubjectIDFromContext(t *testing.T) {
 	// context with no user set
 	ec := echocontext.NewTestEchoContext()
 
-	basicContext := context.WithValue(ec.Request().Context(), echocontext.EchoContextKey, ec)
+	basicContext := contextx.With(ec.Request().Context(), ec)
 
 	ec.SetRequest(ec.Request().WithContext(basicContext))
 
@@ -75,7 +76,7 @@ func TestGetOrganizationIDFromContext(t *testing.T) {
 	// context with no user set
 	ec := echocontext.NewTestEchoContext()
 
-	basicContext := context.WithValue(ec.Request().Context(), echocontext.EchoContextKey, ec)
+	basicContext := contextx.With(ec.Request().Context(), ec)
 
 	ec.SetRequest(ec.Request().WithContext(basicContext))
 
@@ -136,7 +137,7 @@ func TestGetSubscriptionFromContext(t *testing.T) {
 
 	ec := echocontext.NewTestEchoContext()
 
-	basicContext := context.WithValue(ec.Request().Context(), echocontext.EchoContextKey, ec)
+	basicContext := contextx.With(ec.Request().Context(), ec)
 
 	ec.SetRequest(ec.Request().WithContext(basicContext))
 

@@ -5,6 +5,7 @@ import (
 
 	echo "github.com/theopenlane/echox"
 
+	"github.com/theopenlane/utils/contextx"
 	"github.com/theopenlane/utils/ulids"
 
 	"github.com/theopenlane/echox/middleware/echocontext"
@@ -87,7 +88,7 @@ func GetAuthenticatedUserContext(c context.Context) (*AuthenticatedUser, error) 
 func AddAuthenticatedUserContext(c echo.Context, user *AuthenticatedUser) context.Context {
 	c.Set(ContextAuthenticatedUser.name, user)
 
-	ctx := context.WithValue(c.Request().Context(), echocontext.EchoContextKey, c)
+	ctx := contextx.With(c.Request().Context(), c)
 
 	c.SetRequest(c.Request().WithContext(ctx))
 

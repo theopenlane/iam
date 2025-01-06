@@ -4,14 +4,14 @@ import (
 	"context"
 	"testing"
 
-	"github.com/google/go-github/v67/github"
+	"github.com/google/go-github/v68/github"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestContextUser(t *testing.T) {
 	expectedUser := &github.User{
-		ID:   github.Int64(917408),
-		Name: github.String("Meow Meowingtonr"),
+		ID:   github.Ptr(int64(917408)),
+		Name: github.Ptr("Meow Meowingtonr"),
 	}
 	ctx := WithUser(context.Background(), expectedUser)
 	user, err := UserFromContext(ctx)

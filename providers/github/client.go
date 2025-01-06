@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/google/go-github/v67/github"
+	"github.com/google/go-github/v68/github"
 )
 
 // ClientConfig holds the configuration for the GitHub client
@@ -100,8 +100,8 @@ func (u *UsersMock) Get(context.Context, string) (*github.User, *github.Response
 	resp := &http.Response{StatusCode: http.StatusOK}
 
 	return &github.User{
-		Login: github.String("antman"),
-		ID:    github.Int64(1),
+		Login: github.Ptr("antman"),
+		ID:    github.Ptr(int64(1)),
 	}, &github.Response{Response: resp}, nil
 }
 
@@ -111,12 +111,12 @@ func (u *UsersMock) ListEmails(ctx context.Context, opts *github.ListOptions) ([
 
 	return []*github.UserEmail{
 		{
-			Email:   github.String("antman@theopenlane.io"),
-			Primary: github.Bool(true),
+			Email:   github.Ptr("antman@theopenlane.io"),
+			Primary: github.Ptr(true),
 		},
 		{
-			Email:   github.String("ant-man@avengers.com"),
-			Primary: github.Bool(false),
+			Email:   github.Ptr("ant-man@avengers.com"),
+			Primary: github.Ptr(false),
 		},
 	}, &github.Response{Response: resp}, nil
 }

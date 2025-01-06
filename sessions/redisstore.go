@@ -19,7 +19,7 @@ type PersistentStore interface {
 
 var _ PersistentStore = &persistentStore{}
 
-// persistentStore stores Sessions in a persisent data store (redis)
+// persistentStore stores Sessions in a persistent data store (redis)
 type persistentStore struct {
 	client *redis.Client
 	mu     sync.Mutex
