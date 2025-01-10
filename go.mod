@@ -26,8 +26,8 @@ require (
 	github.com/samber/lo v1.47.0
 	github.com/stoewer/go-strcase v1.3.0
 	github.com/stretchr/testify v1.10.0
-	github.com/testcontainers/testcontainers-go v0.34.0
-	github.com/testcontainers/testcontainers-go/modules/openfga v0.34.0
+	github.com/testcontainers/testcontainers-go v0.35.0
+	github.com/testcontainers/testcontainers-go/modules/openfga v0.35.0
 	github.com/theopenlane/echox v0.2.1
 	github.com/theopenlane/utils v0.4.2
 	github.com/vmihailenco/msgpack/v5 v5.4.1
