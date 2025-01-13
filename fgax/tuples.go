@@ -50,6 +50,8 @@ const (
 	CanInviteMembers = "can_invite_members"
 	// CanInviteAdmins is the relation for inviting admins to an entity
 	CanInviteAdmins = "can_invite_admins"
+	// CanViewAuditLog is the relation for viewing the audit log of an entity
+	CanViewAuditLog = "audit_log_viewer"
 )
 
 const (

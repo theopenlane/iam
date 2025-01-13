@@ -47,6 +47,11 @@ func extractDefaultObjectType(val any) string {
 	return strings.Trim(strings.ReplaceAll(schemaName, "history", ""), "_")
 }
 
+// isHistorySchema checks if the schema name contains the word "history"
+func isHistorySchema(schemaName string) bool {
+	return strings.Contains(schemaName, "History")
+}
+
 // extractIDField gets the key that is used for the id field
 func extractIDField(val any) string {
 	idField, ok := val.(string)
@@ -172,6 +177,7 @@ func parseAuthzChecksTemplate(info templateInfo) error {
 		"hasCreateID":              hasCreateID,
 		"hasMutationInputSet":      hasMutationInputSet,
 		"ToLower":                  strings.ToLower,
+		"isHistorySchema":          isHistorySchema,
 	})
 
 	// parse the template

@@ -22,6 +22,7 @@ var (
     {{- $defaultObjectType := extractDefaultObjectType $n.Name }}
     {{- $mutator := $n.MutationName }}
     {{- $querier := $n.QueryName }}
+    {{- $isHistory := isHistorySchema $querier }}
 
     {{/* Only include nodes with the Authz check anntoation. See: Annotations.Name */}}
     {{- if $n.Annotations.Authz }}
@@ -90,7 +91,11 @@ var (
 
         // check if the user has access to the object requested
         ac := fgax.AccessCheck{
+            {{- if $isHistory }}
+            Relation: fgax.CanViewAuditLog,
+            {{- else }}
             Relation: fgax.CanView,
+            {{- end }}
             ObjectType:  "{{ $objectType | ToLower }}",
             SubjectType: auth.GetAuthzSubjectType(ctx),
             SubjectID: subjectID,
