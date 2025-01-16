@@ -93,7 +93,7 @@ func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) erro
 		members, err = m.Client().OrgMembership.Query().Where(orgmembership.IDIn(ids...)).All(ctx)
 	}
 
-	if err != nil || len(members) == 0 {
+	if err != nil {
 		log.Error().Err(err).Msg("failed to get members for update")
 
 		return err
@@ -155,14 +155,12 @@ func (m *OrgMembershipMutation) CreateTuplesFromDelete(ctx context.Context) erro
 
 	// use the predicates from the original request to get the members if we don't have ids
 	if len(ids) == 0 {
-		// this will not work for the soft delete case because the predicates will include deleted_at = nil
-		// and this hook is setup to run after the delete happens
 		members, err = m.Client().OrgMembership.Query().Where(m.predicates...).All(ctx)
 	} else {
 		members, err = m.Client().OrgMembership.Query().Where(orgmembership.IDIn(ids...)).All(ctx)
 	}
 
-	if err != nil || len(members) == 0 {
+	if err != nil {
 		log.Error().Err(err).Msg("failed to get members for delete")
 
 		return err

@@ -105,7 +105,7 @@
                     members, err = m.Client().{{ $name }}.Query().Where({{ $name | ToLower }}.IDIn(ids...)).All(ctx)
                 }
 
-                if err != nil || len(members) == 0 {
+                if err != nil {
                     log.Error().Err(err).Msg("failed to get members for update")
 
                     return err
@@ -176,7 +176,7 @@
                     members, err = m.Client().{{ $name }}.Query().Where({{ $name | ToLower }}.IDIn(ids...)).All(ctx)
                 }
 
-                if err != nil || len(members) == 0 {
+                if err != nil {
                     log.Error().Err(err).Msg("failed to get members for delete")
 
                     return err
