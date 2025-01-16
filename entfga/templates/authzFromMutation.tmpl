@@ -108,7 +108,6 @@
                 // use the predicates from the original request to get the members if we don't have ids
                 if len(ids) == 0 {
                     members, err = m.Client().{{ $name }}.Query().Where(m.predicates...).All(ctx)
-
                 } else {
                     members, err = m.Client().{{ $name }}.Query().Where({{ $name | ToLower }}.IDIn(ids...)).All(ctx)
                 }
