@@ -4,7 +4,13 @@ import (
 	"context"
 
 	"entgo.io/ent"
+	"github.com/theopenlane/entx"
 )
+
+// DeleteTuplesFirstKey is a key for the context to indicate that the the tuples should be deleted first
+// this is useful for delete operations where the policy should be checked before the tuples are deleted
+// of if its part of a bulk delete operation and the tuples should be deleted first
+type DeleteTuplesFirstKey struct{}
 
 // Mutation interface that all generated Mutation types must implement
 type Mutation interface {
@@ -58,7 +64,10 @@ type Querier interface {
 func On(hk ent.Hook, op ent.Op) ent.Hook {
 	return func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-			if m.Op().Is(op) {
+			// if the operation is the one we are looking for, execute the hook
+			// exclude the Update and UpdateOne operations if the object is soft delete
+			// otherwise the operation ends up running twice
+			if m.Op().Is(op) && !(op.Is(ent.OpUpdate|ent.OpUpdateOne) && entx.CheckIsSoftDelete(ctx)) {
 				return hk(next).Mutate(ctx, m)
 			}
 

@@ -1,6 +1,6 @@
 module github.com/theopenlane/iam
 
-go 1.23.3
+go 1.23.4
 
 require (
 	entgo.io/contrib v0.6.0
@@ -29,6 +29,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.35.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.35.0
 	github.com/theopenlane/echox v0.2.1
+	github.com/theopenlane/entx v0.3.2
 	github.com/theopenlane/utils v0.4.2
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.25.0
@@ -48,6 +49,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
+	github.com/XSAM/otelsql v0.36.0 // indirect
 	github.com/Yiling-J/theine-go v0.6.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/agnivade/levenshtein v1.2.0 // indirect

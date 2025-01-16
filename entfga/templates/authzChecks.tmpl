@@ -24,7 +24,7 @@ var (
     {{- $querier := $n.QueryName }}
     {{- $isHistory := isHistorySchema $querier }}
 
-    {{/* Only include nodes with the Authz check anntoation. See: Annotations.Name */}}
+    {{/* Only include nodes with the Authz check annotation. See: Annotations.Name */}}
     {{- if $n.Annotations.Authz }}
 
     {{- $objectType := or (extractObjectType $n.Annotations.Authz.ObjectType) $defaultObjectType }}
