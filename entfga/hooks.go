@@ -56,16 +56,13 @@ func authzHookUpdate[T MutationForHooks]() ent.Hook {
 func authzHookDelete[T MutationForHooks]() ent.Hook {
 	return func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-			retVal, err := next.Mutate(ctx, m)
-			if err != nil {
+			// delete the tuples before the mutation is executed
+			// this way we can ensure we know the ids that are being deleted
+			if err := m.(T).CreateTuplesFromDelete(ctx); err != nil {
 				return nil, err
 			}
 
-			if err = m.(T).CreateTuplesFromDelete(ctx); err != nil {
-				return nil, err
-			}
-
-			return retVal, nil
+			return next.Mutate(ctx, m)
 		})
 	}
 }

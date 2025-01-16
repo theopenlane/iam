@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
-	"github.com/theopenlane/entx"
 	"github.com/theopenlane/iam/entfga"
 	"github.com/theopenlane/iam/entfga/_examples/basic/ent/orgmembership"
 	"github.com/theopenlane/iam/fgax"
@@ -90,7 +89,6 @@ func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) erro
 	// use the predicates from the original request to get the members if we don't have ids
 	if len(ids) == 0 {
 		members, err = m.Client().OrgMembership.Query().Where(m.predicates...).All(ctx)
-
 	} else {
 		members, err = m.Client().OrgMembership.Query().Where(orgmembership.IDIn(ids...)).All(ctx)
 	}
@@ -136,7 +134,6 @@ func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) erro
 }
 
 func (m *OrgMembershipMutation) CreateTuplesFromDelete(ctx context.Context) error {
-
 	// get ids that will be deleted
 	ids, err := m.IDs(ctx)
 	if err != nil {
@@ -157,13 +154,12 @@ func (m *OrgMembershipMutation) CreateTuplesFromDelete(ctx context.Context) erro
 	members := []*OrgMembership{}
 
 	// use the predicates from the original request to get the members if we don't have ids
-	deleteCtx := entx.SkipSoftDelete(ctx)
 	if len(ids) == 0 {
 		// this will not work for the soft delete case because the predicates will include deleted_at = nil
 		// and this hook is setup to run after the delete happens
-		members, err = m.Client().OrgMembership.Query().Where(m.predicates...).All(deleteCtx)
+		members, err = m.Client().OrgMembership.Query().Where(m.predicates...).All(ctx)
 	} else {
-		members, err = m.Client().OrgMembership.Query().Where(orgmembership.IDIn(ids...)).All(deleteCtx)
+		members, err = m.Client().OrgMembership.Query().Where(orgmembership.IDIn(ids...)).All(ctx)
 	}
 
 	if err != nil || len(members) == 0 {
