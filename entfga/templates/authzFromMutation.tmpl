@@ -171,8 +171,6 @@
                 ctx = entx.SkipSoftDelete(ctx)
                 {{- end }}
                 if len(ids) == 0 {
-                    // this will not work for the soft delete case because the predicates will include deleted_at = nil
-                    // and this hook is setup to run after the delete happens
                     members, err = m.Client().{{ $name }}.Query().Where(m.predicates...).All(ctx)
                 } else {
                     members, err = m.Client().{{ $name }}.Query().Where({{ $name | ToLower }}.IDIn(ids...)).All(ctx)
