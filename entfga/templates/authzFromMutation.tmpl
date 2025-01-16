@@ -81,10 +81,10 @@
 
                             return err
                         }
+                    } else {
+                        // singular delete
+                        ids = append(ids, id)
                     }
-
-                    // singular delete
-                    ids = append(ids, id)
                 }
 
                 var (
@@ -179,10 +179,10 @@
 
                             return err
                         }
+                    } else {
+                        // singular delete
+                        ids = append(ids, id)
                     }
-
-                    // singular delete
-                    ids = append(ids, id)
                 }
 
                 tuples := []fgax.TupleKey{}
