@@ -7,6 +7,11 @@ import (
 	"github.com/theopenlane/entx"
 )
 
+// DeleteTuplesFirstKey is a key for the context to indicate that the the tuples should be deleted first
+// this is useful for delete operations where the policy should be checked before the tuples are deleted
+// of if its part of a bulk delete operation and the tuples should be deleted first
+type DeleteTuplesFirstKey struct{}
+
 // Mutation interface that all generated Mutation types must implement
 type Mutation interface {
 	// CheckAccessForEdit checks if the user has access to edit the object type

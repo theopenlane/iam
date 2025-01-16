@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"entgo.io/ent"
+	"github.com/theopenlane/utils/contextx"
 )
 
 // AuthzHooks returns a list of authorization hooks for create, update, and delete
@@ -56,13 +57,34 @@ func authzHookUpdate[T MutationForHooks]() ent.Hook {
 func authzHookDelete[T MutationForHooks]() ent.Hook {
 	return func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-			// delete the tuples before the mutation is executed
-			// this way we can ensure we know the ids that are being deleted
+			if _, allowDelete := contextx.From[DeleteTuplesFirstKey](ctx); !allowDelete {
+				// if we don't have the DeleteTuplesFirstKey, we need to delete the object first
+				// and then delete the tuples
+				// this allows the policy to be checked before the tuples are deleted
+				retVal, err := next.Mutate(ctx, m)
+				if err != nil {
+					return nil, err
+				}
+
+				if err = m.(T).CreateTuplesFromDelete(ctx); err != nil {
+					return nil, err
+				}
+
+				return retVal, nil
+			}
+
+			// if we have the DeleteTuplesFirstKey, we can delete the tuples first
+			// and then delete the object
 			if err := m.(T).CreateTuplesFromDelete(ctx); err != nil {
 				return nil, err
 			}
 
-			return next.Mutate(ctx, m)
+			retVal, err := next.Mutate(ctx, m)
+			if err != nil {
+				return nil, err
+			}
+
+			return retVal, nil
 		})
 	}
 }
