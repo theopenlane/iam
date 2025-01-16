@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/theopenlane/entx"
 	"github.com/theopenlane/iam/entfga"
+	"github.com/theopenlane/iam/entfga/_examples/basic/ent/orgmembership"
 	"github.com/theopenlane/iam/fgax"
 )
 
@@ -54,15 +55,7 @@ func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) erro
 	// check for the single update case
 	if len(ids) == 0 {
 		id, exists := m.ID()
-		if !exists {
-			// get ids from the predicates that were used in the update
-			ids, err = m.Client().OrgMembership.Query().Where(m.predicates...).IDs(ctx)
-			if err != nil || len(ids) == 0 {
-				log.Error().Err(err).Msg("failed to get ids for update")
-
-				return err
-			}
-		} else {
+		if exists {
 			// singular delete
 			ids = append(ids, id)
 		}
@@ -92,13 +85,24 @@ func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) erro
 		return nil
 	}
 
-	// Use the IDs of the memberships and delete all related tuples
-	for _, id := range ids {
-		member, err := m.Client().OrgMembership.Get(ctx, id)
-		if err != nil {
-			return err
-		}
+	members := []*OrgMembership{}
 
+	// use the predicates from the original request to get the members if we don't have ids
+	if len(ids) == 0 {
+		members, err = m.Client().OrgMembership.Query().Where(m.predicates...).All(ctx)
+
+	} else {
+		members, err = m.Client().OrgMembership.Query().Where(orgmembership.IDIn(ids...)).All(ctx)
+	}
+
+	if err != nil || len(members) == 0 {
+		log.Error().Err(err).Msg("failed to get members for update")
+
+		return err
+	}
+
+	// Delete all related tuples
+	for _, member := range members {
 		req := fgax.TupleRequest{
 			SubjectID:   member.UserID,
 			SubjectType: "user",
@@ -142,17 +146,7 @@ func (m *OrgMembershipMutation) CreateTuplesFromDelete(ctx context.Context) erro
 	// check for the single delete case
 	if len(ids) == 0 {
 		id, exists := m.ID()
-		if !exists {
-			// if no ids are returned, get the ids from the predicates that were used in the delete
-			deleteCtx := entx.SkipSoftDelete(ctx)
-
-			ids, err = m.Client().OrgMembership.Query().Where(m.predicates...).IDs(deleteCtx)
-			if err != nil || len(ids) == 0 {
-				log.Error().Err(err).Msg("failed to get ids for delete")
-
-				return err
-			}
-		} else {
+		if exists {
 			// singular delete
 			ids = append(ids, id)
 		}
@@ -160,20 +154,32 @@ func (m *OrgMembershipMutation) CreateTuplesFromDelete(ctx context.Context) erro
 
 	tuples := []fgax.TupleKey{}
 
-	// User the IDs of the memberships and delete all related tuples
-	for _, id := range ids {
-		deleteCtx := entx.SkipSoftDelete(ctx)
-		members, err := m.Client().OrgMembership.Get(deleteCtx, id)
-		if err != nil {
-			return err
-		}
+	members := []*OrgMembership{}
 
+	// use the predicates from the original request to get the members if we don't have ids
+	deleteCtx := entx.SkipSoftDelete(ctx)
+	if len(ids) == 0 {
+		// this will not work for the soft delete case because the predicates will include deleted_at = nil
+		// and this hook is setup to run after the delete happens
+		members, err = m.Client().OrgMembership.Query().Where(m.predicates...).All(deleteCtx)
+	} else {
+		members, err = m.Client().OrgMembership.Query().Where(orgmembership.IDIn(ids...)).All(deleteCtx)
+	}
+
+	if err != nil || len(members) == 0 {
+		log.Error().Err(err).Msg("failed to get members for delete")
+
+		return err
+	}
+
+	// Delete all related tuples
+	for _, member := range members {
 		req := fgax.TupleRequest{
-			SubjectID:   members.UserID,
+			SubjectID:   member.UserID,
 			SubjectType: "user",
-			ObjectID:    members.OrganizationID,
+			ObjectID:    member.OrganizationID,
 			ObjectType:  "organization",
-			Relation:    members.Role.String(),
+			Relation:    member.Role.String(),
 		}
 
 		t := fgax.GetTupleKey(req)
