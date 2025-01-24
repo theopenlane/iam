@@ -17,6 +17,8 @@ var (
 	ErrParseBearer = errors.New("could not parse bearer token from authorization header")
 	// ErrNoAuthorization is returned when no authorization header is found in the request
 	ErrNoAuthorization = errors.New("no authorization header in request")
+	// ErrNoAPIKey is returned when no API key is found in the request
+	ErrNoAPIKey = errors.New("no API key found in request")
 	// ErrNoRequest is returned when no request is found on the context
 	ErrNoRequest = errors.New("no request found on the context")
 	// ErrNoRefreshToken is returned when no refresh token is found on the request

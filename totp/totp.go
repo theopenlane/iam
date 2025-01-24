@@ -20,6 +20,7 @@ import (
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 	"github.com/redis/go-redis/v9"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -92,12 +93,16 @@ func (o *OTP) TOTPSecret(u *User) (string, error) {
 		AccountName: u.DefaultName(),
 	})
 	if err != nil {
+		log.Err(err).Msg("failed to generate TOTP secret")
+
 		return "", ErrFailedToGenerateSecret
 	}
 
 	encryptedKey, err := o.encrypt(key.Secret())
 	if err != nil {
-		return "", ErrCannotDecryptSecret
+		log.Err(err).Msg("failed to generate TOTP secret")
+
+		return "", ErrCannotEncryptSecret
 	}
 
 	return encryptedKey, nil
@@ -166,6 +171,13 @@ func (o *OTP) ValidateTOTP(ctx context.Context, user *User, code string) error {
 	}
 
 	key := fmt.Sprintf("%s_%s", user.ID, code)
+
+	// redis is not configured, we can't invalidate the code for future checks
+	if o.db == nil {
+		log.Warn().Msg("redis is not configured, code will not be invalidated")
+
+		return nil
+	}
 
 	// Validated code has previously been used in the past thirty seconds
 	if err = o.db.Get(ctx, key).Err(); err == nil {
