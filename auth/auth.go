@@ -14,6 +14,8 @@ import (
 const (
 	// Authorization is the key used in HTTP headers or cookies to represent the authorization token
 	Authorization = "Authorization"
+	// APIKeyHeader is the key used in HTTP headers to represent the API key
+	APIKeyHeader = "X-API-Key" //nolint:gosec
 	// AccessTokenCookie is the key used in cookies to represent the access token
 	AccessTokenCookie = "access_token"
 	// RefreshTokenCookie is the key used in cookies to represent the refresh token
@@ -53,6 +55,16 @@ func GetAccessToken(c echo.Context) (string, error) {
 	}
 
 	return "", ErrNoAuthorization
+}
+
+// GetAPIKey retrieves the API key from the authorization header or the X-API-Key header.
+func GetAPIKey(c echo.Context) (string, error) {
+	// Attempt to get the api token from the header
+	if h := c.Request().Header.Get(APIKeyHeader); h != "" {
+		return h, nil
+	}
+
+	return "", ErrNoAPIKey
 }
 
 // GetRefreshToken retrieves the refresh token from the cookies in the request. If the

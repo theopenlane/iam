@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -316,6 +317,91 @@ func TestCookieExpired(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := auth.CookieExpired(tc.cookie)
 			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+func TestGetAPIKey(t *testing.T) {
+	testAPIKey := "test_api_key"
+
+	tests := []struct {
+		name        string
+		headerKey   string
+		headerValue string
+		wantKey     string
+		wantErr     bool
+		err         error
+	}{
+		{
+			name:        "happy path from header",
+			headerKey:   auth.APIKeyHeader,
+			headerValue: testAPIKey,
+			wantKey:     testAPIKey,
+			wantErr:     false,
+			err:         nil,
+		},
+		{
+			name:        "happy path from header, all uppercase",
+			headerKey:   strings.ToUpper(auth.APIKeyHeader),
+			headerValue: testAPIKey,
+			wantKey:     testAPIKey,
+			wantErr:     false,
+			err:         nil,
+		},
+		{
+			name:        "happy path from header, all lowercase",
+			headerKey:   strings.ToLower(auth.APIKeyHeader),
+			headerValue: testAPIKey,
+			wantKey:     testAPIKey,
+			wantErr:     false,
+			err:         nil,
+		},
+		{
+			name:        "no API key header",
+			headerKey:   "Hackorz",
+			headerValue: testAPIKey,
+			wantKey:     "",
+			wantErr:     true,
+			err:         auth.ErrNoAPIKey,
+		},
+		{
+			name:        "empty API key header",
+			headerKey:   auth.APIKeyHeader,
+			headerValue: "",
+			wantKey:     "",
+			wantErr:     true,
+			err:         auth.ErrNoAPIKey,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			e := echo.New()
+
+			req := &http.Request{
+				Header: http.Header{},
+			}
+
+			// Add header
+			req.Header.Add(tc.headerKey, tc.headerValue)
+
+			recorder := httptest.NewRecorder()
+			res := &echo.Response{
+				Writer: recorder,
+			}
+
+			ctx := e.NewContext(req, res)
+
+			gotKey, err := auth.GetAPIKey(ctx)
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.err, err)
+				assert.Empty(t, gotKey)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantKey, gotKey)
 		})
 	}
 }

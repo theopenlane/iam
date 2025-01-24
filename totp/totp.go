@@ -20,6 +20,7 @@ import (
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 	"github.com/redis/go-redis/v9"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -92,12 +93,16 @@ func (o *OTP) TOTPSecret(u *User) (string, error) {
 		AccountName: u.DefaultName(),
 	})
 	if err != nil {
+		log.Err(err).Msg("failed to generate TOTP secret")
+
 		return "", ErrFailedToGenerateSecret
 	}
 
 	encryptedKey, err := o.encrypt(key.Secret())
 	if err != nil {
-		return "", ErrCannotDecryptSecret
+		log.Err(err).Msg("failed to generate TOTP secret")
+
+		return "", ErrCannotEncryptSecret
 	}
 
 	return encryptedKey, nil

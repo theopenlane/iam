@@ -65,6 +65,9 @@ var (
 	// ErrIncorrectCodeProvided is an error representing an incorrect code provided
 	ErrIncorrectCodeProvided = errors.New("incorrect code provided")
 
+	// ErrCannotEncryptSecret is an error representing a failure to encrypt secret
+	ErrCannotEncryptSecret = errors.New("cannot encrypt secret")
+
 	// ErrCannotDecryptSecret is an error representing a failure to decrypt secret
 	ErrCannotDecryptSecret = errors.New("cannot decrypt secret")
 
