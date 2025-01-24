@@ -172,6 +172,13 @@ func (o *OTP) ValidateTOTP(ctx context.Context, user *User, code string) error {
 
 	key := fmt.Sprintf("%s_%s", user.ID, code)
 
+	// redis is not configured, we can't invalidate the code for future checks
+	if o.db == nil {
+		log.Warn().Msg("redis is not configured, code will not be invalidated")
+
+		return nil
+	}
+
 	// Validated code has previously been used in the past thirty seconds
 	if err = o.db.Get(ctx, key).Err(); err == nil {
 		return ErrCodeIsNoLongerValid
