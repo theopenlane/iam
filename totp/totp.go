@@ -384,8 +384,7 @@ func GenerateOTP(secret string) (string, error) {
 func (o *OTP) GenerateRecoveryCodes() []string {
 	codes := []string{}
 
-	// for range o.recoveryCodeCount { // this works in go 1.22 but the linter barfs while its still on 1.21
-	for i := 1; i <= o.recoveryCodeCount; i++ {
+	for range o.recoveryCodeCount {
 		code, err := String(o.recoveryCodeLength, alphanumericCode)
 		if err != nil {
 			continue

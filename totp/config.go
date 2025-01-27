@@ -3,7 +3,7 @@ package totp
 const (
 	defaultLength             = 6
 	defaultRecoveryCodeCount  = 16
-	defaultRecoveryCodeLength = 10
+	defaultRecoveryCodeLength = 8
 	codePeriod                = 30
 )
 
