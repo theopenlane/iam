@@ -15,6 +15,8 @@ type Client struct {
 	Ofga ofgaclient.SdkClient
 	// Config is the client configuration
 	Config ofgaclient.ClientConfiguration
+	// IgnoreDuplicateKeyError ignores the error when a key already exists or a delete request is made for a non-existent key
+	IgnoreDuplicateKeyError bool
 }
 
 // Config configures the openFGA setup
@@ -35,6 +37,8 @@ type Config struct {
 	ModelFile string `json:"modelFile" koanf:"modelFile" jsonschema:"description=path to the fga model file" default:"fga/model/model.fga"`
 	// Credentials for the client
 	Credentials Credentials `json:"credentials" koanf:"credentials" jsonschema:"description=credentials for the openFGA client"`
+	// IgnoreDuplicateKeyError ignores the error when a key already exists or a delete request is made for a non-existent key
+	IgnoreDuplicateKeyError bool `json:"ignoreDuplicateKeyError" koanf:"ignoreDuplicateKeyError" jsonschema:"description=ignore duplicate key error" default:"true"`
 }
 
 // Credentials for the openFGA client
@@ -142,9 +146,17 @@ func WithToken(token string) Option {
 	}
 }
 
+func WithIgnoreDuplicateKeyError(ignore bool) Option {
+	return func(c *Client) {
+		c.IgnoreDuplicateKeyError = ignore
+	}
+}
+
 // CreateFGAClientWithStore returns a Client with a store and model configured
 func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
-	opts := []Option{}
+	opts := []Option{
+		WithIgnoreDuplicateKeyError(c.IgnoreDuplicateKeyError),
+	}
 
 	// set credentials if provided
 	if c.Credentials.APIToken != "" {
