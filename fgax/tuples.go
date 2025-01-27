@@ -62,6 +62,12 @@ const (
 	maxWrites = 10
 )
 
+// errors returned from FGA for duplicate writes or non-existent deletes
+const (
+	writeAlreadyExistsError = "write a tuple which already exists"
+	deleteDoesNotExistError = "delete a tuple which does not exist"
+)
+
 // TupleKey represents a relationship tuple in OpenFGA
 type TupleKey struct {
 	// Subject is the entity that is the subject of the relationship, usually a user
@@ -195,32 +201,49 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 
 	resp, err := c.Ofga.Write(ctx).Body(body).Options(opts).Execute()
 	if err != nil {
-		log.Info().Err(err).Interface("user", resp.Writes).Msg("error writing relationship tuples")
+		// if we don't ignore duplicate key errors, return the errors now
+		if !c.IgnoreDuplicateKeyError {
+			log.Info().Err(err).Interface("writes", resp.Writes).Interface("deletes", resp.Deletes).Msg("error writing relationship tuples")
 
-		return resp, err
-	}
-
-	for _, writes := range resp.Writes {
-		if writes.Error != nil {
-			log.Error().Err(writes.Error).
-				Str("user", writes.TupleKey.User).
-				Str("relation", writes.TupleKey.Relation).
-				Str("object", writes.TupleKey.Object).
-				Msg("error creating relationship tuples")
-
-			return resp, newWritingTuplesError(writes.TupleKey.User, writes.TupleKey.Relation, writes.TupleKey.Object, "writing", err)
+			return resp, err
 		}
-	}
 
-	for _, deletes := range resp.Deletes {
-		if deletes.Error != nil {
-			log.Error().Err(deletes.Error).
-				Str("user", deletes.TupleKey.User).
-				Str("relation", deletes.TupleKey.Relation).
-				Str("object", deletes.TupleKey.Object).
-				Msg("error deleting relationship tuples")
+		for _, writes := range resp.Writes {
+			if writes.Error != nil {
+				if strings.Contains(writes.Error.Error(), writeAlreadyExistsError) {
+					log.Warn().Err(writes.Error).Msg("relationship tuple already exists, skipping")
 
-			return resp, newWritingTuplesError(deletes.TupleKey.User, deletes.TupleKey.Relation, deletes.TupleKey.Object, "writing", err)
+					continue
+				}
+
+				log.Error().Err(writes.Error).
+					Str("user", writes.TupleKey.User).
+					Str("relation", writes.TupleKey.Relation).
+					Str("object", writes.TupleKey.Object).
+					Msg("error creating relationship tuples")
+
+				// returns the first error encountered
+				return resp, newWritingTuplesError(writes.TupleKey.User, writes.TupleKey.Relation, writes.TupleKey.Object, "writing", err)
+			}
+		}
+
+		for _, deletes := range resp.Deletes {
+			if deletes.Error != nil {
+				if strings.Contains(deletes.Error.Error(), deleteDoesNotExistError) {
+					log.Warn().Err(deletes.Error).Msg("relationship does not exist, skipping")
+
+					continue
+				}
+
+				log.Error().Err(deletes.Error).
+					Str("user", deletes.TupleKey.User).
+					Str("relation", deletes.TupleKey.Relation).
+					Str("object", deletes.TupleKey.Object).
+					Msg("error deleting relationship tuples")
+
+				// returns the first delete error encountered
+				return resp, newWritingTuplesError(deletes.TupleKey.User, deletes.TupleKey.Relation, deletes.TupleKey.Object, "writing", err)
+			}
 		}
 	}
 
