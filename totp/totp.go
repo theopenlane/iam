@@ -111,9 +111,9 @@ func (o *OTP) TOTPSecret(u *User) (string, error) {
 // TOTPQRString returns a string containing account details for TOTP code generation
 func (o *OTP) TOTPQRString(u *User) (string, error) {
 	// otpauth://totp/TheOpenLane:matt@google.com?secret=JBSWY3DPEHPK3PXP&issuer=TheOpenLane
-	secret, err := o.decrypt(u.TFASecret)
+	secret, err := o.TOTPDecryptedSecret(u.TFASecret)
 	if err != nil {
-		return "", ErrFailedToGetSecretForQR
+		return "", err
 	}
 
 	v := url.Values{}
@@ -130,6 +130,16 @@ func (o *OTP) TOTPQRString(u *User) (string, error) {
 	}
 
 	return otpauth.String(), nil
+}
+
+// TOTPDecryptedSecret returns a string containing the decrypted TOTP secret
+func (o *OTP) TOTPDecryptedSecret(secret string) (string, error) {
+	secret, err := o.decrypt(secret)
+	if err != nil {
+		return "", ErrFailedToGetSecretForQR
+	}
+
+	return secret, nil
 }
 
 // ValidateOTP checks if a User's OTP code is valid

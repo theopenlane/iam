@@ -70,6 +70,24 @@ func TestTOTPQRString(t *testing.T) {
 	assert.Equal(t, expectedString, qrString, "TOTP QR string does not match")
 }
 
+func TestTOTPDecryptedSecret(t *testing.T) {
+	svc := NewOTP(
+		WithIssuer("authenticator.local"),
+		WithSecret(Secret{
+			Version: 1,
+			Key:     "9f0c6da662f018b58b04a093e2dbb2e1d8d54250",
+		}),
+	)
+
+	secret := "1:usrJIgtKY9j58GgLpKIaoJqNbwylphfzyJcoyRRg1Ow52/7j6KoRpky8tFLZlgrY" //nolint:gosec
+
+	decryptedSecret, err := svc.TOTPDecryptedSecret(secret)
+	require.NoError(t, err)
+
+	expectedString := "572JFGKOMDRA6KHE5O3ZV62I6BP352E7"
+	assert.Equal(t, expectedString, decryptedSecret, "TOTP QR string does not match")
+}
+
 func TestEncryptsWithLatestSecret(t *testing.T) {
 	svc := &OTP{
 		secrets: []Secret{
