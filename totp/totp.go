@@ -385,7 +385,6 @@ func (o *OTP) GenerateRecoveryCodes() []string {
 	codes := []string{}
 
 	for range o.recoveryCodeCount {
-		log.Debug().Int("length", o.recoveryCodeLength).Msg("generating recovery code")
 		code, err := String(o.recoveryCodeLength, alphanumericCode)
 		if err != nil {
 			continue
