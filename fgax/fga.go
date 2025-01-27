@@ -146,6 +146,7 @@ func WithToken(token string) Option {
 	}
 }
 
+// WithIgnoreDuplicateKeyError sets whether the client should ignore duplicate key errors
 func WithIgnoreDuplicateKeyError(ignore bool) Option {
 	return func(c *Client) {
 		c.IgnoreDuplicateKeyError = ignore
