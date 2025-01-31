@@ -659,6 +659,61 @@ func (_c *MockSdkClient_ExpandExecute_Call) RunAndReturn(run func(client.SdkClie
 	return _c
 }
 
+// GetAuthorizationModelId provides a mock function with no fields
+func (_m *MockSdkClient) GetAuthorizationModelId() (string, error) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAuthorizationModelId")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func() (string, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockSdkClient_GetAuthorizationModelId_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAuthorizationModelId'
+type MockSdkClient_GetAuthorizationModelId_Call struct {
+	*mock.Call
+}
+
+// GetAuthorizationModelId is a helper method to define mock.On call
+func (_e *MockSdkClient_Expecter) GetAuthorizationModelId() *MockSdkClient_GetAuthorizationModelId_Call {
+	return &MockSdkClient_GetAuthorizationModelId_Call{Call: _e.mock.On("GetAuthorizationModelId")}
+}
+
+func (_c *MockSdkClient_GetAuthorizationModelId_Call) Run(run func()) *MockSdkClient_GetAuthorizationModelId_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockSdkClient_GetAuthorizationModelId_Call) Return(_a0 string, _a1 error) *MockSdkClient_GetAuthorizationModelId_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockSdkClient_GetAuthorizationModelId_Call) RunAndReturn(run func() (string, error)) *MockSdkClient_GetAuthorizationModelId_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetStore provides a mock function with given fields: ctx
 func (_m *MockSdkClient) GetStore(ctx context.Context) client.SdkClientGetStoreRequestInterface {
 	ret := _m.Called(ctx)
@@ -761,6 +816,61 @@ func (_c *MockSdkClient_GetStoreExecute_Call) Return(_a0 *client.ClientGetStoreR
 }
 
 func (_c *MockSdkClient_GetStoreExecute_Call) RunAndReturn(run func(client.SdkClientGetStoreRequestInterface) (*client.ClientGetStoreResponse, error)) *MockSdkClient_GetStoreExecute_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetStoreId provides a mock function with no fields
+func (_m *MockSdkClient) GetStoreId() (string, error) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetStoreId")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func() (string, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockSdkClient_GetStoreId_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetStoreId'
+type MockSdkClient_GetStoreId_Call struct {
+	*mock.Call
+}
+
+// GetStoreId is a helper method to define mock.On call
+func (_e *MockSdkClient_Expecter) GetStoreId() *MockSdkClient_GetStoreId_Call {
+	return &MockSdkClient_GetStoreId_Call{Call: _e.mock.On("GetStoreId")}
+}
+
+func (_c *MockSdkClient_GetStoreId_Call) Run(run func()) *MockSdkClient_GetStoreId_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockSdkClient_GetStoreId_Call) Return(_a0 string, _a1 error) *MockSdkClient_GetStoreId_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockSdkClient_GetStoreId_Call) RunAndReturn(run func() (string, error)) *MockSdkClient_GetStoreId_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1821,6 +1931,98 @@ func (_c *MockSdkClient_ReadLatestAuthorizationModelExecute_Call) Return(_a0 *cl
 }
 
 func (_c *MockSdkClient_ReadLatestAuthorizationModelExecute_Call) RunAndReturn(run func(client.SdkClientReadLatestAuthorizationModelRequestInterface) (*client.ClientReadAuthorizationModelResponse, error)) *MockSdkClient_ReadLatestAuthorizationModelExecute_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SetAuthorizationModelId provides a mock function with given fields: authorizationModelId
+func (_m *MockSdkClient) SetAuthorizationModelId(authorizationModelId string) error {
+	ret := _m.Called(authorizationModelId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetAuthorizationModelId")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(authorizationModelId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockSdkClient_SetAuthorizationModelId_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetAuthorizationModelId'
+type MockSdkClient_SetAuthorizationModelId_Call struct {
+	*mock.Call
+}
+
+// SetAuthorizationModelId is a helper method to define mock.On call
+//   - authorizationModelId string
+func (_e *MockSdkClient_Expecter) SetAuthorizationModelId(authorizationModelId interface{}) *MockSdkClient_SetAuthorizationModelId_Call {
+	return &MockSdkClient_SetAuthorizationModelId_Call{Call: _e.mock.On("SetAuthorizationModelId", authorizationModelId)}
+}
+
+func (_c *MockSdkClient_SetAuthorizationModelId_Call) Run(run func(authorizationModelId string)) *MockSdkClient_SetAuthorizationModelId_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string))
+	})
+	return _c
+}
+
+func (_c *MockSdkClient_SetAuthorizationModelId_Call) Return(_a0 error) *MockSdkClient_SetAuthorizationModelId_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockSdkClient_SetAuthorizationModelId_Call) RunAndReturn(run func(string) error) *MockSdkClient_SetAuthorizationModelId_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SetStoreId provides a mock function with given fields: storeId
+func (_m *MockSdkClient) SetStoreId(storeId string) error {
+	ret := _m.Called(storeId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetStoreId")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(storeId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockSdkClient_SetStoreId_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetStoreId'
+type MockSdkClient_SetStoreId_Call struct {
+	*mock.Call
+}
+
+// SetStoreId is a helper method to define mock.On call
+//   - storeId string
+func (_e *MockSdkClient_Expecter) SetStoreId(storeId interface{}) *MockSdkClient_SetStoreId_Call {
+	return &MockSdkClient_SetStoreId_Call{Call: _e.mock.On("SetStoreId", storeId)}
+}
+
+func (_c *MockSdkClient_SetStoreId_Call) Run(run func(storeId string)) *MockSdkClient_SetStoreId_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string))
+	})
+	return _c
+}
+
+func (_c *MockSdkClient_SetStoreId_Call) Return(_a0 error) *MockSdkClient_SetStoreId_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockSdkClient_SetStoreId_Call) RunAndReturn(run func(string) error) *MockSdkClient_SetStoreId_Call {
 	_c.Call.Return(run)
 	return _c
 }
