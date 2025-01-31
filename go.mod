@@ -6,7 +6,7 @@ require (
 	entgo.io/contrib v0.6.0
 	entgo.io/ent v0.14.1
 	github.com/99designs/gqlgen v0.17.63
-	github.com/Yamashou/gqlgenc v0.30.2
+	github.com/Yamashou/gqlgenc v0.30.3
 	github.com/alicebob/miniredis/v2 v2.34.0
 	github.com/brianvoe/gofakeit/v7 v7.2.1
 	github.com/coreos/go-oidc/v3 v3.12.0
