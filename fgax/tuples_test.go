@@ -136,6 +136,12 @@ func TestTupleKeyToWriteRequest(t *testing.T) {
 						Kind:       "organization",
 						Identifier: "IDOFTHEORG",
 					},
+					Condition: Condition{
+						Name: "condition_name",
+						Context: &map[string]any{
+							"key": true,
+						},
+					},
 				},
 			},
 			expectedUser:     "user:THEBESTUSER",
@@ -144,7 +150,7 @@ func TestTupleKeyToWriteRequest(t *testing.T) {
 			expectedCount:    1,
 		},
 		{
-			name: "happy path, should lowercase kind and relations",
+			name: "happy path, should lowercase kind and relations, no context in condition",
 			writes: []TupleKey{
 				{
 					Subject: Entity{
@@ -155,6 +161,9 @@ func TestTupleKeyToWriteRequest(t *testing.T) {
 					Object: Entity{
 						Kind:       "ORGANIZATION",
 						Identifier: "IDOFTHEORG",
+					},
+					Condition: Condition{
+						Name: "condition_name",
 					},
 				},
 			},
@@ -223,6 +232,12 @@ func TestTupleKeyToWriteRequest(t *testing.T) {
 				assert.Equal(t, tc.expectedUser, ctk[0].User)
 				assert.Equal(t, tc.expectedRelation, ctk[0].Relation)
 				assert.Equal(t, tc.expectedObject, ctk[0].Object)
+
+				if tc.writes[0].Condition.Name != "" {
+					assert.NotNil(t, ctk[0].Condition)
+					assert.Equal(t, tc.writes[0].Condition.Name, ctk[0].Condition.Name)
+					assert.Equal(t, tc.writes[0].Condition.Context, ctk[0].Condition.Context)
+				}
 			} else {
 				assert.Len(t, ctk, tc.expectedCount)
 			}
@@ -251,6 +266,13 @@ func TestTupleKeyToDeleteRequest(t *testing.T) {
 					Object: Entity{
 						Kind:       "organization",
 						Identifier: "IDOFTHEORG",
+					},
+					Condition: Condition{
+						Name: "condition_name",
+						Context: &map[string]any{
+							"key":  true,
+							"key2": "value",
+						},
 					},
 				},
 			},
@@ -352,10 +374,13 @@ func TestWriteTupleKeys(t *testing.T) {
 
 	fc := NewMockFGAClient(t, c)
 
+	mock_fga.WriteAny(t, c)
+
 	testCases := []struct {
 		name    string
 		writes  []TupleKey
 		deletes []TupleKey
+		errExp  string
 	}{
 		{
 			name: "happy path with relation",
@@ -370,6 +395,33 @@ func TestWriteTupleKeys(t *testing.T) {
 						Kind:       "organization",
 						Identifier: "IDOFTHEORG",
 					},
+					Condition: Condition{
+						Name: "condition_name",
+						Context: &map[string]any{
+							"key":  true,
+							"key2": "value",
+						},
+					},
+				},
+			},
+			deletes: []TupleKey{
+				{
+					Subject: Entity{
+						Kind:       "user2",
+						Identifier: "THEBESTESTUSER",
+					},
+					Relation: "member",
+					Object: Entity{
+						Kind:       "organization",
+						Identifier: "IDOFTHEORG",
+					},
+					Condition: Condition{
+						Name: "condition_name",
+						Context: &map[string]any{
+							"key":  true,
+							"key2": "value",
+						},
+					},
 				},
 			},
 		},
@@ -377,8 +429,6 @@ func TestWriteTupleKeys(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mock_fga.WriteAny(t, c)
-
 			_, err := fc.WriteTupleKeys(context.Background(), tc.writes, tc.deletes)
 			assert.NoError(t, err)
 		})

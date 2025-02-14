@@ -31,6 +31,8 @@ type AccessCheck struct {
 	SubjectType string
 	// Relation is the relationship being checked (e.g. "view", "edit", "delete")
 	Relation string
+	// Context is the context of the request used for conditional relationships
+	Context *map[string]any
 }
 
 // ListAccess is a struct to hold the information needed to list all relations
@@ -45,6 +47,8 @@ type ListAccess struct {
 	SubjectType string
 	// Relations is the relationship being checked (e.g. "can_view", "can_edit", "can_delete")
 	Relations []string
+	// Context is the context of the request used for conditional relationships
+	Context *map[string]any
 }
 
 // CheckAccess checks if the user has access to the object type with the given relation
@@ -73,6 +77,7 @@ func (c *Client) CheckAccess(ctx context.Context, ac AccessCheck) (bool, error) 
 		User:     sub.String(),
 		Relation: ac.Relation,
 		Object:   obj.String(),
+		Context:  ac.Context,
 	}
 
 	return c.checkTuple(ctx, checkReq)
@@ -105,6 +110,7 @@ func (c *Client) ListRelations(ctx context.Context, ac ListAccess) ([]string, er
 			User:     sub.String(),
 			Relation: rel,
 			Object:   obj.String(),
+			Context:  ac.Context,
 		}
 
 		checks = append(checks, check)
