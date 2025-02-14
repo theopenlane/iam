@@ -221,51 +221,8 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 	}
 
 	resp, err := c.Ofga.Write(ctx).Body(body).Options(opts).Execute()
-	if err != nil {
-		// if we don't ignore duplicate key errors, return the errors now
-		if !c.IgnoreDuplicateKeyError {
-			log.Info().Err(err).Interface("writes", resp.Writes).Interface("deletes", resp.Deletes).Msg("error writing relationship tuples")
-
-			return resp, err
-		}
-
-		for _, writes := range resp.Writes {
-			if writes.Error != nil {
-				if strings.Contains(writes.Error.Error(), writeAlreadyExistsError) {
-					log.Warn().Err(writes.Error).Msg("relationship tuple already exists, skipping")
-
-					continue
-				}
-
-				log.Error().Err(writes.Error).
-					Str("user", writes.TupleKey.User).
-					Str("relation", writes.TupleKey.Relation).
-					Str("object", writes.TupleKey.Object).
-					Msg("error creating relationship tuples")
-
-				// returns the first error encountered
-				return resp, newWritingTuplesError(writes.TupleKey.User, writes.TupleKey.Relation, writes.TupleKey.Object, "writing", err)
-			}
-		}
-
-		for _, deletes := range resp.Deletes {
-			if deletes.Error != nil {
-				if strings.Contains(deletes.Error.Error(), deleteDoesNotExistError) {
-					log.Warn().Err(deletes.Error).Msg("relationship does not exist, skipping")
-
-					continue
-				}
-
-				log.Error().Err(deletes.Error).
-					Str("user", deletes.TupleKey.User).
-					Str("relation", deletes.TupleKey.Relation).
-					Str("object", deletes.TupleKey.Object).
-					Msg("error deleting relationship tuples")
-
-				// returns the first delete error encountered
-				return resp, newWritingTuplesError(deletes.TupleKey.User, deletes.TupleKey.Relation, deletes.TupleKey.Object, "writing", err)
-			}
-		}
+	if err := c.checkWriteResponse(resp, err); err != nil {
+		return nil, err
 	}
 
 	return resp, nil
@@ -274,6 +231,7 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 // UpdateConditionalTupleKey will take a tuple key and delete the existing tuple and create a new tuple with the same key
 // this is useful for updating a tuple with a condition because fga does not support conditional updates
 // because the delete doesn't take into account conditions, you can use the same key to delete the existing tuple
+// it will return the response from the write request
 func (c *Client) UpdateConditionalTupleKey(ctx context.Context, tuple TupleKey) (*ofgaclient.ClientWriteResponse, error) {
 	opts := ofgaclient.ClientWriteOptions{AuthorizationModelId: openfga.PtrString(c.Config.AuthorizationModelId)}
 
