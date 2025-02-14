@@ -230,8 +230,8 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 
 // UpdateConditionalTupleKey will take a tuple key and delete the existing tuple and create a new tuple with the same key
 // this is useful for updating a tuple with a condition because fga does not support conditional updates
-// because the delete doesn't take into account conditions, you can use the same key to delete the existing tuple
-// it will return the response from the write request
+// Because the delete doesn't take into account conditions, you can use the same key to delete the existing tuple
+// It will return the response from the write request
 func (c *Client) UpdateConditionalTupleKey(ctx context.Context, tuple TupleKey) (*ofgaclient.ClientWriteResponse, error) {
 	opts := ofgaclient.ClientWriteOptions{AuthorizationModelId: openfga.PtrString(c.Config.AuthorizationModelId)}
 

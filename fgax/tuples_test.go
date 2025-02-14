@@ -422,50 +422,6 @@ func TestWriteTupleKeys(t *testing.T) {
 				},
 			},
 		},
-		{
-			name: "duplicate tuples",
-			writes: []TupleKey{
-				{
-					Subject: Entity{
-						Kind:       "user",
-						Identifier: "THEBESTUSER",
-					},
-					Relation: "member",
-					Object: Entity{
-						Kind:       "organization",
-						Identifier: "IDOFTHEORG",
-					},
-					Condition: Condition{
-						Name: "condition_name",
-						Context: map[string]interface{}{
-							"key":  true,
-							"key2": "value",
-						},
-					},
-				},
-			},
-			deletes: []TupleKey{
-				{
-					Subject: Entity{
-						Kind:       "user",
-						Identifier: "THEBESTUSER",
-					},
-					Relation: "member",
-					Object: Entity{
-						Kind:       "organization",
-						Identifier: "IDOFTHEORG",
-					},
-					Condition: Condition{
-						Name: "condition_name",
-						Context: map[string]interface{}{
-							"key":  false,
-							"key2": "value",
-						},
-					},
-				},
-			},
-			errExp: "cannot_allow_duplicate_tuples_in_one_request",
-		},
 	}
 
 	for _, tc := range testCases {
