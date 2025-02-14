@@ -76,6 +76,8 @@ type TupleKey struct {
 	Object Entity
 	// Relation is the relationship between the subject and object
 	Relation Relation `json:"relation"`
+	// Condition for the relationship
+	Condition Condition `json:"condition,omitempty"`
 }
 
 // TupleRequest is the fields needed to check a tuple in the FGA store
@@ -94,6 +96,10 @@ type TupleRequest struct {
 	SubjectRelation string
 	// Relation is the relationship between the subject and object
 	Relation string
+	// ConditionName for the relationship
+	ConditionName string
+	// ConditionContext for the relationship
+	ConditionContext map[string]any
 }
 
 func NewTupleKey() TupleKey { return TupleKey{} }
@@ -116,6 +122,14 @@ type Relation string
 // String implements the Stringer interface.
 func (r Relation) String() string {
 	return strings.ToLower(string(r))
+}
+
+// Condition represents the type of relation condition for openFGA types
+type Condition struct {
+	// Name of the relationship condition
+	Name string
+	// Context settings for the relationship condition
+	Context map[string]any
 }
 
 // Entity represents an entity/entity-set in OpenFGA.
@@ -168,6 +182,13 @@ func tupleKeyToWriteRequest(writes []TupleKey) (w []ofgaclient.ClientTupleKey) {
 		ctk.SetObject(k.Object.String())
 		ctk.SetUser(k.Subject.String())
 		ctk.SetRelation(k.Relation.String())
+
+		if k.Condition.Name != "" && len(k.Condition.Context) > 0 {
+			ctk.SetCondition(openfga.RelationshipCondition{
+				Name:    k.Condition.Name,
+				Context: &k.Condition.Context,
+			})
+		}
 
 		w = append(w, ctk)
 	}
@@ -248,6 +269,87 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 	}
 
 	return resp, nil
+}
+
+// UpdateConditionalTupleKey will take a tuple key and delete the existing tuple and create a new tuple with the same key
+// this is useful for updating a tuple with a condition because fga does not support conditional updates
+// because the delete doesn't take into account conditions, you can use the same key to delete the existing tuple
+func (c *Client) UpdateConditionalTupleKey(ctx context.Context, tuple TupleKey) (*ofgaclient.ClientWriteResponse, error) {
+	opts := ofgaclient.ClientWriteOptions{AuthorizationModelId: openfga.PtrString(c.Config.AuthorizationModelId)}
+
+	body := ofgaclient.ClientWriteRequest{
+		Deletes: tupleKeyToDeleteRequest([]TupleKey{tuple}),
+	}
+
+	resp, err := c.Ofga.Write(ctx).Body(body).Options(opts).Execute()
+	if err := c.checkWriteResponse(resp, err); err != nil {
+		return nil, err
+	}
+
+	body = ofgaclient.ClientWriteRequest{
+		Writes: tupleKeyToWriteRequest([]TupleKey{tuple}),
+	}
+
+	resp, err = c.Ofga.Write(ctx).Body(body).Options(opts).Execute()
+	if err := c.checkWriteResponse(resp, err); err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+// checkWriteResponse checks the response from the write request and returns an error if there are any errors
+func (c *Client) checkWriteResponse(resp *ofgaclient.ClientWriteResponse, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	// if we don't ignore duplicate key errors, return the errors now
+	if !c.IgnoreDuplicateKeyError {
+		log.Info().Err(err).Interface("writes", resp.Writes).Interface("deletes", resp.Deletes).Msg("error writing relationship tuples")
+
+		return err
+	}
+
+	for _, writes := range resp.Writes {
+		if writes.Error != nil {
+			if strings.Contains(writes.Error.Error(), writeAlreadyExistsError) {
+				log.Warn().Err(writes.Error).Msg("relationship tuple already exists, skipping")
+
+				continue
+			}
+
+			log.Error().Err(writes.Error).
+				Str("user", writes.TupleKey.User).
+				Str("relation", writes.TupleKey.Relation).
+				Str("object", writes.TupleKey.Object).
+				Msg("error creating relationship tuples")
+
+			// returns the first error encountered
+			return newWritingTuplesError(writes.TupleKey.User, writes.TupleKey.Relation, writes.TupleKey.Object, "writing", err)
+		}
+	}
+
+	for _, deletes := range resp.Deletes {
+		if deletes.Error != nil {
+			if strings.Contains(deletes.Error.Error(), deleteDoesNotExistError) {
+				log.Warn().Err(deletes.Error).Msg("relationship does not exist, skipping")
+
+				continue
+			}
+
+			log.Error().Err(deletes.Error).
+				Str("user", deletes.TupleKey.User).
+				Str("relation", deletes.TupleKey.Relation).
+				Str("object", deletes.TupleKey.Object).
+				Msg("error deleting relationship tuples")
+
+			// returns the first delete error encountered
+			return newWritingTuplesError(deletes.TupleKey.User, deletes.TupleKey.Relation, deletes.TupleKey.Object, "writing", err)
+		}
+	}
+
+	return nil
 }
 
 // deleteRelationshipTuple deletes a relationship tuple in the openFGA store
@@ -384,9 +486,18 @@ func GetTupleKey(req TupleRequest) TupleKey {
 		object.Relation = Relation(req.ObjectRelation)
 	}
 
-	return TupleKey{
+	k := TupleKey{
 		Subject:  sub,
 		Object:   object,
 		Relation: Relation(req.Relation),
 	}
+
+	if req.ConditionName != "" && len(req.ConditionContext) > 0 {
+		k.Condition = Condition{
+			Name:    req.ConditionName,
+			Context: req.ConditionContext,
+		}
+	}
+
+	return k
 }
