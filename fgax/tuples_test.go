@@ -138,7 +138,7 @@ func TestTupleKeyToWriteRequest(t *testing.T) {
 					},
 					Condition: Condition{
 						Name: "condition_name",
-						Context: map[string]interface{}{
+						Context: &map[string]interface{}{
 							"key": true,
 						},
 					},
@@ -150,7 +150,7 @@ func TestTupleKeyToWriteRequest(t *testing.T) {
 			expectedCount:    1,
 		},
 		{
-			name: "happy path, should lowercase kind and relations",
+			name: "happy path, should lowercase kind and relations, no context in condition",
 			writes: []TupleKey{
 				{
 					Subject: Entity{
@@ -161,6 +161,9 @@ func TestTupleKeyToWriteRequest(t *testing.T) {
 					Object: Entity{
 						Kind:       "ORGANIZATION",
 						Identifier: "IDOFTHEORG",
+					},
+					Condition: Condition{
+						Name: "condition_name",
 					},
 				},
 			},
@@ -233,7 +236,7 @@ func TestTupleKeyToWriteRequest(t *testing.T) {
 				if tc.writes[0].Condition.Name != "" {
 					assert.NotNil(t, ctk[0].Condition)
 					assert.Equal(t, tc.writes[0].Condition.Name, ctk[0].Condition.Name)
-					assert.Equal(t, &tc.writes[0].Condition.Context, ctk[0].Condition.Context)
+					assert.Equal(t, tc.writes[0].Condition.Context, ctk[0].Condition.Context)
 				}
 			} else {
 				assert.Len(t, ctk, tc.expectedCount)
@@ -266,7 +269,7 @@ func TestTupleKeyToDeleteRequest(t *testing.T) {
 					},
 					Condition: Condition{
 						Name: "condition_name",
-						Context: map[string]interface{}{
+						Context: &map[string]interface{}{
 							"key":  true,
 							"key2": "value",
 						},
@@ -394,7 +397,7 @@ func TestWriteTupleKeys(t *testing.T) {
 					},
 					Condition: Condition{
 						Name: "condition_name",
-						Context: map[string]interface{}{
+						Context: &map[string]interface{}{
 							"key":  true,
 							"key2": "value",
 						},
@@ -414,7 +417,7 @@ func TestWriteTupleKeys(t *testing.T) {
 					},
 					Condition: Condition{
 						Name: "condition_name",
-						Context: map[string]interface{}{
+						Context: &map[string]interface{}{
 							"key":  true,
 							"key2": "value",
 						},

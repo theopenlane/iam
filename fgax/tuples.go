@@ -99,7 +99,7 @@ type TupleRequest struct {
 	// ConditionName for the relationship
 	ConditionName string
 	// ConditionContext for the relationship
-	ConditionContext map[string]any
+	ConditionContext *map[string]any
 }
 
 func NewTupleKey() TupleKey { return TupleKey{} }
@@ -129,7 +129,7 @@ type Condition struct {
 	// Name of the relationship condition
 	Name string
 	// Context settings for the relationship condition
-	Context map[string]any
+	Context *map[string]any
 }
 
 // Entity represents an entity/entity-set in OpenFGA.
@@ -183,10 +183,10 @@ func tupleKeyToWriteRequest(writes []TupleKey) (w []ofgaclient.ClientTupleKey) {
 		ctk.SetUser(k.Subject.String())
 		ctk.SetRelation(k.Relation.String())
 
-		if k.Condition.Name != "" && len(k.Condition.Context) > 0 {
+		if k.Condition.Name != "" {
 			ctk.SetCondition(openfga.RelationshipCondition{
 				Name:    k.Condition.Name,
-				Context: &k.Condition.Context,
+				Context: k.Condition.Context,
 			})
 		}
 
@@ -450,7 +450,7 @@ func GetTupleKey(req TupleRequest) TupleKey {
 		Relation: Relation(req.Relation),
 	}
 
-	if req.ConditionName != "" && len(req.ConditionContext) > 0 {
+	if req.ConditionName != "" {
 		k.Condition = Condition{
 			Name:    req.ConditionName,
 			Context: req.ConditionContext,
