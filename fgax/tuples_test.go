@@ -138,7 +138,7 @@ func TestTupleKeyToWriteRequest(t *testing.T) {
 					},
 					Condition: Condition{
 						Name: "condition_name",
-						Context: &map[string]interface{}{
+						Context: &map[string]any{
 							"key": true,
 						},
 					},
@@ -269,7 +269,7 @@ func TestTupleKeyToDeleteRequest(t *testing.T) {
 					},
 					Condition: Condition{
 						Name: "condition_name",
-						Context: &map[string]interface{}{
+						Context: &map[string]any{
 							"key":  true,
 							"key2": "value",
 						},
@@ -397,7 +397,7 @@ func TestWriteTupleKeys(t *testing.T) {
 					},
 					Condition: Condition{
 						Name: "condition_name",
-						Context: &map[string]interface{}{
+						Context: &map[string]any{
 							"key":  true,
 							"key2": "value",
 						},
@@ -417,7 +417,7 @@ func TestWriteTupleKeys(t *testing.T) {
 					},
 					Condition: Condition{
 						Name: "condition_name",
-						Context: &map[string]interface{}{
+						Context: &map[string]any{
 							"key":  true,
 							"key2": "value",
 						},
