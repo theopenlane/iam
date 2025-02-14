@@ -77,10 +77,7 @@ func (c *Client) CheckAccess(ctx context.Context, ac AccessCheck) (bool, error) 
 		User:     sub.String(),
 		Relation: ac.Relation,
 		Object:   obj.String(),
-	}
-
-	if ac.Context != nil {
-		checkReq.Context = ac.Context
+		Context:  ac.Context,
 	}
 
 	return c.checkTuple(ctx, checkReq)
