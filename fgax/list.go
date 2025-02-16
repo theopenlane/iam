@@ -3,6 +3,7 @@ package fgax
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	fgasdk "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
@@ -21,6 +22,8 @@ type ListRequest struct {
 	SubjectType string
 	// Relation is the relationship between the subject and object
 	Relation string
+	// ConditionContext for the relationship
+	ConditionContext *map[string]any
 }
 
 // ListObjectsRequest creates the ClientListObjectsRequest and queries the FGA store for all objects with the user+relation
@@ -38,13 +41,14 @@ func (c *Client) ListObjectsRequest(ctx context.Context, req ListRequest) (*ofga
 	listReq := ofgaclient.ClientListObjectsRequest{
 		User:     sub.String(),
 		Relation: req.Relation,
-		Type:     req.ObjectType,
+		Type:     strings.ToLower(req.ObjectType),
 	}
 
-	log.Debug().Str("relation", req.Relation).
-		Str("subject", sub.String()).
-		Str("type", req.ObjectType).
-		Msg("listing objects")
+	if req.ConditionContext != nil {
+		listReq.Context = req.ConditionContext
+	}
+
+	log.Debug().Interface("request", listReq).Msg("listing objects")
 
 	return c.listObjects(ctx, listReq)
 }
@@ -57,7 +61,7 @@ func (c *Client) ListUserRequest(ctx context.Context, req ListRequest) (*ofgacli
 
 	// create the fga object
 	obj := fgasdk.FgaObject{
-		Type: req.ObjectType,
+		Type: strings.ToLower(req.ObjectType),
 		Id:   req.ObjectID,
 	}
 
@@ -65,13 +69,14 @@ func (c *Client) ListUserRequest(ctx context.Context, req ListRequest) (*ofgacli
 	listReq := ofgaclient.ClientListUsersRequest{
 		Object:      obj,
 		Relation:    req.Relation,
-		UserFilters: []fgasdk.UserTypeFilter{{Type: req.SubjectType}},
+		UserFilters: []fgasdk.UserTypeFilter{{Type: strings.ToLower(req.SubjectType)}},
 	}
 
-	log.Debug().Str("relation", req.Relation).
-		Str("object", obj.Id).
-		Str("type", obj.Type).
-		Msg("listing users")
+	if req.ConditionContext != nil {
+		listReq.Context = req.ConditionContext
+	}
+
+	log.Debug().Interface("request", listReq).Msg("listing users")
 
 	return c.listUsers(ctx, listReq)
 }
@@ -80,11 +85,7 @@ func (c *Client) ListUserRequest(ctx context.Context, req ListRequest) (*ofgacli
 func (c *Client) listObjects(ctx context.Context, req ofgaclient.ClientListObjectsRequest) (*ofgaclient.ClientListObjectsResponse, error) {
 	list, err := c.Ofga.ListObjects(ctx).Body(req).Execute()
 	if err != nil {
-		log.Error().Err(err).
-			Str("user", req.User).
-			Str("relation", req.Relation).
-			Str("type", req.Type).
-			Msg("error listing objects")
+		log.Error().Err(err).Interface("request", req).Msg("error listing objects")
 
 		return nil, err
 	}
@@ -96,11 +97,7 @@ func (c *Client) listObjects(ctx context.Context, req ofgaclient.ClientListObjec
 func (c *Client) listUsers(ctx context.Context, req ofgaclient.ClientListUsersRequest) (*ofgaclient.ClientListUsersResponse, error) {
 	list, err := c.Ofga.ListUsers(ctx).Body(req).Execute()
 	if err != nil {
-		log.Error().Err(err).
-			Str("object", req.Object.Id).
-			Str("type", req.Object.Type).
-			Str("relation", req.Relation).
-			Msg("error listing users")
+		log.Error().Err(err).Interface("request", req).Msg("error listing users")
 
 		return nil, err
 	}
