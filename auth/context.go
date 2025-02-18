@@ -45,6 +45,8 @@ type AuthenticatedUser struct {
 	SubjectID string
 	// SubjectName is the name of the authenticated user
 	SubjectName string
+	// SubjectEmail is the email of the authenticated user
+	SubjectEmail string
 	// OrganizationID is the organization ID of the authenticated user
 	OrganizationID string
 	// OrganizationName is the name of the organization the user is authenticated to
