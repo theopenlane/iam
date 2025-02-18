@@ -12,15 +12,15 @@ A go library for interacting with [OpenFGA](https://openfga.dev/) - it is compri
 
 ## install
 
-You can install `fgax` by running the following command:
+You can install `iam` by running the following command:
 
 ```shell
-go get github.com/theopenlane/fgax@latest
+go get github.com/theopenlane/iam@latest
 ```
 
-## fgax
+## iam/fgax
 
-This package includes helper functions used heavily in [OpenLane](https://github.com/theopenlane/OpenLane/).
+This package includes helper functions used heavily in [Openlane Core](https://github.com/theopenlane/core/).
 
 For example, you can easily check for `Read` access of an organization using
 
