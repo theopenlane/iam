@@ -32,7 +32,7 @@ require (
 	github.com/theopenlane/entx v0.4.4
 	github.com/theopenlane/utils v0.4.3
 	github.com/vmihailenco/msgpack/v5 v5.4.1
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/tools v0.30.0
 	google.golang.org/api v0.222.0
 	google.golang.org/protobuf v1.36.5
