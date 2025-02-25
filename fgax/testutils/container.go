@@ -29,6 +29,10 @@ type OpenFGATestFixture struct {
 	reuse bool
 	// containerName is the name of the container, defaults to tc-openfga when reusing containers
 	containerName string
+	// memory is the memory for the container
+	memory int64
+	// cpu is the CPU for the container
+	cpu int64
 }
 
 // WithModelFile sets the model file path for the openFGA client
@@ -66,6 +70,20 @@ func WithContainerName(name string) Option {
 	}
 }
 
+// WithMemory sets the memory for the openFGA container
+func WithMemory(memory int64) Option {
+	return func(c *OpenFGATestFixture) {
+		c.memory = memory
+	}
+}
+
+// WithCPU sets the CPU for the openFGA container
+func WithCPU(cpu int64) Option {
+	return func(c *OpenFGATestFixture) {
+		c.cpu = cpu
+	}
+}
+
 // NewFGATestcontainer creates a new test container with the provided context and options
 func NewFGATestcontainer(ctx context.Context, opts ...Option) *OpenFGATestFixture {
 	// setup the default config
@@ -86,7 +104,7 @@ func NewFGATestcontainer(ctx context.Context, opts ...Option) *OpenFGATestFixtur
 	openfgaContainer, err := openfga.Run(
 		ctx,
 		container,
-		WithCustomizer(c.reuse, c.containerName),
+		WithCustomizer(c.reuse, c.containerName, c.memory, c.cpu),
 	)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to run openfga container")
