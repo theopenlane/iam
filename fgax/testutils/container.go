@@ -25,6 +25,10 @@ type OpenFGATestFixture struct {
 	storeName string
 	// tf is the openFGA test fixture
 	tf *openfga.OpenFGAContainer
+	// reuse is a flag to reuse the container
+	reuse bool
+	// containerName is the name of the container, defaults to tc-openfga when reusing containers
+	containerName string
 }
 
 // WithModelFile sets the model file path for the openFGA client
@@ -48,12 +52,27 @@ func WithVersion(version string) Option {
 	}
 }
 
+// WithReuse allows the container to be reused
+func WithReuse(reuse bool) Option {
+	return func(c *OpenFGATestFixture) {
+		c.reuse = reuse
+	}
+}
+
+// WithContainerName allows the container name to be set when using reusable containers
+func WithContainerName(name string) Option {
+	return func(c *OpenFGATestFixture) {
+		c.containerName = name
+	}
+}
+
 // NewFGATestcontainer creates a new test container with the provided context and options
 func NewFGATestcontainer(ctx context.Context, opts ...Option) *OpenFGATestFixture {
 	// setup the default config
 	c := &OpenFGATestFixture{
-		openFGAVersion: "latest",        // default to latest
-		storeName:      gofakeit.Name(), // add a random store name used if not provided
+		openFGAVersion: "latest",          // default to latest
+		storeName:      gofakeit.Name(),   // add a random store name used if not provided
+		containerName:  testcontainerName, // default to tc-openfga
 	}
 
 	// apply the options
@@ -64,7 +83,11 @@ func NewFGATestcontainer(ctx context.Context, opts ...Option) *OpenFGATestFixtur
 	// run the openfga container
 	container := fmt.Sprintf("openfga/openfga:%s", c.openFGAVersion)
 
-	openfgaContainer, err := openfga.Run(ctx, container)
+	openfgaContainer, err := openfga.Run(
+		ctx,
+		container,
+		WithCustomizer(c.reuse, c.containerName),
+	)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to run openfga container")
 	}
