@@ -4,12 +4,13 @@ go 1.23.5
 
 require (
 	entgo.io/contrib v0.6.0
-	entgo.io/ent v0.14.2
+	entgo.io/ent v0.14.3
 	github.com/99designs/gqlgen v0.17.66
 	github.com/Yamashou/gqlgenc v0.31.0
 	github.com/alicebob/miniredis/v2 v2.34.0
 	github.com/brianvoe/gofakeit/v7 v7.2.1
 	github.com/coreos/go-oidc/v3 v3.12.0
+	github.com/docker/docker v27.5.1+incompatible
 	github.com/go-webauthn/webauthn v0.12.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/go-github/v69 v69.2.0
@@ -71,7 +72,6 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/docker v27.5.1+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
