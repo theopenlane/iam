@@ -88,14 +88,17 @@ func WithCPU(cpu int64) Option {
 func NewFGATestcontainer(ctx context.Context, opts ...Option) *OpenFGATestFixture {
 	// setup the default config
 	c := &OpenFGATestFixture{
-		openFGAVersion: "latest",          // default to latest
-		storeName:      gofakeit.Name(),   // add a random store name used if not provided
-		containerName:  testcontainerName, // default to tc-openfga
+		openFGAVersion: "latest",        // default to latest
+		storeName:      gofakeit.Name(), // add a random store name used if not provided
 	}
 
 	// apply the options
 	for _, opt := range opts {
 		opt(c)
+	}
+
+	if c.reuse && c.containerName == "" {
+		c.containerName = testcontainerName // default to tc-openfga when reusing containers and no name is provided
 	}
 
 	// run the openfga container
