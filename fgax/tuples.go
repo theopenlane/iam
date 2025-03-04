@@ -9,6 +9,8 @@ import (
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/rs/zerolog/log"
+
+	"github.com/theopenlane/iam/auth"
 )
 
 // setup relations for use in creating tuples
@@ -25,6 +27,11 @@ const (
 	AuditorRelation = "auditor"
 	// CollaboratorRelation is the relation for collaborators of an entity
 	CollaboratorRelation = "collaborator"
+
+	// Wildcard allows for public access (any subject)
+	// see: https://openfga.dev/docs/modeling/public-access
+	// not allowed on the object side
+	Wildcard = "*"
 
 	// SelfRelation is the relation for the object to itself, usually for user relations
 	SelfRelation = "_self"
@@ -458,4 +465,30 @@ func GetTupleKey(req TupleRequest) TupleKey {
 	}
 
 	return k
+}
+
+// CreateWildcardViewerTuple creates a wildcard tuple with view access the provided object and role for users and service
+// e.g user:* and service:*
+func CreateWildcardViewerTuple(objectID, objectType string) []TupleKey {
+	return createWildcardTuples(objectID, objectType, CanView)
+}
+
+func createWildcardTuples(objectID, objectType, relation string) []TupleKey {
+	tuple := TupleRequest{
+		ObjectID:   objectID,
+		ObjectType: objectType,
+		SubjectID:  Wildcard,
+		Relation:   relation,
+	}
+
+	userTuple := tuple
+	userTuple.SubjectType = auth.UserSubjectType
+
+	serviceTuple := tuple
+	serviceTuple.SubjectType = auth.ServiceSubjectType
+
+	return []TupleKey{
+		GetTupleKey(userTuple),
+		GetTupleKey(serviceTuple),
+	}
 }
