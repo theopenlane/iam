@@ -568,3 +568,77 @@ func TestGetTupleKey(t *testing.T) {
 		})
 	}
 }
+func TestCreateWildcardTuple(t *testing.T) {
+	testCases := []struct {
+		name        string
+		objectID    string
+		objectType  string
+		expectedRes []TupleKey
+	}{
+		{
+			name:       "happy path",
+			objectID:   "object123",
+			objectType: "document",
+			expectedRes: []TupleKey{
+				{
+					Subject: Entity{
+						Kind:       "user",
+						Identifier: Wildcard,
+					},
+					Object: Entity{
+						Kind:       "document",
+						Identifier: "object123",
+					},
+					Relation: CanView,
+				},
+				{
+					Subject: Entity{
+						Kind:       "service",
+						Identifier: Wildcard,
+					},
+					Object: Entity{
+						Kind:       "document",
+						Identifier: "object123",
+					},
+					Relation: CanView,
+				},
+			},
+		},
+		{
+			name:       "another object type",
+			objectID:   "object456",
+			objectType: "file",
+			expectedRes: []TupleKey{
+				{
+					Subject: Entity{
+						Kind:       "user",
+						Identifier: Wildcard,
+					},
+					Object: Entity{
+						Kind:       "file",
+						Identifier: "object456",
+					},
+					Relation: CanView,
+				},
+				{
+					Subject: Entity{
+						Kind:       "service",
+						Identifier: Wildcard,
+					},
+					Object: Entity{
+						Kind:       "file",
+						Identifier: "object456",
+					},
+					Relation: CanView,
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res := CreateWildcardViewerTuple(tc.objectID, tc.objectType)
+			assert.Equal(t, tc.expectedRes, res)
+		})
+	}
+}
