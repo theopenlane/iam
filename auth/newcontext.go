@@ -24,12 +24,12 @@ func MustAuthenticatedUserFromContext(ctx context.Context) *AuthenticatedUser {
 
 // AuthenticatedUserFromContextOr retrieves the authenticated user from the context or returns the provided default value if not found
 func AuthenticatedUserFromContextOr(ctx context.Context, def *AuthenticatedUser) *AuthenticatedUser {
-	return contextx.FromOr[*AuthenticatedUser](ctx, def)
+	return contextx.FromOr(ctx, def)
 }
 
 // AuthenticatedUserFromContextOrFunc retrieves the authenticated user from the context or returns the result of the provided function if not found
 func AuthenticatedUserFromContextOrFunc(ctx context.Context, f func() *AuthenticatedUser) *AuthenticatedUser {
-	return contextx.FromOrFunc[*AuthenticatedUser](ctx, f)
+	return contextx.FromOrFunc(ctx, f)
 }
 
 // WithAccessToken sets the access token in the context
@@ -49,12 +49,12 @@ func MustAccessTokenFromContext(ctx context.Context) string {
 
 // AccessTokenFromContextOr retrieves the access token from the context or returns the provided default value if not found
 func AccessTokenFromContextOr(ctx context.Context, def string) string {
-	return contextx.FromOr[string](ctx, def)
+	return contextx.FromOr(ctx, def)
 }
 
 // AccessTokenFromContextOrFunc retrieves the access token from the context or returns the result of the provided function if not found
 func AccessTokenFromContextOrFunc(ctx context.Context, f func() string) string {
-	return contextx.FromOrFunc[string](ctx, f)
+	return contextx.FromOrFunc(ctx, f)
 }
 
 // WithRequestID sets the request ID in the context
@@ -74,12 +74,12 @@ func MustRequestIDFromContext(ctx context.Context) string {
 
 // RequestIDFromContextOr retrieves the request ID from the context or returns the provided default value if not found
 func RequestIDFromContextOr(ctx context.Context, def string) string {
-	return contextx.FromOr[string](ctx, def)
+	return contextx.FromOr(ctx, def)
 }
 
 // RequestIDFromContextOrFunc retrieves the request ID from the context or returns the result of the provided function if not found
 func RequestIDFromContextOrFunc(ctx context.Context, f func() string) string {
-	return contextx.FromOrFunc[string](ctx, f)
+	return contextx.FromOrFunc(ctx, f)
 }
 
 // NewSetAuthenticatedUserContext sets the authenticated user context in the echo context
