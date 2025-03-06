@@ -39,6 +39,8 @@ type ContextKey struct {
 	name string
 }
 
+type OrganizationCreationContextKey struct{}
+
 // AuthenticatedUser contains the user and organization ID for the authenticated user
 type AuthenticatedUser struct {
 	// SubjectID is the user ID of the authenticated user or the api token ID if the user is an API token
