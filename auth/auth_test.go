@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	echo "github.com/theopenlane/echox"
+	"github.com/theopenlane/echox/middleware/echocontext"
 
 	"github.com/theopenlane/iam/auth"
 	"github.com/theopenlane/iam/sessions"
@@ -124,7 +125,7 @@ func TestGetAccessToken(t *testing.T) {
 
 			ctx := e.NewContext(req, res)
 
-			gotTks, err := auth.GetAccessToken(ctx)
+			gotTks, err := auth.GetBearerToken(ctx)
 			if tc.wantErr {
 				assert.Error(t, err)
 				assert.Equal(t, tc.err, err)
@@ -213,10 +214,7 @@ func TestGetRefreshToken(t *testing.T) {
 }
 
 func TestSetAuthCookies(t *testing.T) {
-	validCtx, err := auth.NewTestEchoContextWithValidUser("funks")
-	if err != nil {
-		t.Fatal()
-	}
+	ec := echocontext.NewTestEchoContext()
 
 	testAccessToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2F1dGguZGF0dW0ubmV0IiwiYXVkIjoiaHR0cHM6Ly9kYXR1bS5uZXQiLCJzdWIiOiJVMVdNNHVGLTNxcGRsLWRtS0lISjQiLCJpYXQiOjE3MDE5ODc2NDYsImV4cCI6MzMyNTg4OTY0NDZ9.y51S2D9qMHLRixj230YZbvQZyhWzDOQ2RPbyJmnEYXA"  //nolint:gosec
 	testRefreshToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2F1dGguZGF0dW0ubmV0IiwiYXVkIjoiaHR0cHM6Ly9kYXR1bS5uZXQiLCJzdWIiOiJVMVdNNHVGLTNxcGRsLWRtS0lISjQiLCJpYXQiOjE3MDE5ODc2NDYsImV4cCI6MzMyNTg4OTY0NDZ9.y51S2D9qMHLRixj230YZbvQZyhWzDOQ2RPbyJmnEYXA" //nolint:gosec
@@ -230,7 +228,7 @@ func TestSetAuthCookies(t *testing.T) {
 
 		{
 			name:         happy,
-			ctx:          validCtx,
+			ctx:          ec,
 			accessToken:  testAccessToken,
 			refreshToken: testRefreshToken,
 		},
@@ -244,10 +242,7 @@ func TestSetAuthCookies(t *testing.T) {
 }
 
 func TestClearAuthCookies(t *testing.T) {
-	validCtx, err := auth.NewTestEchoContextWithValidUser("funks")
-	if err != nil {
-		t.Fatal()
-	}
+	ec := echocontext.NewTestEchoContext()
 
 	tests := []struct {
 		name         string
@@ -260,7 +255,7 @@ func TestClearAuthCookies(t *testing.T) {
 
 		{
 			name: happy,
-			ctx:  validCtx,
+			ctx:  ec,
 		},
 	}
 	for _, tc := range tests {
