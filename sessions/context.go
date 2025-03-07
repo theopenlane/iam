@@ -2,24 +2,21 @@ package sessions
 
 import (
 	"context"
-	"strings"
 
 	"github.com/pkg/errors"
 
+	"github.com/theopenlane/utils/contextx"
 	"golang.org/x/oauth2"
 )
 
-// SessionContextKey is the context key for the user claims
-var SessionContextKey = &ContextKey{"SessionContextKey"}
-
-// ContextKey is the key name for the additional context
-type ContextKey struct {
-	name string
+// ContextWithToken returns a copy of ctx that stores the Token
+func ContextWithToken(ctx context.Context, token *oauth2.Token) context.Context {
+	return contextx.With(ctx, token)
 }
 
 // OhAuthTokenFromContext returns the Token from the ctx
 func OhAuthTokenFromContext(ctx context.Context) (*oauth2.Token, error) {
-	token, ok := ctx.Value(SessionContextKey).(*oauth2.Token)
+	token, ok := contextx.From[*oauth2.Token](ctx)
 	if !ok {
 		return nil, errors.New("context missing Token")
 	}
@@ -27,15 +24,10 @@ func OhAuthTokenFromContext(ctx context.Context) (*oauth2.Token, error) {
 	return token, nil
 }
 
-// ContextWithToken returns a copy of ctx that stores the Token
-func ContextWithToken(ctx context.Context, token *oauth2.Token) context.Context {
-	return context.WithValue(ctx, SessionContextKey, token)
-}
-
 // UserIDFromContext returns the user ID from the ctx
 // this function assumes the session data is stored in a string map
 func UserIDFromContext(ctx context.Context) (string, error) {
-	sessionDetails, ok := ctx.Value(SessionContextKey).(*Session[any])
+	sessionDetails, ok := contextx.From[*Session[any]](ctx)
 	if !ok {
 		return "", ErrInvalidSession
 	}
@@ -60,20 +52,22 @@ func UserIDFromContext(ctx context.Context) (string, error) {
 	return userID, nil
 }
 
+type UserID string
+
 // ContextWithUserID returns a copy of ctx that stores the user ID
-func ContextWithUserID(ctx context.Context, userID string) context.Context {
-	if strings.TrimSpace(userID) == "" {
+func ContextWithUserID(ctx context.Context, userID UserID) context.Context {
+	if userID == "" {
 		return ctx
 	}
 
-	return context.WithValue(ctx, SessionContextKey, userID)
+	return contextx.With(ctx, userID)
 }
 
-// SessionToken returns the encoded session token
+// SessionToken returns the session token from the context
 func SessionToken(ctx context.Context) (string, error) {
-	sd := getSessionDataFromContext(ctx)
-	if sd == nil {
-		return "", ErrInvalidSession
+	sd, err := getSessionDataFromContext(ctx)
+	if err != nil {
+		return "", err
 	}
 
 	sd.mu.Lock()
@@ -82,17 +76,17 @@ func SessionToken(ctx context.Context) (string, error) {
 	return sd.store.EncodeCookie(sd)
 }
 
-// addSessionDataToContext adds the session details to the context
+// addSessionDataToContext adds session data to the context
 func (s *Session[P]) addSessionDataToContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, SessionContextKey, s)
+	return contextx.With(ctx, s)
 }
 
-// getSessionDataFromContext gets the session information from the context
-func getSessionDataFromContext(ctx context.Context) *Session[map[string]any] {
-	c, ok := ctx.Value(SessionContextKey).(*Session[map[string]any])
+// getSessionDataFromContext retrieves session data from the context
+func getSessionDataFromContext(ctx context.Context) (*Session[map[string]any], error) {
+	sessionData, ok := contextx.From[*Session[map[string]any]](ctx)
 	if !ok {
-		return nil
+		return nil, errors.New("context missing session data")
 	}
 
-	return c
+	return sessionData, nil
 }

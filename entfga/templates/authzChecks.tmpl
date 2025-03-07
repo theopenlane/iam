@@ -41,7 +41,7 @@ var (
             return privacy.Skipf("not a graphql request, no context to check")
         }
 
-        subjectID, err := auth.GetUserIDFromContext(ctx)
+        subjectID, err := auth.GetSubjectIDFromContext(ctx)
         if err != nil {
             log.Error().Err(err).Msg("unable to get user id from context")
 
@@ -191,7 +191,7 @@ var (
             return privacy.Allowf("nil request, bypassing auth check")
         }
 
-        subjectID, err := auth.GetUserIDFromContext(ctx)
+        subjectID, err := auth.GetSubjectIDFromContext(ctx)
         if err != nil {
             return err
         }
@@ -232,7 +232,7 @@ var (
             return privacy.Allowf("nil request, bypassing auth check")
         }
 
-        subjectID, err := auth.GetUserIDFromContext(ctx)
+        subjectID, err := auth.GetSubjectIDFromContext(ctx)
         if err != nil {
             log.Error().Err(err).Msg("unable to get user id from context")
 

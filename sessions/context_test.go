@@ -15,7 +15,7 @@ func TestNewContextWithToken(t *testing.T) {
 	ctx := context.Background()
 	token := &oauth2.Token{AccessToken: "test_token"}
 
-	ctx = sessions.NewContextWithToken(ctx, token)
+	ctx = sessions.ContextWithToken(ctx, token)
 	retrievedToken, ok := contextx.From[*oauth2.Token](ctx)
 
 	assert.True(t, ok)
@@ -26,8 +26,8 @@ func TestNewOhAuthTokenFromContext(t *testing.T) {
 	ctx := context.Background()
 	token := &oauth2.Token{AccessToken: "test_token"}
 
-	ctx = sessions.NewContextWithToken(ctx, token)
-	retrievedToken, err := sessions.NewOhAuthTokenFromContext(ctx)
+	ctx = sessions.ContextWithToken(ctx, token)
+	retrievedToken, err := sessions.OhAuthTokenFromContext(ctx)
 
 	assert.NoError(t, err)
 	assert.Equal(t, token, retrievedToken)
@@ -36,7 +36,7 @@ func TestNewOhAuthTokenFromContext(t *testing.T) {
 func TestNewOhAuthTokenFromContext_MissingToken(t *testing.T) {
 	ctx := context.Background()
 
-	_, err := sessions.NewOhAuthTokenFromContext(ctx)
+	_, err := sessions.OhAuthTokenFromContext(ctx)
 
 	assert.Error(t, err)
 	assert.Equal(t, "context missing Token", err.Error())
@@ -45,7 +45,7 @@ func TestNewOhAuthTokenFromContext_MissingToken(t *testing.T) {
 func TestNewUserIDFromContext_MissingSession(t *testing.T) {
 	ctx := context.Background()
 
-	_, err := sessions.NewUserIDFromContext(ctx)
+	_, err := sessions.UserIDFromContext(ctx)
 
 	assert.Error(t, err)
 	assert.Equal(t, sessions.ErrInvalidSession, err)
@@ -55,18 +55,18 @@ func TestNewContextWithUserID(t *testing.T) {
 	ctx := context.Background()
 	userID := sessions.UserID("test_user")
 
-	ctx = sessions.NewContextWithUserID(ctx, userID)
+	ctx = sessions.ContextWithUserID(ctx, userID)
 	retrievedUserID, ok := contextx.From[sessions.UserID](ctx)
 
 	assert.True(t, ok)
 	assert.Equal(t, userID, retrievedUserID)
 }
 
-func TestNewContextWithUserID_EmptyUserID(t *testing.T) {
+func TestNewContextWithUserIDEmptyUserID(t *testing.T) {
 	ctx := context.Background()
 	userID := sessions.UserID("")
 
-	ctx = sessions.NewContextWithUserID(ctx, userID)
+	ctx = sessions.ContextWithUserID(ctx, userID)
 	retrievedUserID, ok := contextx.From[sessions.UserID](ctx)
 
 	assert.False(t, ok)

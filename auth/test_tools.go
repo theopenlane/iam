@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	echo "github.com/theopenlane/echox"
 	"github.com/theopenlane/echox/middleware/echocontext"
 	"github.com/theopenlane/utils/contextx"
 	"github.com/theopenlane/utils/ulids"
@@ -34,8 +33,7 @@ func newValidClaims(subject string) *tokens.Claims {
 	return claims
 }
 
-// NewTestEchoContextWithValidUser creates an echo context with a fake subject for testing purposes ONLY
-func NewTestEchoContextWithValidUser(subject string) (echo.Context, error) {
+func NewTestContextWithValidUser(subject string) context.Context {
 	ec := echocontext.NewTestEchoContext()
 
 	claims := newValidClaims(subject)
@@ -44,23 +42,14 @@ func NewTestEchoContextWithValidUser(subject string) (echo.Context, error) {
 		SubjectID:          claims.UserID,
 		OrganizationID:     claims.OrgID,
 		OrganizationIDs:    []string{claims.OrgID},
-		AuthenticationType: "jwt",
+		AuthenticationType: JWTAuthentication,
 	})
-
-	return ec, nil
-}
-
-func NewTestContextWithValidUser(subject string) (context.Context, error) {
-	ec, err := NewTestEchoContextWithValidUser(subject)
-	if err != nil {
-		return nil, err
-	}
 
 	reqCtx := contextx.With(ec.Request().Context(), ec)
 
 	ec.SetRequest(ec.Request().WithContext(reqCtx))
 
-	return reqCtx, nil
+	return reqCtx
 }
 
 // newValidClaims returns claims with a fake orgID for testing purposes ONLY
@@ -84,8 +73,8 @@ func newValidClaimsOrgID(sub, orgID string) *tokens.Claims {
 	return claims
 }
 
-// NewTestEchoContextWithOrgID creates an echo context with a fake orgID for testing purposes ONLY
-func NewTestEchoContextWithOrgID(sub, orgID string) (echo.Context, error) {
+// NewTestContextWithOrgID creates a context with a fake orgID for testing purposes only (why all caps jeez keep it down)
+func NewTestContextWithOrgID(sub, orgID string) context.Context {
 	ec := echocontext.NewTestEchoContext()
 
 	claims := newValidClaimsOrgID(sub, orgID)
@@ -94,28 +83,18 @@ func NewTestEchoContextWithOrgID(sub, orgID string) (echo.Context, error) {
 		SubjectID:          claims.UserID,
 		OrganizationID:     claims.OrgID,
 		OrganizationIDs:    []string{claims.OrgID},
-		AuthenticationType: "jwt",
+		AuthenticationType: JWTAuthentication,
 	})
-
-	return ec, nil
-}
-
-// NewTestContextWithOrgID creates a context with a fake orgID for testing purposes only (why all caps jeez keep it down)
-func NewTestContextWithOrgID(sub, orgID string) (context.Context, error) {
-	ec, err := NewTestEchoContextWithOrgID(sub, orgID)
-	if err != nil {
-		return nil, err
-	}
 
 	reqCtx := contextx.With(ec.Request().Context(), ec)
 
 	ec.SetRequest(ec.Request().WithContext(reqCtx))
 
-	return reqCtx, nil
+	return reqCtx
 }
 
-// NewTestEchoContextWithOrgID creates an echo context with a fake orgID for testing purposes ONLY
-func NewTestEchoContextWithSubscription(subscription bool) (echo.Context, error) {
+// NewTestContextWithSubscription creates a context with an active subscription for testing purposes only
+func NewTestContextWithSubscription(subscription bool) context.Context {
 	ec := echocontext.NewTestEchoContext()
 
 	claims := newValidClaimsOrgID(ulids.New().String(), ulids.New().String())
@@ -124,23 +103,11 @@ func NewTestEchoContextWithSubscription(subscription bool) (echo.Context, error)
 		SubjectID:          claims.UserID,
 		OrganizationID:     claims.OrgID,
 		OrganizationIDs:    []string{claims.OrgID},
-		AuthenticationType: "jwt",
+		AuthenticationType: JWTAuthentication,
 		ActiveSubscription: subscription,
 	})
 
-	return ec, nil
-}
-
-// NewTestContextWithOrgID creates a context with a fake orgID for testing purposes only (why all caps jeez keep it down)
-func NewTestContextWithSubscription(subscription bool) (context.Context, error) {
-	ec, err := NewTestEchoContextWithSubscription(subscription)
-	if err != nil {
-		return nil, err
-	}
-
 	reqCtx := contextx.With(ec.Request().Context(), ec)
 
-	ec.SetRequest(ec.Request().WithContext(reqCtx))
-
-	return reqCtx, nil
+	return reqCtx
 }

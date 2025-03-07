@@ -72,18 +72,11 @@ func WithBeforeFunc(before middleware.BeforeFunc) Option {
 
 // CreateAndStoreSession creates the session values with user ID and sets the cookie stores the session in
 // the persistent store (redis)
-func (sc *SessionConfig) CreateAndStoreSession(ctx echo.Context, userID string) error {
+func (sc *SessionConfig) CreateAndStoreSession(ctx context.Context, w http.ResponseWriter, userID string) (context.Context, error) {
 	setSessionMap := map[string]any{}
 	setSessionMap[UserIDKey] = userID
 
-	c, err := sc.SaveAndStoreSession(ctx.Request().Context(), ctx.Response().Writer, setSessionMap, userID)
-	if err != nil {
-		return err
-	}
-
-	ctx.SetRequest(ctx.Request().WithContext(c))
-
-	return nil
+	return sc.SaveAndStoreSession(ctx, w, setSessionMap, userID)
 }
 
 // SaveAndStoreSession saves the session to the cookie and to the persistent store (redis) with the provided map of values
@@ -176,11 +169,14 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 
 			c.Response().Before(func() {
 				// refresh and save session cookie
-				if err := config.CreateAndStoreSession(c, sessionID); err != nil {
+				ctx, err := config.CreateAndStoreSession(c.Request().Context(), c.Response().Writer, sessionID)
+				if err != nil {
 					log.Error().Err(err).Msg("unable to create and store new session")
 
 					panic(err)
 				}
+
+				c.SetRequest(c.Request().WithContext(ctx))
 
 				addHeaderIfMissing(c.Response(), "Cache-Control", `no-cache="Set-Cookie"`)
 				addHeaderIfMissing(c.Response(), "Vary", "Cookie")

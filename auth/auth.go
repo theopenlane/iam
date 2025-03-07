@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"net/http"
 	"regexp"
 	"time"
@@ -27,13 +26,13 @@ var (
 	bearer = regexp.MustCompile(`^\s*[Bb]earer\s+([a-zA-Z0-9_\-\.]+)\s*$`)
 )
 
-// GetAccessToken retrieves the bearer token from the authorization header and parses it
+// GetBearerToken retrieves the bearer token from the authorization header and parses it
 // to return only the JWT access token component of the header. Alternatively, if the
 // authorization header is not present, then the token is fetched from cookies. If the
 // header is missing or the token is not available, an error is returned.
 //
 // NOTE: the authorization header takes precedence over access tokens in cookies.
-func GetAccessToken(c echo.Context) (string, error) {
+func GetBearerToken(c echo.Context) (string, error) {
 	// Attempt to get the access token from the header.
 	if h := c.Request().Header.Get(Authorization); h != "" {
 		match := bearer.FindStringSubmatch(h)
@@ -81,32 +80,6 @@ func GetRefreshToken(c echo.Context) (string, error) {
 	}
 
 	return cookie.Value, nil
-}
-
-// AuthContextFromRequest creates a context from the echo request context, copying fields
-// that may be required for forwarded requests. This method should be called by
-// handlers which need to forward requests to other services and need to preserve data
-// from the original request such as the user's credentials.
-func AuthContextFromRequest(c echo.Context) (*context.Context, error) {
-	req := c.Request()
-	if req == nil {
-		return nil, ErrNoRequest
-	}
-
-	// Add access token to context (from either header or cookie using Authenticate middleware)
-	ctx := req.Context()
-	if token := c.Get(ContextAccessToken.name); token != "" {
-		ctx = context.WithValue(ctx, ContextAccessToken, token)
-	}
-
-	// Add request id to context
-	if requestID := c.Get(ContextRequestID.name); requestID != "" {
-		ctx = context.WithValue(ctx, ContextRequestID, requestID)
-	} else if requestID := c.Request().Header.Get("X-Request-ID"); requestID != "" {
-		ctx = context.WithValue(ctx, ContextRequestID, requestID)
-	}
-
-	return &ctx, nil
 }
 
 // SetAuthCookies is a helper function to set authentication cookies on a echo request.
