@@ -33,7 +33,7 @@ func TestNewOhAuthTokenFromContext(t *testing.T) {
 	assert.Equal(t, token, retrievedToken)
 }
 
-func TestNewOhAuthTokenFromContext_MissingToken(t *testing.T) {
+func TestNewOhAuthTokenFromContextMissingToken(t *testing.T) {
 	ctx := context.Background()
 
 	_, err := sessions.OhAuthTokenFromContext(ctx)
@@ -42,7 +42,7 @@ func TestNewOhAuthTokenFromContext_MissingToken(t *testing.T) {
 	assert.Equal(t, "context missing Token", err.Error())
 }
 
-func TestNewUserIDFromContext_MissingSession(t *testing.T) {
+func TestNewUserIDFromContextMissingSession(t *testing.T) {
 	ctx := context.Background()
 
 	_, err := sessions.UserIDFromContext(ctx)
