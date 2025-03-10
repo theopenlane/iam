@@ -11,7 +11,7 @@ require (
 	github.com/brianvoe/gofakeit/v7 v7.2.1
 	github.com/coreos/go-oidc/v3 v3.12.0
 	github.com/docker/docker v28.0.1+incompatible
-	github.com/go-webauthn/webauthn v0.12.1
+	github.com/go-webauthn/webauthn v0.12.2
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/go-github/v69 v69.2.0
 	github.com/gorilla/securecookie v1.1.2
@@ -85,7 +85,7 @@ require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-openapi/inflect v0.21.0 // indirect
 	github.com/go-test/deep v1.0.8 // indirect
-	github.com/go-webauthn/x v0.1.18 // indirect
+	github.com/go-webauthn/x v0.1.19 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/cel-go v0.23.2 // indirect
