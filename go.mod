@@ -4,7 +4,7 @@ go 1.23.5
 
 require (
 	entgo.io/contrib v0.6.0
-	entgo.io/ent v0.14.3
+	entgo.io/ent v0.14.4
 	github.com/99designs/gqlgen v0.17.68
 	github.com/Yamashou/gqlgenc v0.31.0
 	github.com/alicebob/miniredis/v2 v2.34.0
@@ -31,7 +31,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.35.0
 	github.com/theopenlane/echox v0.2.1
 	github.com/theopenlane/entx v0.4.4
-	github.com/theopenlane/utils v0.4.3
+	github.com/theopenlane/utils v0.4.4
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/tools v0.31.0
