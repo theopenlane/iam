@@ -6,11 +6,17 @@
 
 # Identity and Access Management (IAM)
 
-A go library for interacting with [OpenFGA](https://openfga.dev/) - it is comprised of 2 packages, `fgax` and `entfga`.
+This repository contains the `iam` libraries, which is a collection of packages that control the authentication and authorization of users and services within Openlane. The repo is laid out at a high level containing:
+
+- auth: primarily context interactions type definitions
 - fgax: wrapper to interact with the [OpenFGA go-sdk](https://github.com/openfga/go-sdk) and client libraries
 - entfga: an [ent extension](https://entgo.io/docs/extensions/) to create relationship tuples using [ent Hooks](https://entgo.io/docs/hooks/)
+- providers: third party authentication flow(s); today github, google, oauth2 are supported with webauthn and oidc in-progress
+- sessions: interfaces for managing user sessions with support for Redis as the session store
+- tokens: tokenmanager which can create and validate tokens of various types, e.g. refresh tokens, access tokens, url tokens, etc.
+- totp: second factor authentication library for generating unique, temporary passcodes
 
-## install
+## Install
 
 You can install `iam` by running the following command:
 
@@ -18,7 +24,16 @@ You can install `iam` by running the following command:
 go get github.com/theopenlane/iam@latest
 ```
 
-## iam/fgax
+## Usage
+
+The goal of separating out the code that lives within this repo from the `core` repo is to make the authentication and authorization constructs re-usable across repositories / projects. Given that, `core` itself is a large consumer of the IAM repo and thus has many practical [implementation](https://github.com/theopenlane/core/blob/main/internal/httpserve/authmanager/authmanager.go) examples. You can see instantiation of many of these libraries within `serveropts` and `authmanager`.
+
+###  Providers
+
+You can see practical examples with basic web interface setups within the `core` repository [here](https://github.com/theopenlane/core/tree/main/pkg/testutils)
+
+
+## IAM/FGAX
 
 This package includes helper functions used heavily in [Openlane Core](https://github.com/theopenlane/core/).
 
@@ -44,7 +59,7 @@ For example, you can easily check for `Read` access of an organization using
 	}
 ```
 
-## entfga
+## EntFGA
 
 See the [README](./entfga/README.md) for details
 

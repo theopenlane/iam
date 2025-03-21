@@ -1,6 +1,6 @@
 module github.com/theopenlane/iam
 
-go 1.23.5
+go 1.24.1
 
 require (
 	entgo.io/contrib v0.6.0
