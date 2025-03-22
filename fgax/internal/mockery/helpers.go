@@ -228,6 +228,7 @@ func BatchCheck(t *testing.T, c *MockSdkClient, list []string, allowed []string)
 		checkResp := ofgaclient.ClientBatchCheckSingleResponse{
 			Request: ofgaclient.ClientCheckRequest{
 				Relation: relation,
+				Object:   relation,
 			},
 			ClientCheckResponse: ccr,
 		}
