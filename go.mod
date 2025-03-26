@@ -10,7 +10,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.34.0
 	github.com/brianvoe/gofakeit/v7 v7.2.1
 	github.com/coreos/go-oidc/v3 v3.13.0
-	github.com/docker/docker v28.0.3+incompatible
+	github.com/docker/docker v28.0.4+incompatible
 	github.com/go-webauthn/webauthn v0.12.2
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/go-github/v70 v70.0.0
