@@ -307,7 +307,7 @@ func TestBatchCheckObjectAccess(t *testing.T) {
 			c := mock_fga.NewMockSdkClient(t)
 			mc := NewMockFGAClient(t, c)
 
-			if !tc.wantErr {
+			if !tc.wantErr && len(tc.checks) > 0 {
 				mock_fga.BatchCheck(t, c, tc.checkedObjects, tc.expectedRes)
 			}
 
@@ -389,7 +389,7 @@ func TestBatchGetAllowedIDs(t *testing.T) {
 			c := mock_fga.NewMockSdkClient(t)
 			mc := NewMockFGAClient(t, c)
 
-			if !tc.wantErr {
+			if !tc.wantErr && len(tc.checks) > 0 {
 				mock_fga.BatchCheck(t, c, tc.checkedObjects, tc.checkResults)
 			}
 

@@ -54,6 +54,10 @@ type ListAccess struct {
 // BatchCheckObjectAccess checks if the user has access to the list of objects with the given relation
 // It returns a list of objects (type:id, e.g. organization:01JPWNAGM9S61G57DS364MFKGX) that the user has access to
 func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessCheck) ([]string, error) {
+	if len(checks) == 0 {
+		return []string{}, nil
+	}
+
 	checkRequests := []ofgaclient.ClientCheckRequest{}
 
 	for _, ac := range checks {
