@@ -51,10 +51,76 @@ type ListAccess struct {
 	Context *map[string]any
 }
 
+// BatchCheckObjectAccess checks if the user has access to the list of objects with the given relation
+// It returns a list of objects (type:id, e.g. organization:01JPWNAGM9S61G57DS364MFKGX) that the user has access to
+func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessCheck) ([]string, error) {
+	if len(checks) == 0 {
+		return []string{}, nil
+	}
+
+	checkRequests := []ofgaclient.ClientCheckRequest{}
+
+	for _, ac := range checks {
+		check, err := toCheckRequest(ac)
+		if err != nil {
+			return nil, err
+		}
+
+		checkRequests = append(checkRequests, *check)
+	}
+
+	results, err := c.Ofga.BatchCheck(ctx).Body(checkRequests).Execute()
+	if err != nil {
+		return nil, err
+	}
+
+	allowedObjects := []string{}
+
+	for _, result := range *results {
+		if result.Allowed != nil && *result.Allowed {
+			allowedObjects = append(allowedObjects, result.Request.Object)
+		}
+	}
+
+	return allowedObjects, nil
+}
+
+// BatchGetAllowedIDs checks if the user has access to the list of objects with the given relation
+// and returns a list of objects; it assumes the checks are for all the same object types (or the user knows the object type from the id)
+func (c *Client) BatchGetAllowedIDs(ctx context.Context, checks []AccessCheck) ([]string, error) {
+	res, err := c.BatchCheckObjectAccess(ctx, checks)
+	if err != nil {
+		return nil, err
+	}
+
+	allowedObjectIds := []string{}
+
+	for _, r := range res {
+		entity, err := ParseEntity(r)
+		if err != nil {
+			return nil, err
+		}
+
+		allowedObjectIds = append(allowedObjectIds, entity.Identifier)
+	}
+
+	return allowedObjectIds, nil
+}
+
 // CheckAccess checks if the user has access to the object type with the given relation
 func (c *Client) CheckAccess(ctx context.Context, ac AccessCheck) (bool, error) {
-	if err := validateAccessCheck(ac); err != nil {
+	checkReq, err := toCheckRequest(ac)
+	if err != nil {
 		return false, err
+	}
+
+	return c.checkTuple(ctx, *checkReq)
+}
+
+// toCheckRequest converts an AccessCheck to a ClientCheckRequest
+func toCheckRequest(ac AccessCheck) (*ofgaclient.ClientCheckRequest, error) {
+	if err := validateAccessCheck(ac); err != nil {
+		return nil, err
 	}
 
 	if ac.SubjectType == "" {
@@ -71,16 +137,12 @@ func (c *Client) CheckAccess(ctx context.Context, ac AccessCheck) (bool, error) 
 		Identifier: ac.ObjectID,
 	}
 
-	log.Info().Str("relation", ac.Relation).Str("object", obj.String()).Msg("checking relationship tuples")
-
-	checkReq := ofgaclient.ClientCheckRequest{
+	return &ofgaclient.ClientCheckRequest{
 		User:     sub.String(),
 		Relation: ac.Relation,
 		Object:   obj.String(),
 		Context:  ac.Context,
-	}
-
-	return c.checkTuple(ctx, checkReq)
+	}, nil
 }
 
 // ListRelations returns the list of relations the user has with the object

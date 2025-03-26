@@ -247,3 +247,164 @@ func TestListRelations(t *testing.T) {
 		})
 	}
 }
+func TestBatchCheckObjectAccess(t *testing.T) {
+	tests := []struct {
+		name           string
+		checks         []AccessCheck
+		checkedObjects []string
+		expectedRes    []string
+		wantErr        bool
+	}{
+		{
+			name: "happy path, valid access",
+			checks: []AccessCheck{
+				{
+					ObjectType: "organization",
+					ObjectID:   "ulid-of-org-1",
+					Relation:   "member",
+					SubjectID:  "ulid-of-member",
+				},
+				{
+					ObjectType: "organization",
+					ObjectID:   "ulid-of-org-2",
+					Relation:   "member",
+					SubjectID:  "ulid-of-member",
+				},
+			},
+			checkedObjects: []string{"organization:ulid-of-org-1", "organization:ulid-of-org-2"},
+			expectedRes:    []string{"organization:ulid-of-org-1"},
+			wantErr:        false,
+		},
+		{
+			name: "one invalid access check",
+			checks: []AccessCheck{
+				{
+					ObjectType: "organization",
+					ObjectID:   "ulid-of-org-1",
+					Relation:   "member",
+					SubjectID:  "ulid-of-member",
+				},
+				{
+					ObjectType: "",
+					ObjectID:   "ulid-of-org-2",
+					Relation:   "member",
+					SubjectID:  "ulid-of-member",
+				},
+			},
+			expectedRes: nil,
+			wantErr:     true,
+		},
+		{
+			name:        "no access checks",
+			checks:      []AccessCheck{},
+			expectedRes: []string{},
+			wantErr:     false,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// setup mock client
+			c := mock_fga.NewMockSdkClient(t)
+			mc := NewMockFGAClient(t, c)
+
+			if !tc.wantErr && len(tc.checks) > 0 {
+				mock_fga.BatchCheck(t, c, tc.checkedObjects, tc.expectedRes)
+			}
+
+			// do request
+			valid, err := mc.BatchCheckObjectAccess(context.Background(), tc.checks)
+
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedRes, valid)
+
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedRes, valid)
+		})
+	}
+}
+
+func TestBatchGetAllowedIDs(t *testing.T) {
+	tests := []struct {
+		name           string
+		checks         []AccessCheck
+		checkedObjects []string
+		checkResults   []string
+		expectedRes    []string
+		wantErr        bool
+	}{
+		{
+			name: "happy path, valid access",
+			checks: []AccessCheck{
+				{
+					ObjectType: "organization",
+					ObjectID:   "ulid-of-org-1",
+					Relation:   "member",
+					SubjectID:  "ulid-of-member",
+				},
+				{
+					ObjectType: "organization",
+					ObjectID:   "ulid-of-org-2",
+					Relation:   "member",
+					SubjectID:  "ulid-of-member",
+				},
+			},
+			checkedObjects: []string{"organization:ulid-of-org-1", "organization:ulid-of-org-2"},
+			checkResults:   []string{"organization:ulid-of-org-1"},
+			expectedRes:    []string{"ulid-of-org-1"},
+			wantErr:        false,
+		},
+		{
+			name: "one invalid access check",
+			checks: []AccessCheck{
+				{
+					ObjectType: "organization",
+					ObjectID:   "ulid-of-org-1",
+					Relation:   "member",
+					SubjectID:  "ulid-of-member",
+				},
+				{
+					ObjectType: "",
+					ObjectID:   "ulid-of-org-2",
+					Relation:   "member",
+					SubjectID:  "ulid-of-member",
+				},
+			},
+			expectedRes: nil,
+			wantErr:     true,
+		},
+		{
+			name:        "no access checks",
+			checks:      []AccessCheck{},
+			expectedRes: []string{},
+			wantErr:     false,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// setup mock client
+			c := mock_fga.NewMockSdkClient(t)
+			mc := NewMockFGAClient(t, c)
+
+			if !tc.wantErr && len(tc.checks) > 0 {
+				mock_fga.BatchCheck(t, c, tc.checkedObjects, tc.checkResults)
+			}
+
+			// do request
+			valid, err := mc.BatchGetAllowedIDs(context.Background(), tc.checks)
+
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedRes, valid)
+
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedRes, valid)
+		})
+	}
+}
