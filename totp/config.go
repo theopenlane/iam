@@ -25,7 +25,7 @@ type Config struct {
 }
 
 // NewOTP returns a new OTP validator
-func NewOTP(options ...ConfigOption) TOTPManager {
+func NewOTP(options ...ConfigOption) Manager {
 	s := OTP{
 		codeLength:         defaultLength,
 		ttl:                codePeriod,

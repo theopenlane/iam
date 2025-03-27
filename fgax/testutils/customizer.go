@@ -24,11 +24,11 @@ func (c Customizer) Customize(req *testcontainers.GenericContainerRequest) error
 
 	req.HostConfigModifier = func(config *container.HostConfig) {
 		if c.memory > 0 {
-			config.Resources.Memory = c.memory
+			config.Memory = c.memory
 		}
 
 		if c.cpu > 0 {
-			config.Resources.CPUQuota = c.cpu
+			config.CPUQuota = c.cpu
 		}
 	}
 

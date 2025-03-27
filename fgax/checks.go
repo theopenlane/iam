@@ -93,7 +93,7 @@ func (c *Client) BatchGetAllowedIDs(ctx context.Context, checks []AccessCheck) (
 		return nil, err
 	}
 
-	allowedObjectIds := []string{}
+	allowedObjectIDs := []string{}
 
 	for _, r := range res {
 		entity, err := ParseEntity(r)
@@ -101,10 +101,10 @@ func (c *Client) BatchGetAllowedIDs(ctx context.Context, checks []AccessCheck) (
 			return nil, err
 		}
 
-		allowedObjectIds = append(allowedObjectIds, entity.Identifier)
+		allowedObjectIDs = append(allowedObjectIDs, entity.Identifier)
 	}
 
-	return allowedObjectIds, nil
+	return allowedObjectIDs, nil
 }
 
 // CheckAccess checks if the user has access to the object type with the given relation

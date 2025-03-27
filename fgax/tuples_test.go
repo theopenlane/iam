@@ -372,7 +372,7 @@ func TestWriteTupleKeys(t *testing.T) {
 	// setup mock client
 	c := mock_fga.NewMockSdkClient(t)
 
-	fc := NewMockFGAClient(t, c)
+	fc := NewMockFGAClient(c)
 
 	mock_fga.WriteAny(t, c)
 
@@ -439,7 +439,7 @@ func TestDeleteRelationshipTuple(t *testing.T) {
 	// setup mock client
 	c := mock_fga.NewMockSdkClient(t)
 
-	fc := NewMockFGAClient(t, c)
+	fc := NewMockFGAClient(c)
 
 	testCases := []struct {
 		name              string

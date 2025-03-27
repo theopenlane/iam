@@ -63,7 +63,7 @@ func (s *TokenTestSuite) TestCachedJWKSValidator() {
 	// Create a test server that initially serves the partial_jwks.json file then
 	// serves the jwks.json file from then on out.
 	requests := 0
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		var (
 			err  error
 			path string

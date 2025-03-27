@@ -12,7 +12,7 @@ import (
 // Userinfo endpoint and a client to holler
 func newGoogleTestServer(jsonData string) (*http.Client, *httptest.Server) {
 	client, mux, server := testutils.TestServer()
-	mux.HandleFunc("/oauth2/v2/userinfo", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/oauth2/v2/userinfo", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, jsonData)
 	})

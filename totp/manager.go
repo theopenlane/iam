@@ -20,11 +20,6 @@ type TFAOptions string
 // MessageType describes a classification of a Message
 type MessageType string
 
-// Manager manages the protocol for SMS/Email 2FA codes and TOTP codes
-type Manager struct {
-	TOTPManager TOTPManager
-}
-
 const (
 	// OTPEmail allows a user to complete TFA with an OTP code delivered via email
 	OTPEmail TFAOptions = "otp_email"
@@ -122,8 +117,8 @@ type Message struct {
 	DeliveryAttempts int
 }
 
-// TOTPManager manages the protocol for SMS/Email 2FA codes and TOTP codes
-type TOTPManager interface {
+// Manager manages the protocol for SMS/Email 2FA codes and TOTP codes
+type Manager interface {
 	// TOTPQRString returns a URL string used for TOTP code generation
 	TOTPQRString(u *User) (string, error)
 	// TOTPDecryptedSecret decrypts a TOTP secret
