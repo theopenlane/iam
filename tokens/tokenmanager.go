@@ -204,7 +204,7 @@ func (tm *TokenManager) CreateToken(claims *Claims) *jwt.Token {
 func (tm *TokenManager) CreateAccessToken(claims *Claims) (_ *jwt.Token, err error) {
 	// Create the claims for the access token, using access token defaults
 	now := time.Now()
-	sub := claims.RegisteredClaims.Subject
+	sub := claims.Subject
 
 	var kid ulid.ULID
 

@@ -67,7 +67,7 @@ func On(hk ent.Hook, op ent.Op) ent.Hook {
 			// if the operation is the one we are looking for, execute the hook
 			// exclude the Update and UpdateOne operations if the object is soft delete
 			// otherwise the operation ends up running twice
-			if m.Op().Is(op) && !(op.Is(ent.OpUpdate|ent.OpUpdateOne) && entx.CheckIsSoftDelete(ctx)) {
+			if m.Op().Is(op) && (!op.Is(ent.OpUpdate|ent.OpUpdateOne) || !entx.CheckIsSoftDelete(ctx)) {
 				return hk(next).Mutate(ctx, m)
 			}
 

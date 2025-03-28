@@ -1,8 +1,6 @@
 package fgax
 
 import (
-	"testing"
-
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 
@@ -10,7 +8,7 @@ import (
 )
 
 // NewMockFGAClient is a mock client based on the mockery testing framework
-func NewMockFGAClient(t *testing.T, c *mock_fga.MockSdkClient) *Client {
+func NewMockFGAClient(c *mock_fga.MockSdkClient) *Client {
 	client := Client{
 		Config: ofgaclient.ClientConfiguration{
 			// The api host is the only required field when setting up a new FGA client connection

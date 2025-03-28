@@ -97,7 +97,7 @@ func NewCachedJWKSValidator(ctx context.Context, cache *jwk.Cache, endpoint, aud
 // (JSON Web Key Set) cache. It takes in a `context.Context` as a parameter and returns an error if
 // the refresh process fails
 func (v *CachedJWKSValidator) Refresh(ctx context.Context) (err error) {
-	if v.JWKSValidator.keys, err = v.cache.Refresh(ctx, v.endpoint); err != nil {
+	if v.keys, err = v.cache.Refresh(ctx, v.endpoint); err != nil {
 		return fmt.Errorf("could not refresh cache from %s: %w", v.endpoint, err)
 	}
 
@@ -109,7 +109,7 @@ func (v *CachedJWKSValidator) Refresh(ctx context.Context) (err error) {
 // JWKS from the cache using the `cache.Get` method. Then, it calls the `keyFunc` method of the embedded `JWKSValidator` struct to perform the actual key retrieval and validation. If the JWKS
 // cannot be retrieved from the cache, an error is returned
 func (v *CachedJWKSValidator) keyFunc(token *jwt.Token) (publicKey interface{}, err error) {
-	if v.JWKSValidator.keys, err = v.cache.Get(context.Background(), v.endpoint); err != nil {
+	if v.keys, err = v.cache.Get(context.Background(), v.endpoint); err != nil {
 		return nil, fmt.Errorf("could not retrieve JWKS from cache: %w", err)
 	}
 

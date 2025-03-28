@@ -110,7 +110,7 @@ func TestListObjectsRequest(t *testing.T) {
 			// setup mock client
 			mc := mock_fga.NewMockSdkClient(t)
 
-			c := NewMockFGAClient(t, mc)
+			c := NewMockFGAClient(mc)
 
 			// mock response for input
 			body := []string{
@@ -195,7 +195,7 @@ func TestListUsersRequest(t *testing.T) {
 			// setup mock client
 			mc := mock_fga.NewMockSdkClient(t)
 
-			c := NewMockFGAClient(t, mc)
+			c := NewMockFGAClient(mc)
 
 			// mock response for input
 			mock_fga.ListUsers(t, mc, users, tc.errRes)

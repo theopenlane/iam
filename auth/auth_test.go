@@ -235,7 +235,7 @@ func TestSetAuthCookies(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tc.name, func(_ *testing.T) {
 			auth.SetAuthCookies(tc.ctx.Response().Writer, tc.accessToken, tc.refreshToken, *sessions.DebugCookieConfig)
 		})
 	}
@@ -259,7 +259,7 @@ func TestClearAuthCookies(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tc.name, func(_ *testing.T) {
 			auth.ClearAuthCookies(tc.ctx.Response().Writer)
 		})
 	}

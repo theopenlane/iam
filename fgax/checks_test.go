@@ -38,7 +38,7 @@ func TestCheckTuple(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// setup mock client
 			c := mock_fga.NewMockSdkClient(t)
-			mc := NewMockFGAClient(t, c)
+			mc := NewMockFGAClient(c)
 
 			// mock response for input
 			body := ofgaclient.ClientCheckRequest{
@@ -142,7 +142,7 @@ func TestCheckAccess(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// setup mock client
 			c := mock_fga.NewMockSdkClient(t)
-			mc := NewMockFGAClient(t, c)
+			mc := NewMockFGAClient(c)
 
 			if tc.expectedRes {
 				mock_fga.CheckAny(t, c, tc.expectedRes)
@@ -226,7 +226,7 @@ func TestListRelations(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// setup mock client
 			c := mock_fga.NewMockSdkClient(t)
-			mc := NewMockFGAClient(t, c)
+			mc := NewMockFGAClient(c)
 
 			if !tc.wantErr {
 				mock_fga.BatchCheck(t, c, tc.check.Relations, tc.expectedRes)
@@ -305,7 +305,7 @@ func TestBatchCheckObjectAccess(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// setup mock client
 			c := mock_fga.NewMockSdkClient(t)
-			mc := NewMockFGAClient(t, c)
+			mc := NewMockFGAClient(c)
 
 			if !tc.wantErr && len(tc.checks) > 0 {
 				mock_fga.BatchCheck(t, c, tc.checkedObjects, tc.expectedRes)
@@ -387,7 +387,7 @@ func TestBatchGetAllowedIDs(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// setup mock client
 			c := mock_fga.NewMockSdkClient(t)
-			mc := NewMockFGAClient(t, c)
+			mc := NewMockFGAClient(c)
 
 			if !tc.wantErr && len(tc.checks) > 0 {
 				mock_fga.BatchCheck(t, c, tc.checkedObjects, tc.checkResults)

@@ -17,16 +17,16 @@ type ClientConfig struct {
 	IsMock       bool
 }
 
-// GitHubInterface defines all necessary methods
+// Interface defines all necessary methods
 // https://godoc.org/github.com/google/go-github/github#NewClient
-type GitHubInterface interface {
-	NewClient(httpClient *http.Client) GitHubClient
+type Interface interface {
+	NewClient(httpClient *http.Client) Client
 	GetConfig() *ClientConfig
 	SetConfig(config *ClientConfig)
 }
 
-// GitHubClient defines all necessary methods used by the client
-type GitHubClient struct {
+// Client defines all necessary methods used by the client
+type Client struct {
 	Users githubUserService
 }
 
@@ -36,23 +36,23 @@ type githubUserService interface {
 	ListEmails(ctx context.Context, opts *github.ListOptions) ([]*github.UserEmail, *github.Response, error)
 }
 
-// GitHubCreator implements GitHubInterface
-type GitHubCreator struct {
+// Creator implements GitHubInterface
+type Creator struct {
 	Config *ClientConfig
 }
 
 // GetConfig returns the current configuration
-func (g *GitHubCreator) GetConfig() *ClientConfig {
+func (g *Creator) GetConfig() *ClientConfig {
 	return g.Config
 }
 
 // SetConfig sets the configuration
-func (g *GitHubCreator) SetConfig(config *ClientConfig) {
+func (g *Creator) SetConfig(config *ClientConfig) {
 	g.Config = config
 }
 
 // NewClient returns a new GitHubClient
-func (g *GitHubCreator) NewClient(httpClient *http.Client) GitHubClient {
+func (g *Creator) NewClient(httpClient *http.Client) Client {
 	client := github.NewClient(httpClient)
 
 	if g.Config.BaseURL != nil {
@@ -63,29 +63,29 @@ func (g *GitHubCreator) NewClient(httpClient *http.Client) GitHubClient {
 		client.UploadURL = g.Config.UploadURL
 	}
 
-	return GitHubClient{
+	return Client{
 		Users: client.Users,
 	}
 }
 
-// GitHubMock implements GitHubInterface
-type GitHubMock struct {
+// MockInterface implements GitHubInterface
+type MockInterface struct {
 	Config *ClientConfig
 }
 
 // GetConfig returns the current configuration
-func (g *GitHubMock) GetConfig() *ClientConfig {
+func (g *MockInterface) GetConfig() *ClientConfig {
 	return g.Config
 }
 
 // SetConfig sets the configuration
-func (g *GitHubMock) SetConfig(config *ClientConfig) {
+func (g *MockInterface) SetConfig(config *ClientConfig) {
 	g.Config = config
 }
 
 // NewClient returns a new mock GitHubClient
-func (g *GitHubMock) NewClient(httpClient *http.Client) GitHubClient {
-	return GitHubClient{
+func (g *MockInterface) NewClient(_ *http.Client) Client {
+	return Client{
 		Users: &UsersMock{},
 	}
 }
@@ -106,7 +106,7 @@ func (u *UsersMock) Get(context.Context, string) (*github.User, *github.Response
 }
 
 // ListEmails returns a mock list of Github user emails
-func (u *UsersMock) ListEmails(ctx context.Context, opts *github.ListOptions) ([]*github.UserEmail, *github.Response, error) {
+func (u *UsersMock) ListEmails(_ context.Context, _ *github.ListOptions) ([]*github.UserEmail, *github.Response, error) {
 	resp := &http.Response{StatusCode: http.StatusOK}
 
 	return []*github.UserEmail{

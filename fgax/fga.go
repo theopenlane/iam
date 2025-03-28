@@ -183,7 +183,7 @@ func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
 			return nil, err
 		}
 
-		c.StoreID, err = fgaClient.CreateStore(ctx, c.StoreName)
+		c.StoreID, err = fgaClient.CreateStore(c.StoreName)
 		if err != nil {
 			return nil, err
 		}
@@ -226,7 +226,7 @@ func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
 }
 
 // CreateStore creates a new fine grained authorization store and returns the store ID
-func (c *Client) CreateStore(ctx context.Context, storeName string) (string, error) {
+func (c *Client) CreateStore(storeName string) (string, error) {
 	options := ofgaclient.ClientListStoresOptions{
 		ContinuationToken: openfga.PtrString(""),
 	}

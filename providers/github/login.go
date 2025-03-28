@@ -111,16 +111,16 @@ func validateResponse(user *github.User, resp *github.Response, err error) error
 	return nil
 }
 
-func getGithubClient(ctx context.Context, clientConfig *ClientConfig, config *oauth2.Config, token *oauth2.Token) (githubClient GitHubClient, err error) {
+func getGithubClient(ctx context.Context, clientConfig *ClientConfig, config *oauth2.Config, token *oauth2.Token) (githubClient Client, err error) {
 	// create httClient with provided token
 	httpClient := config.Client(ctx, token)
 
 	// setup client
-	var g GitHubInterface
+	var g Interface
 
-	g = &GitHubCreator{}
+	g = &Creator{}
 	if clientConfig.IsMock {
-		g = &GitHubMock{}
+		g = &MockInterface{}
 	}
 
 	// Set params for enterprise Github client
@@ -155,7 +155,7 @@ func enterpriseGithubClientFromAuthURL(authURL string, config *ClientConfig) (*C
 }
 
 // getUserEmails from `user/emails` and return the user's primary email address
-func getUserEmails(ctx context.Context, githubClient GitHubClient) (*string, error) {
+func getUserEmails(ctx context.Context, githubClient Client) (*string, error) {
 	emails, _, err := githubClient.Users.ListEmails(ctx, nil)
 	if err != nil {
 		return nil, err
