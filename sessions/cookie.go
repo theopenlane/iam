@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	defaultMaxAgeSeconds = 60 * 60 // 1 hour (in seconds)
+	defaultMaxAgeSeconds = 1 * 60 // 1 hour (in seconds)
 )
 
 var (

@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	echo "github.com/theopenlane/echox"
 	"github.com/theopenlane/echox/middleware"
+	"github.com/theopenlane/utils/rout"
 )
 
 // SessionConfig is used to configure session management
@@ -67,6 +68,18 @@ func WithSkipperFunc(skipper middleware.Skipper) Option {
 func WithBeforeFunc(before middleware.BeforeFunc) Option {
 	return func(opts *SessionConfig) {
 		opts.BeforeFunc = before
+	}
+}
+
+// WithMaxAge allows the user to specify the maximum age for the session cookie, defaults to 3600 seconds (1 hour)
+func WithMaxAge(maxAge int) Option {
+	return func(opts *SessionConfig) {
+		if opts.CookieConfig == nil {
+			opts.CookieConfig = &CookieConfig{}
+		}
+
+		// Set the MaxAge for the cookie configuration
+		opts.CookieConfig.MaxAge = maxAge
 	}
 }
 
@@ -135,7 +148,7 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 			if err != nil {
 				log.Error().Err(err).Msg("unable to get session")
 
-				return err
+				return unauthorized(c, ErrInvalidSession)
 			}
 
 			// get the session id from the session data
@@ -150,17 +163,16 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 			if err != nil {
 				log.Error().Err(err).Msg("unable to get session from store")
 
-				return err
+				return unauthorized(c, ErrInvalidSession)
 			}
 
 			if userIDFromCookie != userID {
 				log.Error().
-					Err(err).
 					Interface("cookie", userIDFromCookie).
 					Str("store", userID).
 					Msg("sessions do not match")
 
-				return err
+				return unauthorized(c, ErrInvalidSession)
 			}
 
 			// Add session to context to be used in request paths
@@ -198,4 +210,13 @@ func addHeaderIfMissing(w http.ResponseWriter, key, value string) {
 	}
 
 	w.Header().Add(key, value)
+}
+
+// unauthorized returns a 401 Unauthorized response with the error message.
+func unauthorized(c echo.Context, err error) error {
+	if err := c.JSON(http.StatusUnauthorized, rout.ErrorResponse(err)); err != nil {
+		return err
+	}
+
+	return err
 }
