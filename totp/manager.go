@@ -20,6 +20,11 @@ type TFAOptions string
 // MessageType describes a classification of a Message
 type MessageType string
 
+// Client manages the protocol for SMS/Email 2FA codes and TOTP codes
+type Client struct {
+	Manager Manager
+}
+
 const (
 	// OTPEmail allows a user to complete TFA with an OTP code delivered via email
 	OTPEmail TFAOptions = "otp_email"

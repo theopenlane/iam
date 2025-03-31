@@ -15,6 +15,8 @@ type Config struct {
 	EncryptionKey string `json:"encryptionKey" koanf:"encryptionKey" default:"encryptionsecret"`
 	// Domain is the domain for the cookie, leave empty to use the default value of the server
 	Domain string `json:"domain" koanf:"domain" default:""`
+	// MaxAge is the maximum age of the session cookie in seconds. After this time, the cookie will be invalidated
+	MaxAge int `json:"maxAge" koanf:"maxAge" default:"3600"` // 1 hour by default in seconds
 }
 
 // Session represents state values maintained in a sessions Store
