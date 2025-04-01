@@ -28,7 +28,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.36.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.36.0
-	github.com/theopenlane/echox v0.2.1
+	github.com/theopenlane/echox v0.2.3
 	github.com/theopenlane/entx v0.4.4
 	github.com/theopenlane/utils v0.4.4
 	github.com/vmihailenco/msgpack/v5 v5.4.1
