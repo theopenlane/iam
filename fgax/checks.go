@@ -5,6 +5,7 @@ import (
 
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/rs/zerolog/log"
+	"github.com/theopenlane/utils/ulids"
 )
 
 const (
@@ -58,10 +59,9 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 		return []string{}, nil
 	}
 
-	checkRequests := []ofgaclient.ClientCheckRequest{}
-
+	checkRequests := []ofgaclient.ClientBatchCheckItem{}
 	for _, ac := range checks {
-		check, err := toCheckRequest(ac)
+		check, err := toBatchCheckItem(ac)
 		if err != nil {
 			return nil, err
 		}
@@ -69,17 +69,43 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 		checkRequests = append(checkRequests, *check)
 	}
 
-	results, err := c.Ofga.BatchCheck(ctx).Body(checkRequests).Execute()
-	if err != nil {
+	results, err := c.Ofga.BatchCheck(ctx).Body(
+		ofgaclient.ClientBatchCheckRequest{
+			Checks: checkRequests,
+		}).Execute()
+	if err != nil || results == nil {
 		return nil, err
 	}
 
 	allowedObjects := []string{}
 
-	for _, result := range *results {
-		if result.Allowed != nil && *result.Allowed {
-			allowedObjects = append(allowedObjects, result.Request.Object)
+	for id, result := range *results.Result {
+		if result.HasError() {
+			err := result.GetError()
+			log.Error().Str("error", err.GetMessage()).Interface("accessCheck", id).Msg("error checking access")
+
+			continue
 		}
+
+		if result.GetAllowed() {
+			// get id from the correlation ID
+			check, ok := getCheckItemByCorrelationID(id, checkRequests)
+			if !ok {
+				log.Error().Str("correlationID", id).Msg("correlation ID not found in checks")
+
+				continue
+			}
+
+			obj, err := ParseEntity(check.Object)
+			if err != nil {
+				log.Error().Err(err).Str("object", check.Object).Msg("error parsing object")
+
+				return nil, err
+			}
+
+			allowedObjects = append(allowedObjects, obj.Identifier)
+		}
+
 	}
 
 	return allowedObjects, nil
@@ -115,6 +141,36 @@ func (c *Client) CheckAccess(ctx context.Context, ac AccessCheck) (bool, error) 
 	}
 
 	return c.checkTuple(ctx, *checkReq)
+}
+
+func toBatchCheckItem(ac AccessCheck) (*ofgaclient.ClientBatchCheckItem, error) {
+	if err := validateAccessCheck(ac); err != nil {
+		log.Error().Err(err).Interface("accessCheck", ac).Msg("invalid access check")
+
+		return nil, err
+	}
+
+	if ac.SubjectType == "" {
+		ac.SubjectType = defaultSubject
+	}
+
+	sub := Entity{
+		Kind:       Kind(ac.SubjectType),
+		Identifier: ac.SubjectID,
+	}
+
+	obj := Entity{
+		Kind:       ac.ObjectType,
+		Identifier: ac.ObjectID,
+	}
+
+	return &ofgaclient.ClientBatchCheckItem{
+		User:          sub.String(),
+		Relation:      ac.Relation,
+		Object:        obj.String(),
+		Context:       ac.Context,
+		CorrelationId: ulids.New().String(), // generate a new correlation ID for each check
+	}, nil
 }
 
 // toCheckRequest converts an AccessCheck to a ClientCheckRequest
@@ -165,14 +221,15 @@ func (c *Client) ListRelations(ctx context.Context, ac ListAccess) ([]string, er
 		Identifier: ac.ObjectID,
 	}
 
-	checks := []ofgaclient.ClientCheckRequest{}
+	checks := []ofgaclient.ClientBatchCheckItem{}
 
 	for _, rel := range ac.Relations {
-		check := ofgaclient.ClientCheckRequest{
-			User:     sub.String(),
-			Relation: rel,
-			Object:   obj.String(),
-			Context:  ac.Context,
+		check := ofgaclient.ClientBatchCheckItem{
+			User:          sub.String(),
+			Relation:      rel,
+			Object:        obj.String(),
+			Context:       ac.Context,
+			CorrelationId: ulids.New().String(), // generate a new correlation ID for each check
 		}
 
 		checks = append(checks, check)
@@ -224,21 +281,43 @@ func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckReq
 }
 
 // batchCheckTuples checks the openFGA store for provided relationship tuples and returns the allowed relations
-func (c *Client) batchCheckTuples(ctx context.Context, checks []ofgaclient.ClientCheckRequest) ([]string, error) {
-	res, err := c.Ofga.BatchCheck(ctx).Body(checks).Execute()
+func (c *Client) batchCheckTuples(ctx context.Context, checks []ofgaclient.ClientBatchCheckItem) ([]string, error) {
+	res, err := c.Ofga.BatchCheck(ctx).Body(
+		ofgaclient.ClientBatchCheckRequest{
+			Checks: checks,
+		}).Execute()
 	if err != nil || res == nil {
 		return nil, err
 	}
 
 	relations := []string{}
 
-	for _, r := range *res {
-		if r.Allowed != nil && *r.Allowed {
-			relations = append(relations, r.Request.Relation)
+	for i, r := range *res.Result {
+		if r.GetAllowed() {
+			// get id from the correlation ID
+			check, ok := getCheckItemByCorrelationID(i, checks)
+			if !ok {
+				log.Error().Str("correlationID", i).Msg("correlation ID not found in checks")
+
+				continue
+			}
+
+			relations = append(relations, check.Relation)
 		}
 	}
 
 	return relations, nil
+}
+
+// getCheckItemByCorrelationID retrieves the check by correlation ID from the list of checks
+func getCheckItemByCorrelationID(correlationID string, checks []ofgaclient.ClientBatchCheckItem) (ofgaclient.ClientBatchCheckItem, bool) {
+	for _, check := range checks {
+		if check.CorrelationId == correlationID {
+			return check, true
+		}
+	}
+
+	return ofgaclient.ClientBatchCheckItem{}, false
 }
 
 // CheckSystemAdminRole checks if the user has system admin access
