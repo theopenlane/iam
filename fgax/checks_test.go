@@ -2,8 +2,10 @@ package fgax
 
 import (
 	"context"
+	"slices"
 	"testing"
 
+	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/stretchr/testify/assert"
 
@@ -229,7 +231,14 @@ func TestListRelations(t *testing.T) {
 			mc := NewMockFGAClient(c)
 
 			if !tc.wantErr {
-				mock_fga.BatchCheck(t, c, tc.check.Relations, tc.expectedRes)
+				res := map[string]openfga.BatchCheckSingleResult{}
+				for _, relation := range tc.check.Relations {
+					res[relation] = openfga.BatchCheckSingleResult{
+						Allowed: openfga.PtrBool(slices.Contains(tc.expectedRes, relation)),
+					}
+				}
+
+				mock_fga.BatchCheck(t, c, res)
 			}
 
 			// do request
@@ -308,7 +317,14 @@ func TestBatchCheckObjectAccess(t *testing.T) {
 			mc := NewMockFGAClient(c)
 
 			if !tc.wantErr && len(tc.checks) > 0 {
-				mock_fga.BatchCheck(t, c, tc.checkedObjects, tc.expectedRes)
+				res := map[string]openfga.BatchCheckSingleResult{}
+				for _, relation := range tc.checkedObjects {
+					res[relation] = openfga.BatchCheckSingleResult{
+						Allowed: openfga.PtrBool(slices.Contains(tc.expectedRes, relation)),
+					}
+				}
+
+				mock_fga.BatchCheck(t, c, res)
 			}
 
 			// do request
@@ -390,7 +406,14 @@ func TestBatchGetAllowedIDs(t *testing.T) {
 			mc := NewMockFGAClient(c)
 
 			if !tc.wantErr && len(tc.checks) > 0 {
-				mock_fga.BatchCheck(t, c, tc.checkedObjects, tc.checkResults)
+				res := map[string]openfga.BatchCheckSingleResult{}
+				for _, relation := range tc.checkedObjects {
+					res[relation] = openfga.BatchCheckSingleResult{
+						Allowed: openfga.PtrBool(slices.Contains(tc.expectedRes, relation)),
+					}
+				}
+
+				mock_fga.BatchCheck(t, c, res)
 			}
 
 			// do request
