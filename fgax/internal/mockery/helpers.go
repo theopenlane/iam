@@ -2,7 +2,6 @@ package client
 
 import (
 	"errors"
-	"slices"
 	"testing"
 
 	openfga "github.com/openfga/go-sdk"
@@ -211,32 +210,14 @@ func CheckAny(t *testing.T, c *MockSdkClient, allowed bool) {
 }
 
 // CheckAny mocks a check request for any times in a test
-func BatchCheck(t *testing.T, c *MockSdkClient, list []string, allowed []string) {
+func BatchCheck(t *testing.T, c *MockSdkClient, res map[string]openfga.BatchCheckSingleResult) {
 	batch := NewMockSdkClientBatchCheckRequestInterface(t)
 
-	resp := []ofgaclient.ClientBatchCheckSingleResponse{}
-
-	for _, relation := range list {
-		result := false
-		if slices.Contains(allowed, relation) {
-			result = true
-		}
-
-		ccr := ofgaclient.ClientCheckResponse{}
-		ccr.SetAllowed(result)
-
-		checkResp := ofgaclient.ClientBatchCheckSingleResponse{
-			Request: ofgaclient.ClientCheckRequest{
-				Relation: relation,
-				Object:   relation,
-			},
-			ClientCheckResponse: ccr,
-		}
-
-		resp = append(resp, checkResp)
+	checkResp := openfga.BatchCheckResponse{
+		Result: &res,
 	}
 
-	batch.EXPECT().Execute().Return(&resp, nil)
+	batch.EXPECT().Execute().Return(&checkResp, nil)
 
 	batch.EXPECT().Body(mock.Anything).Return(batch)
 
