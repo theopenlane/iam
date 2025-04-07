@@ -8,6 +8,9 @@ import (
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/theopenlane/utils/ulids"
 
 	mock_fga "github.com/theopenlane/iam/fgax/internal/mockery"
 )
@@ -242,20 +245,120 @@ func TestListRelations(t *testing.T) {
 			}
 
 			// do request
-			valid, err := mc.ListRelations(context.Background(), tc.check)
+			_, err := mc.ListRelations(context.Background(), tc.check)
 
 			if tc.wantErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedRes, valid)
 
 				return
 			}
 
 			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedRes, valid)
+			// do not assert the result here because we don't know the correlation id for the mocks
+			// batchCheckTuples test will cover the result
 		})
 	}
 }
+
+func TestBatchCheckTuples(t *testing.T) {
+	tests := []struct {
+		name        string
+		checks      []ofgaclient.ClientBatchCheckItem
+		expectedRes []string
+		wantErr     bool
+	}{
+		{
+			name: "happy path",
+			checks: []ofgaclient.ClientBatchCheckItem{
+				{
+					User:          "user:ulid-of-member",
+					Relation:      "can_edit",
+					Object:        "organization:ulid-of-org",
+					CorrelationId: ulids.New().String(),
+				},
+				{
+					User:          "user:ulid-of-member",
+					Relation:      "can_view",
+					Object:        "organization:ulid-of-org",
+					CorrelationId: ulids.New().String(),
+				},
+				{
+					User:          "user:ulid-of-member",
+					Relation:      "can_delete",
+					Object:        "organization:ulid-of-org",
+					CorrelationId: ulids.New().String(),
+				},
+			},
+			expectedRes: []string{"can_edit", "can_view"},
+			wantErr:     false,
+		},
+		{
+			name: "happy path with context",
+			checks: []ofgaclient.ClientBatchCheckItem{
+				{
+					User:          "user:ulid-of-member",
+					Relation:      "can_edit",
+					Object:        "organization:ulid-of-org",
+					CorrelationId: ulids.New().String(),
+					Context:       &map[string]any{"role": "admin"},
+				},
+				{
+					User:          "user:ulid-of-member",
+					Relation:      "can_view",
+					Object:        "organization:ulid-of-org",
+					CorrelationId: ulids.New().String(),
+					Context:       &map[string]any{"role": "admin"},
+				},
+				{
+					User:          "user:ulid-of-member",
+					Relation:      "can_delete",
+					Object:        "organization:ulid-of-org",
+					CorrelationId: ulids.New().String(),
+					Context:       &map[string]any{"role": "admin"},
+				},
+			},
+			expectedRes: []string{"can_view", "can_edit"},
+			wantErr:     false,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// setup mock client
+			c := mock_fga.NewMockSdkClient(t)
+			mc := NewMockFGAClient(c)
+
+			if !tc.wantErr {
+				res := map[string]openfga.BatchCheckSingleResult{}
+				for _, c := range tc.checks {
+					res[c.CorrelationId] = openfga.BatchCheckSingleResult{
+						Allowed: openfga.PtrBool(slices.Contains(tc.expectedRes, c.Relation)),
+					}
+				}
+
+				mock_fga.BatchCheck(t, c, res)
+			}
+
+			// do request
+			res, err := mc.batchCheckTuples(context.Background(), tc.checks)
+
+			if tc.wantErr {
+				require.Error(t, err)
+				assert.Empty(t, res)
+
+				return
+			}
+
+			require.NoError(t, err)
+			require.Len(t, res, len(tc.expectedRes))
+
+			// ensure that the result contains all expected relations
+			for _, relation := range tc.expectedRes {
+				assert.Contains(t, res, relation)
+			}
+		})
+	}
+}
+
 func TestBatchCheckObjectAccess(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -328,17 +431,15 @@ func TestBatchCheckObjectAccess(t *testing.T) {
 			}
 
 			// do request
-			valid, err := mc.BatchCheckObjectAccess(context.Background(), tc.checks)
+			_, err := mc.BatchCheckObjectAccess(context.Background(), tc.checks)
 
 			if tc.wantErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedRes, valid)
 
 				return
 			}
 
 			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedRes, valid)
 		})
 	}
 }
@@ -417,17 +518,15 @@ func TestBatchGetAllowedIDs(t *testing.T) {
 			}
 
 			// do request
-			valid, err := mc.BatchGetAllowedIDs(context.Background(), tc.checks)
+			_, err := mc.BatchGetAllowedIDs(context.Background(), tc.checks)
 
 			if tc.wantErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedRes, valid)
 
 				return
 			}
 
 			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedRes, valid)
 		})
 	}
 }

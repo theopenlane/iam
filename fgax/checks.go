@@ -60,6 +60,7 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 	}
 
 	checkRequests := []ofgaclient.ClientBatchCheckItem{}
+
 	for _, ac := range checks {
 		check, err := toBatchCheckItem(ac)
 		if err != nil {
@@ -105,7 +106,6 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 
 			allowedObjects = append(allowedObjects, obj.Identifier)
 		}
-
 	}
 
 	return allowedObjects, nil

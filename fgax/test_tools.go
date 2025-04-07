@@ -8,7 +8,7 @@ import (
 )
 
 // NewMockFGAClient is a mock client based on the mockery testing framework
-func NewMockFGAClient(c *mock_fga.MockClient) *Client {
+func NewMockFGAClient(c *mock_fga.MockSdkClient) *Client {
 	client := Client{
 		Config: ofgaclient.ClientConfiguration{
 			// The api host is the only required field when setting up a new FGA client connection
