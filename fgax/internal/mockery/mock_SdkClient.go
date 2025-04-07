@@ -2559,66 +2559,6 @@ func (_c *MockSdkClient_WriteTuplesExecute_Call) RunAndReturn(run func(client.Sd
 	return _c
 }
 
-// singleBatchCheck provides a mock function with given fields: ctx, body, options
-func (_m *MockSdkClient) singleBatchCheck(ctx context.Context, body openfga.BatchCheckRequest, options *client.BatchCheckOptions) (*openfga.BatchCheckResponse, error) {
-	ret := _m.Called(ctx, body, options)
-
-	if len(ret) == 0 {
-		panic("no return value specified for singleBatchCheck")
-	}
-
-	var r0 *openfga.BatchCheckResponse
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, openfga.BatchCheckRequest, *client.BatchCheckOptions) (*openfga.BatchCheckResponse, error)); ok {
-		return rf(ctx, body, options)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, openfga.BatchCheckRequest, *client.BatchCheckOptions) *openfga.BatchCheckResponse); ok {
-		r0 = rf(ctx, body, options)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*openfga.BatchCheckResponse)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, openfga.BatchCheckRequest, *client.BatchCheckOptions) error); ok {
-		r1 = rf(ctx, body, options)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// MockSdkClient_singleBatchCheck_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'singleBatchCheck'
-type MockSdkClient_singleBatchCheck_Call struct {
-	*mock.Call
-}
-
-// singleBatchCheck is a helper method to define mock.On call
-//   - ctx context.Context
-//   - body openfga.BatchCheckRequest
-//   - options *client.BatchCheckOptions
-func (_e *MockSdkClient_Expecter) singleBatchCheck(ctx interface{}, body interface{}, options interface{}) *MockSdkClient_singleBatchCheck_Call {
-	return &MockSdkClient_singleBatchCheck_Call{Call: _e.mock.On("singleBatchCheck", ctx, body, options)}
-}
-
-func (_c *MockSdkClient_singleBatchCheck_Call) Run(run func(ctx context.Context, body openfga.BatchCheckRequest, options *client.BatchCheckOptions)) *MockSdkClient_singleBatchCheck_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(openfga.BatchCheckRequest), args[2].(*client.BatchCheckOptions))
-	})
-	return _c
-}
-
-func (_c *MockSdkClient_singleBatchCheck_Call) Return(_a0 *openfga.BatchCheckResponse, _a1 error) *MockSdkClient_singleBatchCheck_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *MockSdkClient_singleBatchCheck_Call) RunAndReturn(run func(context.Context, openfga.BatchCheckRequest, *client.BatchCheckOptions) (*openfga.BatchCheckResponse, error)) *MockSdkClient_singleBatchCheck_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // NewMockSdkClient creates a new instance of MockSdkClient. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewMockSdkClient(t interface {
