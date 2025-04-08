@@ -247,35 +247,31 @@ func (o *OTP) encrypt(s string) (string, error) {
 		return "", err
 	}
 
-	key := sha256.New()
+	key := sha256.Sum256([]byte(secret.Key))
 
-	if _, err = key.Write([]byte(secret.Key)); err != nil {
-		return "", ErrCannotWriteSecret
-	}
-
-	block, err := aes.NewCipher(key.Sum(nil))
+	block, err := aes.NewCipher(key[:])
 	if err != nil {
 		return "", ErrFailedToCreateCipherBlock
 	}
 
 	cipherText := make([]byte, aes.BlockSize+len(s))
-
 	iv := cipherText[:aes.BlockSize]
+
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return "", ErrFailedToCreateCipherText
 	}
 
-	stream := cipher.NewCFBEncrypter(block, iv) // # spellcheck:off
+	stream := cipher.NewCTR(block, iv)
 	stream.XORKeyStream(cipherText[aes.BlockSize:], []byte(s))
 
-	return fmt.Sprintf("%v:%s",
-		secret.Version,
-		base64.StdEncoding.EncodeToString(cipherText),
-	), nil
+	encoded := base64.StdEncoding.EncodeToString(cipherText)
+
+	return fmt.Sprintf("%v:%s", secret.Version, encoded), nil
 }
 
 // decrypt decrypts an encrypted string using a versioned secret
 func (o *OTP) decrypt(encryptedTxt string) (string, error) {
+	// Split and parse the version prefix
 	v := strings.Split(encryptedTxt, ":")[0]
 	encryptedTxt = strings.TrimPrefix(encryptedTxt, fmt.Sprintf("%s:", v))
 
@@ -289,32 +285,30 @@ func (o *OTP) decrypt(encryptedTxt string) (string, error) {
 		return "", err
 	}
 
-	key := sha256.New()
-
-	if _, err = key.Write([]byte(secret.Key)); err != nil {
-		return "", ErrCannotWriteSecret
-	}
-
-	block, err := aes.NewCipher(key.Sum(nil))
-	if err != nil {
-		return "", ErrFailedToCreateCipherBlock
-	}
-
-	if len(encryptedTxt) < aes.BlockSize {
-		return "", ErrCipherTextTooShort
-	}
+	key := sha256.Sum256([]byte(secret.Key))
 
 	decoded, err := base64.StdEncoding.DecodeString(encryptedTxt)
 	if err != nil {
 		return "", ErrCannotDecodeSecret
 	}
 
-	iv := decoded[:aes.BlockSize]
-	decoded = decoded[aes.BlockSize:]
-	stream := cipher.NewCFBDecrypter(block, iv)
-	stream.XORKeyStream(decoded, decoded)
+	if len(decoded) < aes.BlockSize {
+		return "", ErrCipherTextTooShort
+	}
 
-	return string(decoded), nil
+	block, err := aes.NewCipher(key[:])
+	if err != nil {
+		return "", ErrFailedToCreateCipherBlock
+	}
+
+	iv := decoded[:aes.BlockSize]
+	cipherText := decoded[aes.BlockSize:]
+
+	stream := cipher.NewCTR(block, iv)
+	plainText := make([]byte, len(cipherText))
+	stream.XORKeyStream(plainText, cipherText)
+
+	return string(plainText), nil
 }
 
 // toOTPHash creates a hash from a OTP code

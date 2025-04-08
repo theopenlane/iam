@@ -11,6 +11,16 @@
       "excludePackagePatterns": [
         "github.com/theopenlane/iam"
       ]
+    },
+    {
+      "groupName": "all patch dependencies",
+      "groupSlug": "all-patch",
+      "matchPackageNames": [
+        "*"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ]
     }
   ],
   "labels": [

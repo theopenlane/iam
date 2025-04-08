@@ -27,7 +27,10 @@ func TestOTPManager(t *testing.T) {
 func TestTOTPSecret(t *testing.T) {
 	svc := NewOTP(
 		WithIssuer("authenticator.local"),
-		WithSecret(Secret{Version: 0, Key: "secret-key"}),
+		WithSecret(Secret{
+			Version: 1,
+			Key:     "9f0c6da662f018b58b04a093e2dbb2e1",
+		}),
 	)
 	user := &User{
 		IsTOTPAllowed:     true,
@@ -48,13 +51,13 @@ func TestTOTPQRString(t *testing.T) {
 		WithIssuer("authenticator.local"),
 		WithSecret(Secret{
 			Version: 1,
-			Key:     "9f0c6da662f018b58b04a093e2dbb2e1d8d54250",
+			Key:     "9f0c6da662f018b58b04a093e2dbb2e1",
 		}),
 	)
 	user := &User{
 		IsTOTPAllowed:     true,
 		IsEmailOTPAllowed: false,
-		TFASecret:         "1:usrJIgtKY9j58GgLpKIaoJqNbwylphfzyJcoyRRg1Ow52/7j6KoRpky8tFLZlgrY",
+		TFASecret:         "1:8ovY+wxceIZipnE81YgNTI/8q3eMBm9v0ZlU93RHWUVUes0RRd6IdIMI6/SU1jMp",
 		Phone: sql.NullString{
 			String: "+17853931234",
 			Valid:  true,
@@ -66,7 +69,7 @@ func TestTOTPQRString(t *testing.T) {
 
 	expectedString := "otpauth://totp/authenticator.local:+17853931234?algorithm=" +
 		"SHA1&digits=6&issuer=authenticator.local&period=30&secret=" +
-		"572JFGKOMDRA6KHE5O3ZV62I6BP352E7"
+		"5UEP2YNN7GWAMUFHS65SH7ONWZVZ3LKF"
 	assert.Equal(t, expectedString, qrString, "TOTP QR string does not match")
 }
 
@@ -75,17 +78,17 @@ func TestTOTPDecryptedSecret(t *testing.T) {
 		WithIssuer("authenticator.local"),
 		WithSecret(Secret{
 			Version: 1,
-			Key:     "9f0c6da662f018b58b04a093e2dbb2e1d8d54250",
+			Key:     "9f0c6da662f018b58b04a093e2dbb2e1",
 		}),
 	)
 
-	secret := "1:usrJIgtKY9j58GgLpKIaoJqNbwylphfzyJcoyRRg1Ow52/7j6KoRpky8tFLZlgrY" //nolint:gosec
+	secret := "1:8ovY+wxceIZipnE81YgNTI/8q3eMBm9v0ZlU93RHWUVUes0RRd6IdIMI6/SU1jMp" //nolint:gosec
 
 	decryptedSecret, err := svc.TOTPDecryptedSecret(secret)
 	require.NoError(t, err)
 
-	expectedString := "572JFGKOMDRA6KHE5O3ZV62I6BP352E7"
-	assert.Equal(t, expectedString, decryptedSecret, "TOTP QR string does not match")
+	expectedString := "5UEP2YNN7GWAMUFHS65SH7ONWZVZ3LKF"
+	assert.Equal(t, expectedString, decryptedSecret)
 }
 
 func TestEncryptsWithLatestSecret(t *testing.T) {
