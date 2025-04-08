@@ -12,11 +12,11 @@ require (
 	github.com/docker/docker v28.0.4+incompatible
 	github.com/go-webauthn/webauthn v0.12.3
 	github.com/golang-jwt/jwt/v5 v5.2.2
-	github.com/google/go-github/v70 v70.0.0
+	github.com/google/go-github/v71 v71.0.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/lestrrat-go/jwx/v2 v2.1.4
 	github.com/oklog/ulid/v2 v2.1.0
-	github.com/openfga/go-sdk v0.6.5
+	github.com/openfga/go-sdk v0.7.1
 	github.com/openfga/language/pkg/go v0.2.0-beta.2.0.20250220223040-ed0cfba54336
 	github.com/openfga/openfga v1.8.9
 	github.com/pkg/errors v0.9.1
