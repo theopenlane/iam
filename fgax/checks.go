@@ -53,7 +53,7 @@ type ListAccess struct {
 }
 
 // BatchCheckObjectAccess checks if the user has access to the list of objects with the given relation
-// It returns a list of objects (type:id, e.g. organization:01JPWNAGM9S61G57DS364MFKGX) that the user has access to
+// It returns a list of objects id (e.g. 01JPWNAGM9S61G57DS364MFKGX) that the user has access to
 func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessCheck) ([]string, error) {
 	if len(checks) == 0 {
 		return []string{}, nil
@@ -109,28 +109,6 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 	}
 
 	return allowedObjects, nil
-}
-
-// BatchGetAllowedIDs checks if the user has access to the list of objects with the given relation
-// and returns a list of objects; it assumes the checks are for all the same object types (or the user knows the object type from the id)
-func (c *Client) BatchGetAllowedIDs(ctx context.Context, checks []AccessCheck) ([]string, error) {
-	res, err := c.BatchCheckObjectAccess(ctx, checks)
-	if err != nil {
-		return nil, err
-	}
-
-	allowedObjectIDs := []string{}
-
-	for _, r := range res {
-		entity, err := ParseEntity(r)
-		if err != nil {
-			return nil, err
-		}
-
-		allowedObjectIDs = append(allowedObjectIDs, entity.Identifier)
-	}
-
-	return allowedObjectIDs, nil
 }
 
 // CheckAccess checks if the user has access to the object type with the given relation
