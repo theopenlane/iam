@@ -344,8 +344,8 @@ github.com/testcontainers/testcontainers-go/modules/openfga v0.36.0 h1:R8Ix8eXlr
 github.com/testcontainers/testcontainers-go/modules/openfga v0.36.0/go.mod h1:2fQgsTLjShfgwae4BVYp7lIIIdQfvJAEIScYO2H4tFI=
 github.com/theopenlane/echox v0.2.3 h1:RlaEIFj03q9SR0YFmv7atlXtOe/5a3bRu4sF26pYSk0=
 github.com/theopenlane/echox v0.2.3/go.mod h1:xM2ECZW3/KEXZPetd1QAmN4mR8RetSwhDaySEQj+CHk=
-github.com/theopenlane/entx v0.6.1 h1:/Wm1J0Ul7Bbk5oFfDaVvjLrIVXx1AK1FJMm/sXxHLCA=
-github.com/theopenlane/entx v0.6.1/go.mod h1:/h6DkZw+lltQhH2HiQ61WEWwrqo7dh2Qsz648RjouGA=
+github.com/theopenlane/entx v0.7.2 h1:SojOMjFH34x+FH+IxlH+oE3MCECy5icWlT4IhG9yROQ=
+github.com/theopenlane/entx v0.7.2/go.mod h1:JXr0QBSOOPHjLKk7yN3G0BcrxyUwN+n1vRoeVZU+BLQ=
 github.com/theopenlane/utils v0.4.5 h1:afS6VqnaNGHHZZ08b9roSEkfJls7fqx8QbJFi6B3f4w=
 github.com/theopenlane/utils v0.4.5/go.mod h1:aX2LvjiXj++v15Kigsqngx5I4cJLXT+Hb86F/4LJfb4=
 github.com/tklauser/go-sysconf v0.3.12 h1:0QaGUFOdQaIVdPgfITYzaTegZvdCjmYO52cSFAEVmqU=
