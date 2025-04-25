@@ -342,8 +342,8 @@ github.com/testcontainers/testcontainers-go v0.36.0 h1:YpffyLuHtdp5EUsI5mT4sRw8G
 github.com/testcontainers/testcontainers-go v0.36.0/go.mod h1:yk73GVJ0KUZIHUtFna6MO7QS144qYpoY8lEEtU9Hed0=
 github.com/testcontainers/testcontainers-go/modules/openfga v0.36.0 h1:R8Ix8eXlr8WBAVU5WPRevdzduas7HD9GsYWJUljBB84=
 github.com/testcontainers/testcontainers-go/modules/openfga v0.36.0/go.mod h1:2fQgsTLjShfgwae4BVYp7lIIIdQfvJAEIScYO2H4tFI=
-github.com/theopenlane/echox v0.2.3 h1:RlaEIFj03q9SR0YFmv7atlXtOe/5a3bRu4sF26pYSk0=
-github.com/theopenlane/echox v0.2.3/go.mod h1:xM2ECZW3/KEXZPetd1QAmN4mR8RetSwhDaySEQj+CHk=
+github.com/theopenlane/echox v0.2.4 h1:bocz1Dfs7d2fkNa8foQqdmeTtkMTQNwe1v20bIGIDps=
+github.com/theopenlane/echox v0.2.4/go.mod h1:0cPOHe4SSQHmqP0/n2LsIEzRSogkxSX653bE+PIOVZ8=
 github.com/theopenlane/entx v0.7.2 h1:SojOMjFH34x+FH+IxlH+oE3MCECy5icWlT4IhG9yROQ=
 github.com/theopenlane/entx v0.7.2/go.mod h1:JXr0QBSOOPHjLKk7yN3G0BcrxyUwN+n1vRoeVZU+BLQ=
 github.com/theopenlane/utils v0.4.5 h1:afS6VqnaNGHHZZ08b9roSEkfJls7fqx8QbJFi6B3f4w=
