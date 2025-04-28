@@ -11,8 +11,8 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/lestrrat-go/jwx/v2/jwa"
-	"github.com/lestrrat-go/jwx/v2/jwk"
+	"github.com/lestrrat-go/jwx/v3/jwa"
+	"github.com/lestrrat-go/jwx/v3/jwk"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -261,7 +261,7 @@ func (tm *TokenManager) Keys() (keys jwk.Set, err error) {
 	for kid, pubkey := range tm.keys {
 		var key jwk.Key
 
-		if key, err = jwk.FromRaw(pubkey); err != nil {
+		if key, err = jwk.Import(pubkey); err != nil {
 			return nil, err
 		}
 
@@ -274,7 +274,7 @@ func (tm *TokenManager) Keys() (keys jwk.Set, err error) {
 		}
 
 		// NOTE: the algorithm should match the signing method of this package
-		if err = key.Set(jwk.AlgorithmKey, jwa.RS256); err != nil {
+		if err = key.Set(jwk.AlgorithmKey, jwa.RS256().String()); err != nil {
 			return nil, err
 		}
 
