@@ -49,18 +49,14 @@ func (v *JWKSValidator) keyFunc(token *jwt.Token) (publicKey any, err error) {
 
 	// Per JWT security notice: do not forget to validate alg is expected
 	alg, ok := key.Algorithm()
+
 	if !ok || token.Method.Alg() != alg.String() {
-		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"]) //nolint:err113
 	}
 
 	if err = jwk.Export(key, &publicKey); err != nil {
 		return nil, fmt.Errorf("could not extract raw key: %w", err)
 	}
-
-	// Extract the raw public key from the key material and return it.
-	//	if err = key.Raw(&publicKey); err != nil {
-	//		return nil, fmt.Errorf("could not extract raw key: %w", err)
-	//	}
 
 	return publicKey, nil
 }
@@ -80,19 +76,20 @@ type CachedJWKSValidator struct {
 // NewCachedJWKSValidator function is a constructor for creating a new instance of the
 // `CachedJWKSValidator` struct. It takes in a `context.Context`, a `*jwk.Cache`, an endpoint string,
 // an audience string, and an issuer string
-func NewCachedJWKSValidator(ctx context.Context, cache *jwk.Cache, endpoint, audience, issuer string) (validator *CachedJWKSValidator, err error) {
+func NewCachedJWKSValidator(cache *jwk.Cache, endpoint, audience, issuer string) (validator *CachedJWKSValidator, err error) {
 	validator = &CachedJWKSValidator{
 		cache:    cache,
 		endpoint: endpoint,
 	}
 
-	var keys jwk.Set
+	keys := jwk.NewSet()
 
-	if keys, err = cache.Refresh(ctx, endpoint); err != nil {
-		return nil, err
+	v := NewJWKSValidator(keys, audience, issuer)
+	if v == nil {
+		return nil, fmt.Errorf("could not create new JWKS validator") //nolint:err113
 	}
 
-	validator.JWKSValidator = *NewJWKSValidator(keys, audience, issuer)
+	validator.JWKSValidator = *v
 	validator.validator.keyFunc = validator.keyFunc
 
 	return validator, nil
@@ -113,9 +110,5 @@ func (v *CachedJWKSValidator) Refresh(ctx context.Context) (err error) {
 // struct is implementing a custom key function for retrieving the public key used to verify the JWT
 // token signature
 func (v *CachedJWKSValidator) keyFunc(token *jwt.Token) (publicKey interface{}, err error) {
-	if v.keys, err = v.cache.Refresh(context.Background(), v.endpoint); err != nil {
-		return nil, fmt.Errorf("could not refresh JWKS from cache: %w", err)
-	}
-
 	return v.JWKSValidator.keyFunc(token)
 }

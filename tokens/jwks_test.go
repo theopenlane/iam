@@ -71,6 +71,7 @@ func (s *TokenTestSuite) TestCachedJWKSValidator() {
 			f    *os.File
 		)
 
+		// Serve the partial_jwks.json file on the first request
 		if requests == 0 {
 			path = "testdata/partial_jwks.json"
 		} else {
@@ -118,7 +119,7 @@ func (s *TokenTestSuite) TestCachedJWKSValidator() {
 	cache, _ := jwk.NewCache(context.Background(), httprcclient)
 	cache.Register(context.Background(), srv.URL, jwk.WithMinInterval(1*time.Minute)) // nolint: errcheck
 
-	validator, err := tokens.NewCachedJWKSValidator(context.Background(), cache, srv.URL, "http://localhost:3000", "http://localhost:3001")
+	validator, err := tokens.NewCachedJWKSValidator(cache, srv.URL, "http://localhost:3000", "http://localhost:3001")
 	require.NoError(err, "could not create new cached JWKS validator")
 
 	// The first attempt to validate the access token should fail since the
