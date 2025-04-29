@@ -28,7 +28,7 @@ type validator struct {
 func (v *validator) Verify(tks string) (claims *Claims, err error) {
 	var token *jwt.Token
 
-	if token, err = jwt.ParseWithClaims(tks, &Claims{}, v.keyFunc); err != nil {
+	if token, err = jwt.ParseWithClaims(tks, &Claims{}, v.keyFunc, jwt.WithValidMethods([]string{signingMethod.Alg()})); err != nil {
 		return nil, err
 	}
 
@@ -54,8 +54,7 @@ func (v *validator) Verify(tks string) (claims *Claims, err error) {
 // handled on a case-by-case basis; for example by validating an expired access token
 // during reauthentication
 func (v *validator) Parse(tks string) (claims *Claims, err error) {
-	method := GetAlgorithms()
-	parser := jwt.NewParser(jwt.WithValidMethods(method), jwt.WithoutClaimsValidation())
+	parser := jwt.NewParser(jwt.WithValidMethods([]string{signingMethod.Alg()}), jwt.WithoutClaimsValidation())
 	claims = &Claims{}
 
 	if _, err = parser.ParseWithClaims(tks, claims, v.keyFunc); err != nil {
