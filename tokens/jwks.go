@@ -74,7 +74,7 @@ type CachedJWKSValidator struct {
 }
 
 // NewCachedJWKSValidator function is a constructor for creating a new instance of the
-// `CachedJWKSValidator` struct. It takes in a `context.Context`, a `*jwk.Cache`, an endpoint string,
+// `CachedJWKSValidator` struct. It takes in a `*jwk.Cache`, an endpoint string,
 // an audience string, and an issuer string
 func NewCachedJWKSValidator(cache *jwk.Cache, endpoint, audience, issuer string) (validator *CachedJWKSValidator, err error) {
 	validator = &CachedJWKSValidator{
