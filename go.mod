@@ -1,11 +1,11 @@
 module github.com/theopenlane/iam
 
-go 1.24.1
+go 1.24.2
 
 require (
 	entgo.io/ent v0.14.4
 	github.com/99designs/gqlgen v0.17.72
-	github.com/Yamashou/gqlgenc v0.31.0
+	github.com/Yamashou/gqlgenc v0.32.0
 	github.com/alicebob/miniredis/v2 v2.34.0
 	github.com/brianvoe/gofakeit/v7 v7.2.1
 	github.com/coreos/go-oidc/v3 v3.14.1
