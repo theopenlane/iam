@@ -110,7 +110,7 @@ func (v *CachedJWKSValidator) Refresh(ctx context.Context) (err error) {
 // struct is implementing a custom key function for retrieving the public key used to verify the JWT
 // token signature
 func (v *CachedJWKSValidator) keyFunc(token *jwt.Token) (publicKey interface{}, err error) {
-	if v.JWKSValidator.keys, err = v.cache.Lookup(context.Background(), v.endpoint); err != nil {
+	if v.keys, err = v.cache.Lookup(context.Background(), v.endpoint); err != nil {
 		return nil, fmt.Errorf("could not retrieve JWKS from cache: %w", err)
 	}
 
