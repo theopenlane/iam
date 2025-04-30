@@ -10,7 +10,8 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/lestrrat-go/jwx/v2/jwk"
+	"github.com/lestrrat-go/httprc/v3"
+	"github.com/lestrrat-go/jwx/v3/jwk"
 
 	"github.com/theopenlane/iam/tokens"
 )
@@ -70,6 +71,7 @@ func (s *TokenTestSuite) TestCachedJWKSValidator() {
 			f    *os.File
 		)
 
+		// Serve the partial_jwks.json file on the first request
 		if requests == 0 {
 			path = "testdata/partial_jwks.json"
 		} else {
@@ -111,10 +113,13 @@ func (s *TokenTestSuite) TestCachedJWKSValidator() {
 	require.NoError(err, "could not create token pair")
 	time.Sleep(500 * time.Millisecond)
 
+	httprcclient := httprc.NewClient() // new for v3
+
 	// Create a new cached validator for testing
-	cache := jwk.NewCache(context.Background())
-	cache.Register(srv.URL, jwk.WithMinRefreshInterval(1*time.Minute)) // nolint: errcheck
-	validator, err := tokens.NewCachedJWKSValidator(context.Background(), cache, srv.URL, "http://localhost:3000", "http://localhost:3001")
+	cache, _ := jwk.NewCache(context.Background(), httprcclient)
+	cache.Register(context.Background(), srv.URL, jwk.WithMinInterval(1*time.Minute)) // nolint: errcheck
+
+	validator, err := tokens.NewCachedJWKSValidator(cache, srv.URL, "http://localhost:3000", "http://localhost:3001")
 	require.NoError(err, "could not create new cached JWKS validator")
 
 	// The first attempt to validate the access token should fail since the
@@ -124,7 +129,9 @@ func (s *TokenTestSuite) TestCachedJWKSValidator() {
 
 	// After refreshing the cache, the access token should be able to be verified.
 	err = validator.Refresh(context.Background())
-	require.NoError(err, "could not refresh cache")
+	if err != nil {
+		require.FailNow("cache refresh failed", err.Error())
+	}
 
 	actualClaims, err := validator.Verify(atks)
 	require.NoError(err, "should have been able to verify the access token")

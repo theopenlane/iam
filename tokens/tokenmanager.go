@@ -11,8 +11,8 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/lestrrat-go/jwx/v2/jwa"
-	"github.com/lestrrat-go/jwx/v2/jwk"
+	"github.com/lestrrat-go/jwx/v3/jwa"
+	"github.com/lestrrat-go/jwx/v3/jwk"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -33,7 +33,6 @@ var (
 // When the TokenManager creates tokens it will use JWT standard claims as well as
 // extended claims based on usage. The standard claims included are exp, nbf
 // aud, and sub. On token verification, the exp, nbf, iss and aud claims are validated.
-
 type TokenManager struct {
 	validator
 	refreshAudience string
@@ -42,30 +41,6 @@ type TokenManager struct {
 	currentKey      *rsa.PrivateKey
 	keys            map[ulid.ULID]*rsa.PublicKey
 	kidEntropy      io.Reader
-}
-
-var TimeFunc = time.Now
-
-// Keyfunc will be used by the Parse methods as a callback function to supply the key for verification
-type Keyfunc func(*Token) (interface{}, error)
-
-// Token represents a JWT Token.  Different fields will be used depending on whether you're
-// creating or parsing/verifying a token
-type Token struct {
-	// Raw is the raw token; populated when you parse a token
-	Raw string
-	// Method is the signing metehod of the token
-	Method SigningMethod
-	// Header is the first segment of the token
-	Header map[string]interface{}
-	// Claims is the second segment of the token
-	Claims           Claims
-	ClaimBytes       []byte
-	ToBeSignedString string
-	// Signature is the third segment of the token; populated when you parse a token
-	Signature string
-	// Valid is a bool determining if the token is valid; populated when you parse or verify a token
-	Valid bool
 }
 
 // New creates a TokenManager with the specified keys which should be a mapping of ULID
@@ -261,7 +236,7 @@ func (tm *TokenManager) Keys() (keys jwk.Set, err error) {
 	for kid, pubkey := range tm.keys {
 		var key jwk.Key
 
-		if key, err = jwk.FromRaw(pubkey); err != nil {
+		if key, err = jwk.Import(pubkey); err != nil {
 			return nil, err
 		}
 
@@ -274,7 +249,7 @@ func (tm *TokenManager) Keys() (keys jwk.Set, err error) {
 		}
 
 		// NOTE: the algorithm should match the signing method of this package
-		if err = key.Set(jwk.AlgorithmKey, jwa.RS256); err != nil {
+		if err = key.Set(jwk.AlgorithmKey, jwa.RS256().String()); err != nil {
 			return nil, err
 		}
 
