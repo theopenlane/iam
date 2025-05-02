@@ -4,8 +4,8 @@ go 1.24.2
 
 require (
 	entgo.io/ent v0.14.4
-	github.com/99designs/gqlgen v0.17.72
-	github.com/Yamashou/gqlgenc v0.32.0
+	github.com/99designs/gqlgen v0.17.73
+	github.com/Yamashou/gqlgenc v0.32.1
 	github.com/alicebob/miniredis/v2 v2.34.0
 	github.com/brianvoe/gofakeit/v7 v7.2.1
 	github.com/coreos/go-oidc/v3 v3.14.1
@@ -90,6 +90,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/go-webauthn/x v0.1.20 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
+	github.com/goccy/go-yaml v1.17.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/cel-go v0.25.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
@@ -156,7 +157,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.6 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/vektah/gqlparser/v2 v2.5.25 // indirect
+	github.com/vektah/gqlparser/v2 v2.5.26 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
