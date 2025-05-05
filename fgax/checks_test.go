@@ -188,6 +188,16 @@ func TestListRelations(t *testing.T) {
 			wantErr:     false,
 		},
 		{
+			name: "happy path, no relations provided",
+			check: ListAccess{
+				ObjectType: "organization",
+				ObjectID:   "ulid-of-org",
+				SubjectID:  "ulid-of-member",
+			},
+			expectedRes: []string{"can_view", "can_read"},
+			wantErr:     false,
+		},
+		{
 			name: "happy path with context",
 			check: ListAccess{
 				ObjectType: "organization",
@@ -234,6 +244,11 @@ func TestListRelations(t *testing.T) {
 			mc := NewMockFGAClient(c)
 
 			if !tc.wantErr {
+				// if the relations are not provided, we need to mock the read request
+				if tc.check.Relations == nil {
+					mock_fga.ReadAuthorizationModel(t, c, tc.expectedRes, nil)
+				}
+
 				res := map[string]openfga.BatchCheckSingleResult{}
 				for _, relation := range tc.check.Relations {
 					res[relation] = openfga.BatchCheckSingleResult{

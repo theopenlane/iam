@@ -2,6 +2,7 @@ package fgax
 
 import (
 	"context"
+	"strings"
 
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/rs/zerolog/log"
@@ -199,9 +200,22 @@ func (c *Client) ListRelations(ctx context.Context, ac ListAccess) ([]string, er
 		Identifier: ac.ObjectID,
 	}
 
+	relations := ac.Relations
+	if relations == nil {
+		// get relations from the model
+		var err error
+
+		relations, err = c.getRelationsFromModel(ctx, ac.ObjectType.String())
+		if err != nil {
+			log.Error().Err(err).Msg("error getting relations from model")
+
+			return nil, err
+		}
+	}
+
 	checks := []ofgaclient.ClientBatchCheckItem{}
 
-	for _, rel := range ac.Relations {
+	for _, rel := range relations {
 		check := ofgaclient.ClientBatchCheckItem{
 			User:          sub.String(),
 			Relation:      rel,
@@ -347,4 +361,34 @@ func validateListAccess(ac ListAccess) error {
 	}
 
 	return nil
+}
+
+// getRelationsFromModel retrieves the relations from the authorization model and returns
+// the relations for the given object type
+func (c *Client) getRelationsFromModel(ctx context.Context, objectType string) ([]string, error) {
+	model, err := c.Ofga.ReadAuthorizationModel(ctx).Execute()
+	if err != nil {
+		return nil, err
+	}
+
+	// get the authorization model from the client
+	authorizationModel := model.GetAuthorizationModel()
+
+	// get the type definitions from the authorization model
+	typeDefs := authorizationModel.GetTypeDefinitions()
+
+	// get relations from the type definitions
+	relations := []string{}
+
+	for _, typeDef := range typeDefs {
+		if strings.EqualFold(typeDef.GetType(), objectType) {
+			rel := typeDef.GetRelations()
+
+			for k := range rel {
+				relations = append(relations, k)
+			}
+		}
+	}
+
+	return relations, nil
 }
