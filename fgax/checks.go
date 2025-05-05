@@ -207,7 +207,7 @@ func (c *Client) ListRelations(ctx context.Context, ac ListAccess) ([]string, er
 
 		relations, err = c.getRelationsFromModel(ctx, ac.ObjectType.String())
 		if err != nil {
-			log.Error().Err(err).Interface("accessCheck", ac).Msg("error getting relations from model")
+			log.Error().Err(err).Msg("error getting relations from model")
 
 			return nil, err
 		}
@@ -363,6 +363,8 @@ func validateListAccess(ac ListAccess) error {
 	return nil
 }
 
+// getRelationsFromModel retrieves the relations from the authorization model and returns
+// the relations for the given object type
 func (c *Client) getRelationsFromModel(ctx context.Context, objectType string) ([]string, error) {
 	model, err := c.Ofga.ReadAuthorizationModel(ctx).Execute()
 	if err != nil {
