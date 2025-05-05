@@ -242,3 +242,28 @@ func DeleteAny(t *testing.T, c *MockSdkClient, errMsg string) {
 
 	c.EXPECT().DeleteTuples(mock.Anything).Return(di)
 }
+
+func ReadAuthorizationModel(t *testing.T, c *MockSdkClient, relations []string, err error) {
+	rr := NewMockSdkClientReadAuthorizationModelRequestInterface(t)
+
+	relationMap := map[string]openfga.Userset{}
+
+	for _, rel := range relations {
+		relationMap[rel] = openfga.Userset{}
+	}
+
+	resp := &ofgaclient.ClientReadAuthorizationModelResponse{
+		AuthorizationModel: &openfga.AuthorizationModel{
+			TypeDefinitions: []openfga.TypeDefinition{
+				{
+					Type:      "organization",
+					Relations: &relationMap,
+				},
+			},
+		},
+	}
+
+	rr.EXPECT().Execute().Return(resp, err)
+
+	c.EXPECT().ReadAuthorizationModel(mock.Anything).Return(rr)
+}

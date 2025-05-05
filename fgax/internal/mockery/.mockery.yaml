@@ -1,7 +1,8 @@
-with-expecter: true
-dir: .
 all: false
-disable-version-string: true
+dir: .
+template: testify
+pkgname: client
+filename: mocks.go
 packages:
   github.com/openfga/go-sdk/client:
     config:
@@ -22,5 +23,5 @@ packages:
         config:
       SdkClientListObjectsRequestInterface:
         config:
-resolve-type-alias: false
-issue-845-fix: true
+      SdkClientReadAuthorizationModelRequestInterface:
+        config:
