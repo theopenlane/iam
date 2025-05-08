@@ -12,7 +12,7 @@ require (
 	github.com/docker/docker v28.1.1+incompatible
 	github.com/go-webauthn/webauthn v0.12.3
 	github.com/golang-jwt/jwt/v5 v5.2.2
-	github.com/google/go-github/v71 v71.0.0
+	github.com/google/go-github/v72 v72.0.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/lestrrat-go/jwx/v3 v3.0.1
 	github.com/oklog/ulid/v2 v2.1.0
@@ -38,7 +38,10 @@ require (
 	google.golang.org/protobuf v1.36.6
 )
 
-require github.com/lestrrat-go/httprc/v3 v3.0.0-beta2
+require (
+	github.com/google/go-github/v71 v71.0.0
+	github.com/lestrrat-go/httprc/v3 v3.0.0-beta2
+)
 
 require (
 	ariga.io/atlas v0.31.1-0.20250212144724-069be8033e83 // indirect
