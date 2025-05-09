@@ -14,6 +14,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/go-github/v72 v72.0.0
 	github.com/gorilla/securecookie v1.1.2
+	github.com/lestrrat-go/httprc/v3 v3.0.0-beta2
 	github.com/lestrrat-go/jwx/v3 v3.0.1
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/openfga/go-sdk v0.7.1
@@ -36,11 +37,6 @@ require (
 	golang.org/x/tools v0.33.0
 	google.golang.org/api v0.231.0
 	google.golang.org/protobuf v1.36.6
-)
-
-require (
-	github.com/google/go-github/v71 v71.0.0
-	github.com/lestrrat-go/httprc/v3 v3.0.0-beta2
 )
 
 require (
