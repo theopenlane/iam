@@ -21,7 +21,7 @@ require (
 	github.com/openfga/language/pkg/go v0.2.0-beta.2.0.20250220223040-ed0cfba54336
 	github.com/openfga/openfga v1.8.12
 	github.com/pkg/errors v0.9.1
-	github.com/pquerna/otp v1.4.0
+	github.com/pquerna/otp v1.5.0
 	github.com/redis/go-redis/v9 v9.8.0
 	github.com/rs/zerolog v1.34.0
 	github.com/samber/lo v1.50.0
