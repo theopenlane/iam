@@ -44,6 +44,9 @@ type ManagedGroupContextKey struct{}
 // OrgSubscriptionContextKey is the context key name for the organization subscription context
 type OrgSubscriptionContextKey struct{}
 
+// AcmeSolverContextKey is the context key name for the acme solver context
+type AcmeSolverContextKey struct{}
+
 // AuthenticatedUser contains the user and organization ID for the authenticated user
 type AuthenticatedUser struct {
 	// SubjectID is the user ID of the authenticated user or the api token ID if the user is an API token
