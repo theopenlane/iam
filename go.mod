@@ -14,7 +14,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/go-github/v72 v72.0.0
 	github.com/gorilla/securecookie v1.1.2
-	github.com/lestrrat-go/httprc/v3 v3.0.0-beta2
+	github.com/lestrrat-go/httprc/v3 v3.0.0
 	github.com/lestrrat-go/jwx/v3 v3.0.2
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/openfga/go-sdk v0.7.1
@@ -31,7 +31,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.37.0
 	github.com/theopenlane/echox v0.2.4
 	github.com/theopenlane/entx v0.7.2
-	github.com/theopenlane/utils v0.4.5
+	github.com/theopenlane/utils v0.4.6
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/tools v0.33.0
