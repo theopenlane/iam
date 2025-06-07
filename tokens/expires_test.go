@@ -1,9 +1,12 @@
 package tokens_test
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"testing"
 	"time"
 
+	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/require"
 
 	"github.com/theopenlane/iam/tokens"
@@ -53,4 +56,41 @@ func TestNotBefore(t *testing.T) {
 	// Check that an error is returned when parsing a bad token
 	_, err = tokens.NotBefore("notarealtoken")
 	require.Error(t, err, "should not be able to parse a bad token")
+}
+
+func TestIsExpired(t *testing.T) {
+	t.Run("Expired Token", func(t *testing.T) {
+		expired, err := tokens.IsExpired(accessToken)
+		require.NoError(t, err)
+		require.True(t, expired)
+	})
+
+	t.Run("Valid Token", func(t *testing.T) {
+		key, err := rsa.GenerateKey(rand.Reader, 1024) //nolint:gosec
+		require.NoError(t, err)
+		conf := tokens.Config{
+			Audience:        "http://localhost:3000",
+			Issuer:          "http://localhost:3001",
+			AccessDuration:  time.Hour,
+			RefreshDuration: 2 * time.Hour,
+			RefreshOverlap:  -15 * time.Minute,
+		}
+		tm, err := tokens.NewWithKey(key, conf)
+		require.NoError(t, err)
+
+		token, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
+		require.NoError(t, err)
+		signed, err := tm.Sign(token)
+		require.NoError(t, err)
+
+		isExpired, err := tokens.IsExpired(signed)
+		require.NoError(t, err)
+		require.False(t, isExpired)
+	})
+
+	t.Run("Invalid Token", func(t *testing.T) {
+		isExpired, err := tokens.IsExpired("notatoken")
+		require.Error(t, err)
+		require.True(t, isExpired)
+	})
 }
