@@ -6,13 +6,13 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -160,7 +160,7 @@ func (o *OTP) ValidateOTP(code string, hash string) error {
 		return ErrInvalidCode("code submission failed")
 	}
 
-	if h != otp.CodeHash {
+	if subtle.ConstantTimeCompare([]byte(h), []byte(otp.CodeHash)) != 1 {
 		return ErrInvalidCode("incorrect code provided")
 	}
 
@@ -254,15 +254,17 @@ func (o *OTP) encrypt(s string) (string, error) {
 		return "", ErrFailedToCreateCipherBlock
 	}
 
-	cipherText := make([]byte, aes.BlockSize+len(s))
-	iv := cipherText[:aes.BlockSize]
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", ErrFailedToCreateCipherBlock
+	}
 
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return "", ErrFailedToCreateCipherText
 	}
 
-	stream := cipher.NewCTR(block, iv)
-	stream.XORKeyStream(cipherText[aes.BlockSize:], []byte(s))
+	cipherText := gcm.Seal(nonce, nonce, []byte(s), nil)
 
 	encoded := base64.StdEncoding.EncodeToString(cipherText)
 
@@ -292,21 +294,27 @@ func (o *OTP) decrypt(encryptedTxt string) (string, error) {
 		return "", ErrCannotDecodeSecret
 	}
 
-	if len(decoded) < aes.BlockSize {
-		return "", ErrCipherTextTooShort
-	}
-
 	block, err := aes.NewCipher(key[:])
 	if err != nil {
 		return "", ErrFailedToCreateCipherBlock
 	}
 
-	iv := decoded[:aes.BlockSize]
-	cipherText := decoded[aes.BlockSize:]
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", ErrFailedToCreateCipherBlock
+	}
 
-	stream := cipher.NewCTR(block, iv)
-	plainText := make([]byte, len(cipherText))
-	stream.XORKeyStream(plainText, cipherText)
+	if len(decoded) < gcm.NonceSize() {
+		return "", ErrCipherTextTooShort
+	}
+
+	nonce := decoded[:gcm.NonceSize()]
+	cipherText := decoded[gcm.NonceSize():]
+
+	plainText, err := gcm.Open(nil, nonce, cipherText, nil)
+	if err != nil {
+		return "", ErrCannotDecryptSecret
+	}
 
 	return string(plainText), nil
 }
@@ -352,13 +360,12 @@ func FromOTPHash(otpHash string) (*Hash, error) {
 }
 
 // GenerateOTP generates a Time-Based One-Time Password (TOTP).
-func GenerateOTP(secret string) (string, error) {
+func GenerateOTP(secret, issuer, account string) (string, error) {
 	secretBytes := []byte(secret)
 
-	// TODO: not from env vars
 	key, err := totp.Generate(totp.GenerateOpts{
-		Issuer:      os.Getenv("ISSUER_NAME"),
-		AccountName: os.Getenv("ACCOUNT_NAME"),
+		Issuer:      issuer,
+		AccountName: account,
 		Secret:      secretBytes,
 		// You can customize the TOTP options as needed.
 	})
