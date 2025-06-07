@@ -31,7 +31,7 @@ func TestTOTPSecret(t *testing.T) {
 			Version: 1,
 			Key:     "9f0c6da662f018b58b04a093e2dbb2e1",
 		}),
-	)
+	).(*OTP)
 	user := &User{
 		IsTOTPAllowed:     true,
 		IsEmailOTPAllowed: false,
@@ -53,11 +53,14 @@ func TestTOTPQRString(t *testing.T) {
 			Version: 1,
 			Key:     "9f0c6da662f018b58b04a093e2dbb2e1",
 		}),
-	)
+	).(*OTP)
+	encrypted, err := svc.encrypt("5UEP2YNN7GWAMUFHS65SH7ONWZVZ3LKF")
+	require.NoError(t, err)
+
 	user := &User{
 		IsTOTPAllowed:     true,
 		IsEmailOTPAllowed: false,
-		TFASecret:         "1:8ovY+wxceIZipnE81YgNTI/8q3eMBm9v0ZlU93RHWUVUes0RRd6IdIMI6/SU1jMp",
+		TFASecret:         encrypted,
 		Phone: sql.NullString{
 			String: "+17853931234",
 			Valid:  true,
@@ -80,11 +83,12 @@ func TestTOTPDecryptedSecret(t *testing.T) {
 			Version: 1,
 			Key:     "9f0c6da662f018b58b04a093e2dbb2e1",
 		}),
-	)
+	).(*OTP)
 
-	secret := "1:8ovY+wxceIZipnE81YgNTI/8q3eMBm9v0ZlU93RHWUVUes0RRd6IdIMI6/SU1jMp" //nolint:gosec
+	encrypted, err := svc.encrypt("5UEP2YNN7GWAMUFHS65SH7ONWZVZ3LKF")
+	require.NoError(t, err)
 
-	decryptedSecret, err := svc.TOTPDecryptedSecret(secret)
+	decryptedSecret, err := svc.TOTPDecryptedSecret(encrypted)
 	require.NoError(t, err)
 
 	expectedString := "5UEP2YNN7GWAMUFHS65SH7ONWZVZ3LKF"
@@ -124,4 +128,10 @@ func TestGenerateRecoveryCodes(t *testing.T) {
 	for _, code := range codes {
 		assert.Len(t, code, 8, "incorrect recovery code length")
 	}
+}
+
+func TestGenerateOTP(t *testing.T) {
+	otp, err := GenerateOTP("ABCDEFGHIJKL", "issuer", "user@example.com")
+	require.NoError(t, err)
+	assert.Len(t, otp, 6, "incorrect otp length")
 }
