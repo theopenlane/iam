@@ -298,6 +298,114 @@ func (s *TokenTestSuite) TestKeyRotation() {
 	require.Error(err)
 }
 
+// Test signing tokens with multiple keys and rotating the active signing key.
+// Tokens created with previous keys should continue to verify successfully.
+func (s *TokenTestSuite) TestSigningKeyManagement() {
+	require := s.Require()
+
+	// start token manager that has a single key
+	key1, err := rsa.GenerateKey(rand.Reader, 1024) // nolint:gosec
+	require.NoError(err, "could not generate rsa key")
+
+	conf := tokens.Config{
+		Audience:        audience,
+		Issuer:          issuer,
+		AccessDuration:  time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
+	}
+
+	tm, err := tokens.NewWithKey(key1, conf)
+	require.NoError(err, "could not initialize token manager with key1")
+
+	kid1 := tm.CurrentKey()
+
+	// Sign a token with the first key
+	tok1, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
+	require.NoError(err, "could not create access token with key1")
+	sig1, err := tm.Sign(tok1)
+	require.NoError(err, "could not sign token with key1")
+
+	// Generate a second key with a ULID that is newer so AddSigningKey rotates to it
+	key2, err := rsa.GenerateKey(rand.Reader, 1024) //nolint:gosec
+	require.NoError(err, "could not generate rsa key")
+
+	kid2 := ulids.FromTime(time.Now().Add(time.Second))
+	tm.AddSigningKey(kid2, key2)
+
+	require.Equal(kid2, tm.CurrentKey(), "latest key should be active")
+
+	// JWKS should include both keys.
+	jwks, err := tm.Keys()
+	require.NoError(err)
+	require.Equal(2, jwks.Len())
+
+	// Sign another token with the new key.
+	tok2, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
+	require.NoError(err)
+	sig2, err := tm.Sign(tok2)
+	require.NoError(err)
+
+	// Verify both tokens.
+	_, err = tm.Verify(sig1)
+	require.NoError(err, "token signed with first key should still verify")
+
+	_, err = tm.Verify(sig2)
+	require.NoError(err, "token signed with second key should verify")
+
+	// Rotate back to the first key
+	err = tm.UseSigningKey(kid1)
+	require.NoError(err)
+	require.Equal(kid1, tm.CurrentKey())
+
+	tok3, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
+	require.NoError(err)
+	sig3, err := tm.Sign(tok3)
+	require.NoError(err)
+
+	_, err = tm.Verify(sig3)
+	require.NoError(err, "token signed after rotating back should verify")
+
+	// Attempt to use an unknown key id
+	err = tm.UseSigningKey(ulids.New())
+	require.ErrorIs(err, tokens.ErrUnknownSigningKey)
+}
+
+// Test that removing a signing key invalidates tokens signed with it
+func (s *TokenTestSuite) TestSigningKeyRemovalInvalidatesTokens() {
+	require := s.Require()
+
+	tm, err := tokens.New(s.conf)
+	require.NoError(err, "could not initialize token manager")
+
+	// Create and sign a token with the current key
+	tok, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
+	require.NoError(err)
+	signed, err := tm.Sign(tok)
+	require.NoError(err)
+
+	// Ensure it verifies prior to key removal
+	_, err = tm.Verify(signed)
+	require.NoError(err)
+
+	kid := tm.CurrentKey()
+
+	// Remove the signing key that was used to sign the token
+	tm.RemoveSigningKey(kid)
+
+	// Verification should now fail because the key no longer exists
+	_, err = tm.Verify(signed)
+	require.EqualError(err, "token is unverifiable: error while executing keyfunc: unknown signing key")
+
+	// Tokens signed with the remaining key should still verify.
+	tok2, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
+	require.NoError(err)
+	sig2, err := tm.Sign(tok2)
+	require.NoError(err)
+	_, err = tm.Verify(sig2)
+	require.NoError(err)
+}
+
 // Test that a token can be parsed even if it is expired. This is necessary to parse
 // access tokens in order to use a refresh token to extract the claims
 func (s *TokenTestSuite) TestParseExpiredToken() {
@@ -364,4 +472,46 @@ func TestParseUnverifiedTokenClaims(t *testing.T) {
 	// Should return an error when a bad token is parsed.
 	_, err = tokens.ParseUnverifiedTokenClaims("notarealtoken")
 	require.Error(t, err, "should not be able to parse a bad token")
+}
+
+func TestRefreshAudience(t *testing.T) {
+	key, err := rsa.GenerateKey(rand.Reader, 1024) //nolint:gosec
+	require.NoError(t, err)
+
+	conf := tokens.Config{
+		Audience: "http://localhost:3000",
+		Issuer:   "https://example.com",
+	}
+
+	tm, err := tokens.NewWithKey(key, conf)
+	require.NoError(t, err)
+
+	// Should default to issuer + /v1/refresh
+	require.Equal(t, "https://example.com/v1/refresh", tm.RefreshAudience())
+
+	// If issuer is invalid, fallback to DefaultRefreshAudience
+	badKey, err := rsa.GenerateKey(rand.Reader, 1024) //nolint:gosec
+	require.NoError(t, err)
+
+	badConf := tokens.Config{
+		Audience: "http://localhost:3000",
+		Issuer:   "%gh$?",
+	}
+
+	tmBad, err := tokens.NewWithKey(badKey, badConf)
+	require.NoError(t, err)
+	require.Equal(t, tokens.DefaultRefreshAudience, tmBad.RefreshAudience())
+
+	// RefreshAudience from config should be ignored
+	confOverride := tokens.Config{
+		Audience:        "http://localhost:3000",
+		Issuer:          "https://example.com",
+		RefreshAudience: "https://override.example.com/refresh",
+	}
+
+	key2, err := rsa.GenerateKey(rand.Reader, 1024) //nolint:gosec
+	require.NoError(t, err)
+	tmOverride, err := tokens.NewWithKey(key2, confOverride)
+	require.NoError(t, err)
+	require.Equal(t, "https://example.com/v1/refresh", tmOverride.RefreshAudience())
 }

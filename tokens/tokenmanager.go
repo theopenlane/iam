@@ -40,6 +40,7 @@ type TokenManager struct {
 	currentKeyID    ulid.ULID
 	currentKey      *rsa.PrivateKey
 	keys            map[ulid.ULID]*rsa.PublicKey
+	signingKeys     map[ulid.ULID]*rsa.PrivateKey
 	kidEntropy      io.Reader
 }
 
@@ -53,8 +54,9 @@ func New(conf Config) (tm *TokenManager, err error) {
 			audience: conf.Audience,
 			issuer:   conf.Issuer,
 		},
-		conf: conf,
-		keys: make(map[ulid.ULID]*rsa.PublicKey),
+		conf:        conf,
+		keys:        make(map[ulid.ULID]*rsa.PublicKey),
+		signingKeys: make(map[ulid.ULID]*rsa.PrivateKey),
 		kidEntropy: &ulid.LockedMonotonicReader{
 			MonotonicReader: ulid.Monotonic(rand.Reader, 0),
 		},
@@ -82,6 +84,7 @@ func New(conf Config) (tm *TokenManager, err error) {
 		}
 
 		tm.keys[keyID] = &key.PublicKey
+		tm.signingKeys[keyID] = key
 
 		// Set the current key if it is the latest key
 		if tm.currentKey == nil || keyID.Time() > tm.currentKeyID.Time() {
@@ -104,8 +107,9 @@ func NewWithKey(key *rsa.PrivateKey, conf Config) (tm *TokenManager, err error) 
 			audience: conf.Audience,
 			issuer:   conf.Issuer,
 		},
-		conf: conf,
-		keys: make(map[ulid.ULID]*rsa.PublicKey),
+		conf:        conf,
+		keys:        make(map[ulid.ULID]*rsa.PublicKey),
+		signingKeys: make(map[ulid.ULID]*rsa.PrivateKey),
 		kidEntropy: &ulid.LockedMonotonicReader{
 			MonotonicReader: ulid.Monotonic(rand.Reader, 0),
 		},
@@ -119,6 +123,7 @@ func NewWithKey(key *rsa.PrivateKey, conf Config) (tm *TokenManager, err error) 
 	}
 
 	tm.keys[kid] = &key.PublicKey
+	tm.signingKeys[kid] = key
 	tm.currentKey = key
 	tm.currentKeyID = kid
 
@@ -286,6 +291,65 @@ func (tm *TokenManager) Config() Config {
 // CurrentKey returns the ulid of the current key being used to sign tokens - this is just the identifier of the key, not the key itself
 func (tm *TokenManager) CurrentKey() ulid.ULID {
 	return tm.currentKeyID
+}
+
+// AddSigningKey registers a new signing key. If the supplied key has a later
+// ULID timestamp than the currently active key it becomes the new signing key.
+func (tm *TokenManager) AddSigningKey(keyID ulid.ULID, key *rsa.PrivateKey) {
+	tm.keys[keyID] = &key.PublicKey
+	tm.signingKeys[keyID] = key
+
+	if tm.currentKey == nil || keyID.Time() > tm.currentKeyID.Time() {
+		tm.currentKey = key
+		tm.currentKeyID = keyID
+	}
+}
+
+// UseSigningKey sets the current signing key to the key specified by keyID.
+// It returns ErrUnknownSigningKey if the key has not been registered.
+func (tm *TokenManager) UseSigningKey(keyID ulid.ULID) error {
+	key, ok := tm.signingKeys[keyID]
+	if !ok {
+		return ErrUnknownSigningKey
+	}
+
+	tm.currentKey = key
+	tm.currentKeyID = keyID
+
+	return nil
+}
+
+// RemoveSigningKey deletes the signing key identified by keyID. If the removed
+// key is the currently active signing key the newest remaining key will become
+// active. Removing a key ensures any tokens referencing it can no longer be
+// validated.
+func (tm *TokenManager) RemoveSigningKey(keyID ulid.ULID) {
+	delete(tm.keys, keyID)
+	delete(tm.signingKeys, keyID)
+
+	// If no keys remain, clear the current key fields and return
+	if len(tm.signingKeys) == 0 {
+		tm.currentKey = nil
+		tm.currentKeyID = ulid.ULID{}
+
+		return
+	}
+
+	// If the removed key was active, rotate to the newest remaining key
+	if tm.currentKeyID.Compare(keyID) == 0 {
+		var latestID ulid.ULID
+		var latestKey *rsa.PrivateKey
+
+		for id, key := range tm.signingKeys {
+			if latestKey == nil || id.Time() > latestID.Time() {
+				latestKey = key
+				latestID = id
+			}
+		}
+
+		tm.currentKey = latestKey
+		tm.currentKeyID = latestID
+	}
 }
 
 // keyFunc selects the RSA public key from the list of tokenmanager internal keys based on the kid in the token header - if the kid does not exist an error is returned the token is not validated
