@@ -64,14 +64,20 @@ type MockSdkClient_BatchCheck_Call struct {
 }
 
 // BatchCheck is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) BatchCheck(ctx interface{}) *MockSdkClient_BatchCheck_Call {
 	return &MockSdkClient_BatchCheck_Call{Call: _e.mock.On("BatchCheck", ctx)}
 }
 
 func (_c *MockSdkClient_BatchCheck_Call) Run(run func(ctx context.Context)) *MockSdkClient_BatchCheck_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -120,14 +126,20 @@ type MockSdkClient_BatchCheckExecute_Call struct {
 }
 
 // BatchCheckExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientBatchCheckRequestInterface
 func (_e *MockSdkClient_Expecter) BatchCheckExecute(request interface{}) *MockSdkClient_BatchCheckExecute_Call {
 	return &MockSdkClient_BatchCheckExecute_Call{Call: _e.mock.On("BatchCheckExecute", request)}
 }
 
 func (_c *MockSdkClient_BatchCheckExecute_Call) Run(run func(request client.SdkClientBatchCheckRequestInterface)) *MockSdkClient_BatchCheckExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientBatchCheckRequestInterface))
+		var arg0 client.SdkClientBatchCheckRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientBatchCheckRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -167,14 +179,20 @@ type MockSdkClient_Check_Call struct {
 }
 
 // Check is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) Check(ctx interface{}) *MockSdkClient_Check_Call {
 	return &MockSdkClient_Check_Call{Call: _e.mock.On("Check", ctx)}
 }
 
 func (_c *MockSdkClient_Check_Call) Run(run func(ctx context.Context)) *MockSdkClient_Check_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -223,14 +241,20 @@ type MockSdkClient_CheckExecute_Call struct {
 }
 
 // CheckExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientCheckRequestInterface
 func (_e *MockSdkClient_Expecter) CheckExecute(request interface{}) *MockSdkClient_CheckExecute_Call {
 	return &MockSdkClient_CheckExecute_Call{Call: _e.mock.On("CheckExecute", request)}
 }
 
 func (_c *MockSdkClient_CheckExecute_Call) Run(run func(request client.SdkClientCheckRequestInterface)) *MockSdkClient_CheckExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientCheckRequestInterface))
+		var arg0 client.SdkClientCheckRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientCheckRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -270,14 +294,20 @@ type MockSdkClient_ClientBatchCheck_Call struct {
 }
 
 // ClientBatchCheck is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) ClientBatchCheck(ctx interface{}) *MockSdkClient_ClientBatchCheck_Call {
 	return &MockSdkClient_ClientBatchCheck_Call{Call: _e.mock.On("ClientBatchCheck", ctx)}
 }
 
 func (_c *MockSdkClient_ClientBatchCheck_Call) Run(run func(ctx context.Context)) *MockSdkClient_ClientBatchCheck_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -326,14 +356,20 @@ type MockSdkClient_ClientBatchCheckExecute_Call struct {
 }
 
 // ClientBatchCheckExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientBatchCheckClientRequestInterface
 func (_e *MockSdkClient_Expecter) ClientBatchCheckExecute(request interface{}) *MockSdkClient_ClientBatchCheckExecute_Call {
 	return &MockSdkClient_ClientBatchCheckExecute_Call{Call: _e.mock.On("ClientBatchCheckExecute", request)}
 }
 
 func (_c *MockSdkClient_ClientBatchCheckExecute_Call) Run(run func(request client.SdkClientBatchCheckClientRequestInterface)) *MockSdkClient_ClientBatchCheckExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientBatchCheckClientRequestInterface))
+		var arg0 client.SdkClientBatchCheckClientRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientBatchCheckClientRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -373,14 +409,20 @@ type MockSdkClient_CreateStore_Call struct {
 }
 
 // CreateStore is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) CreateStore(ctx interface{}) *MockSdkClient_CreateStore_Call {
 	return &MockSdkClient_CreateStore_Call{Call: _e.mock.On("CreateStore", ctx)}
 }
 
 func (_c *MockSdkClient_CreateStore_Call) Run(run func(ctx context.Context)) *MockSdkClient_CreateStore_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -429,14 +471,20 @@ type MockSdkClient_CreateStoreExecute_Call struct {
 }
 
 // CreateStoreExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientCreateStoreRequestInterface
 func (_e *MockSdkClient_Expecter) CreateStoreExecute(request interface{}) *MockSdkClient_CreateStoreExecute_Call {
 	return &MockSdkClient_CreateStoreExecute_Call{Call: _e.mock.On("CreateStoreExecute", request)}
 }
 
 func (_c *MockSdkClient_CreateStoreExecute_Call) Run(run func(request client.SdkClientCreateStoreRequestInterface)) *MockSdkClient_CreateStoreExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientCreateStoreRequestInterface))
+		var arg0 client.SdkClientCreateStoreRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientCreateStoreRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -476,14 +524,20 @@ type MockSdkClient_DeleteStore_Call struct {
 }
 
 // DeleteStore is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) DeleteStore(ctx interface{}) *MockSdkClient_DeleteStore_Call {
 	return &MockSdkClient_DeleteStore_Call{Call: _e.mock.On("DeleteStore", ctx)}
 }
 
 func (_c *MockSdkClient_DeleteStore_Call) Run(run func(ctx context.Context)) *MockSdkClient_DeleteStore_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -532,14 +586,20 @@ type MockSdkClient_DeleteStoreExecute_Call struct {
 }
 
 // DeleteStoreExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientDeleteStoreRequestInterface
 func (_e *MockSdkClient_Expecter) DeleteStoreExecute(request interface{}) *MockSdkClient_DeleteStoreExecute_Call {
 	return &MockSdkClient_DeleteStoreExecute_Call{Call: _e.mock.On("DeleteStoreExecute", request)}
 }
 
 func (_c *MockSdkClient_DeleteStoreExecute_Call) Run(run func(request client.SdkClientDeleteStoreRequestInterface)) *MockSdkClient_DeleteStoreExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientDeleteStoreRequestInterface))
+		var arg0 client.SdkClientDeleteStoreRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientDeleteStoreRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -579,14 +639,20 @@ type MockSdkClient_DeleteTuples_Call struct {
 }
 
 // DeleteTuples is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) DeleteTuples(ctx interface{}) *MockSdkClient_DeleteTuples_Call {
 	return &MockSdkClient_DeleteTuples_Call{Call: _e.mock.On("DeleteTuples", ctx)}
 }
 
 func (_c *MockSdkClient_DeleteTuples_Call) Run(run func(ctx context.Context)) *MockSdkClient_DeleteTuples_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -635,14 +701,20 @@ type MockSdkClient_DeleteTuplesExecute_Call struct {
 }
 
 // DeleteTuplesExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientDeleteTuplesRequestInterface
 func (_e *MockSdkClient_Expecter) DeleteTuplesExecute(request interface{}) *MockSdkClient_DeleteTuplesExecute_Call {
 	return &MockSdkClient_DeleteTuplesExecute_Call{Call: _e.mock.On("DeleteTuplesExecute", request)}
 }
 
 func (_c *MockSdkClient_DeleteTuplesExecute_Call) Run(run func(request client.SdkClientDeleteTuplesRequestInterface)) *MockSdkClient_DeleteTuplesExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientDeleteTuplesRequestInterface))
+		var arg0 client.SdkClientDeleteTuplesRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientDeleteTuplesRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -682,14 +754,20 @@ type MockSdkClient_Expand_Call struct {
 }
 
 // Expand is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) Expand(ctx interface{}) *MockSdkClient_Expand_Call {
 	return &MockSdkClient_Expand_Call{Call: _e.mock.On("Expand", ctx)}
 }
 
 func (_c *MockSdkClient_Expand_Call) Run(run func(ctx context.Context)) *MockSdkClient_Expand_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -738,14 +816,20 @@ type MockSdkClient_ExpandExecute_Call struct {
 }
 
 // ExpandExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientExpandRequestInterface
 func (_e *MockSdkClient_Expecter) ExpandExecute(request interface{}) *MockSdkClient_ExpandExecute_Call {
 	return &MockSdkClient_ExpandExecute_Call{Call: _e.mock.On("ExpandExecute", request)}
 }
 
 func (_c *MockSdkClient_ExpandExecute_Call) Run(run func(request client.SdkClientExpandRequestInterface)) *MockSdkClient_ExpandExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientExpandRequestInterface))
+		var arg0 client.SdkClientExpandRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientExpandRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -838,14 +922,20 @@ type MockSdkClient_GetStore_Call struct {
 }
 
 // GetStore is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) GetStore(ctx interface{}) *MockSdkClient_GetStore_Call {
 	return &MockSdkClient_GetStore_Call{Call: _e.mock.On("GetStore", ctx)}
 }
 
 func (_c *MockSdkClient_GetStore_Call) Run(run func(ctx context.Context)) *MockSdkClient_GetStore_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -894,14 +984,20 @@ type MockSdkClient_GetStoreExecute_Call struct {
 }
 
 // GetStoreExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientGetStoreRequestInterface
 func (_e *MockSdkClient_Expecter) GetStoreExecute(request interface{}) *MockSdkClient_GetStoreExecute_Call {
 	return &MockSdkClient_GetStoreExecute_Call{Call: _e.mock.On("GetStoreExecute", request)}
 }
 
 func (_c *MockSdkClient_GetStoreExecute_Call) Run(run func(request client.SdkClientGetStoreRequestInterface)) *MockSdkClient_GetStoreExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientGetStoreRequestInterface))
+		var arg0 client.SdkClientGetStoreRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientGetStoreRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -994,14 +1090,20 @@ type MockSdkClient_ListObjects_Call struct {
 }
 
 // ListObjects is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) ListObjects(ctx interface{}) *MockSdkClient_ListObjects_Call {
 	return &MockSdkClient_ListObjects_Call{Call: _e.mock.On("ListObjects", ctx)}
 }
 
 func (_c *MockSdkClient_ListObjects_Call) Run(run func(ctx context.Context)) *MockSdkClient_ListObjects_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1050,14 +1152,20 @@ type MockSdkClient_ListObjectsExecute_Call struct {
 }
 
 // ListObjectsExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientListObjectsRequestInterface
 func (_e *MockSdkClient_Expecter) ListObjectsExecute(request interface{}) *MockSdkClient_ListObjectsExecute_Call {
 	return &MockSdkClient_ListObjectsExecute_Call{Call: _e.mock.On("ListObjectsExecute", request)}
 }
 
 func (_c *MockSdkClient_ListObjectsExecute_Call) Run(run func(request client.SdkClientListObjectsRequestInterface)) *MockSdkClient_ListObjectsExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientListObjectsRequestInterface))
+		var arg0 client.SdkClientListObjectsRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientListObjectsRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1097,14 +1205,20 @@ type MockSdkClient_ListRelations_Call struct {
 }
 
 // ListRelations is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) ListRelations(ctx interface{}) *MockSdkClient_ListRelations_Call {
 	return &MockSdkClient_ListRelations_Call{Call: _e.mock.On("ListRelations", ctx)}
 }
 
 func (_c *MockSdkClient_ListRelations_Call) Run(run func(ctx context.Context)) *MockSdkClient_ListRelations_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1153,14 +1267,20 @@ type MockSdkClient_ListRelationsExecute_Call struct {
 }
 
 // ListRelationsExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientListRelationsRequestInterface
 func (_e *MockSdkClient_Expecter) ListRelationsExecute(request interface{}) *MockSdkClient_ListRelationsExecute_Call {
 	return &MockSdkClient_ListRelationsExecute_Call{Call: _e.mock.On("ListRelationsExecute", request)}
 }
 
 func (_c *MockSdkClient_ListRelationsExecute_Call) Run(run func(request client.SdkClientListRelationsRequestInterface)) *MockSdkClient_ListRelationsExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientListRelationsRequestInterface))
+		var arg0 client.SdkClientListRelationsRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientListRelationsRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1200,14 +1320,20 @@ type MockSdkClient_ListStores_Call struct {
 }
 
 // ListStores is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) ListStores(ctx interface{}) *MockSdkClient_ListStores_Call {
 	return &MockSdkClient_ListStores_Call{Call: _e.mock.On("ListStores", ctx)}
 }
 
 func (_c *MockSdkClient_ListStores_Call) Run(run func(ctx context.Context)) *MockSdkClient_ListStores_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1256,14 +1382,20 @@ type MockSdkClient_ListStoresExecute_Call struct {
 }
 
 // ListStoresExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientListStoresRequestInterface
 func (_e *MockSdkClient_Expecter) ListStoresExecute(request interface{}) *MockSdkClient_ListStoresExecute_Call {
 	return &MockSdkClient_ListStoresExecute_Call{Call: _e.mock.On("ListStoresExecute", request)}
 }
 
 func (_c *MockSdkClient_ListStoresExecute_Call) Run(run func(request client.SdkClientListStoresRequestInterface)) *MockSdkClient_ListStoresExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientListStoresRequestInterface))
+		var arg0 client.SdkClientListStoresRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientListStoresRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1303,14 +1435,20 @@ type MockSdkClient_ListUsers_Call struct {
 }
 
 // ListUsers is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) ListUsers(ctx interface{}) *MockSdkClient_ListUsers_Call {
 	return &MockSdkClient_ListUsers_Call{Call: _e.mock.On("ListUsers", ctx)}
 }
 
 func (_c *MockSdkClient_ListUsers_Call) Run(run func(ctx context.Context)) *MockSdkClient_ListUsers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1359,14 +1497,20 @@ type MockSdkClient_ListUsersExecute_Call struct {
 }
 
 // ListUsersExecute is a helper method to define mock.On call
-//   - r
+//   - r client.SdkClientListUsersRequestInterface
 func (_e *MockSdkClient_Expecter) ListUsersExecute(r interface{}) *MockSdkClient_ListUsersExecute_Call {
 	return &MockSdkClient_ListUsersExecute_Call{Call: _e.mock.On("ListUsersExecute", r)}
 }
 
 func (_c *MockSdkClient_ListUsersExecute_Call) Run(run func(r client.SdkClientListUsersRequestInterface)) *MockSdkClient_ListUsersExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientListUsersRequestInterface))
+		var arg0 client.SdkClientListUsersRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientListUsersRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1406,14 +1550,20 @@ type MockSdkClient_Read_Call struct {
 }
 
 // Read is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) Read(ctx interface{}) *MockSdkClient_Read_Call {
 	return &MockSdkClient_Read_Call{Call: _e.mock.On("Read", ctx)}
 }
 
 func (_c *MockSdkClient_Read_Call) Run(run func(ctx context.Context)) *MockSdkClient_Read_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1453,14 +1603,20 @@ type MockSdkClient_ReadAssertions_Call struct {
 }
 
 // ReadAssertions is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) ReadAssertions(ctx interface{}) *MockSdkClient_ReadAssertions_Call {
 	return &MockSdkClient_ReadAssertions_Call{Call: _e.mock.On("ReadAssertions", ctx)}
 }
 
 func (_c *MockSdkClient_ReadAssertions_Call) Run(run func(ctx context.Context)) *MockSdkClient_ReadAssertions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1509,14 +1665,20 @@ type MockSdkClient_ReadAssertionsExecute_Call struct {
 }
 
 // ReadAssertionsExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientReadAssertionsRequestInterface
 func (_e *MockSdkClient_Expecter) ReadAssertionsExecute(request interface{}) *MockSdkClient_ReadAssertionsExecute_Call {
 	return &MockSdkClient_ReadAssertionsExecute_Call{Call: _e.mock.On("ReadAssertionsExecute", request)}
 }
 
 func (_c *MockSdkClient_ReadAssertionsExecute_Call) Run(run func(request client.SdkClientReadAssertionsRequestInterface)) *MockSdkClient_ReadAssertionsExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientReadAssertionsRequestInterface))
+		var arg0 client.SdkClientReadAssertionsRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientReadAssertionsRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1556,14 +1718,20 @@ type MockSdkClient_ReadAuthorizationModel_Call struct {
 }
 
 // ReadAuthorizationModel is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) ReadAuthorizationModel(ctx interface{}) *MockSdkClient_ReadAuthorizationModel_Call {
 	return &MockSdkClient_ReadAuthorizationModel_Call{Call: _e.mock.On("ReadAuthorizationModel", ctx)}
 }
 
 func (_c *MockSdkClient_ReadAuthorizationModel_Call) Run(run func(ctx context.Context)) *MockSdkClient_ReadAuthorizationModel_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1612,14 +1780,20 @@ type MockSdkClient_ReadAuthorizationModelExecute_Call struct {
 }
 
 // ReadAuthorizationModelExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientReadAuthorizationModelRequestInterface
 func (_e *MockSdkClient_Expecter) ReadAuthorizationModelExecute(request interface{}) *MockSdkClient_ReadAuthorizationModelExecute_Call {
 	return &MockSdkClient_ReadAuthorizationModelExecute_Call{Call: _e.mock.On("ReadAuthorizationModelExecute", request)}
 }
 
 func (_c *MockSdkClient_ReadAuthorizationModelExecute_Call) Run(run func(request client.SdkClientReadAuthorizationModelRequestInterface)) *MockSdkClient_ReadAuthorizationModelExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientReadAuthorizationModelRequestInterface))
+		var arg0 client.SdkClientReadAuthorizationModelRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientReadAuthorizationModelRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1659,14 +1833,20 @@ type MockSdkClient_ReadAuthorizationModels_Call struct {
 }
 
 // ReadAuthorizationModels is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) ReadAuthorizationModels(ctx interface{}) *MockSdkClient_ReadAuthorizationModels_Call {
 	return &MockSdkClient_ReadAuthorizationModels_Call{Call: _e.mock.On("ReadAuthorizationModels", ctx)}
 }
 
 func (_c *MockSdkClient_ReadAuthorizationModels_Call) Run(run func(ctx context.Context)) *MockSdkClient_ReadAuthorizationModels_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1715,14 +1895,20 @@ type MockSdkClient_ReadAuthorizationModelsExecute_Call struct {
 }
 
 // ReadAuthorizationModelsExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientReadAuthorizationModelsRequestInterface
 func (_e *MockSdkClient_Expecter) ReadAuthorizationModelsExecute(request interface{}) *MockSdkClient_ReadAuthorizationModelsExecute_Call {
 	return &MockSdkClient_ReadAuthorizationModelsExecute_Call{Call: _e.mock.On("ReadAuthorizationModelsExecute", request)}
 }
 
 func (_c *MockSdkClient_ReadAuthorizationModelsExecute_Call) Run(run func(request client.SdkClientReadAuthorizationModelsRequestInterface)) *MockSdkClient_ReadAuthorizationModelsExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientReadAuthorizationModelsRequestInterface))
+		var arg0 client.SdkClientReadAuthorizationModelsRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientReadAuthorizationModelsRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1762,14 +1948,20 @@ type MockSdkClient_ReadChanges_Call struct {
 }
 
 // ReadChanges is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) ReadChanges(ctx interface{}) *MockSdkClient_ReadChanges_Call {
 	return &MockSdkClient_ReadChanges_Call{Call: _e.mock.On("ReadChanges", ctx)}
 }
 
 func (_c *MockSdkClient_ReadChanges_Call) Run(run func(ctx context.Context)) *MockSdkClient_ReadChanges_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1818,14 +2010,20 @@ type MockSdkClient_ReadChangesExecute_Call struct {
 }
 
 // ReadChangesExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientReadChangesRequestInterface
 func (_e *MockSdkClient_Expecter) ReadChangesExecute(request interface{}) *MockSdkClient_ReadChangesExecute_Call {
 	return &MockSdkClient_ReadChangesExecute_Call{Call: _e.mock.On("ReadChangesExecute", request)}
 }
 
 func (_c *MockSdkClient_ReadChangesExecute_Call) Run(run func(request client.SdkClientReadChangesRequestInterface)) *MockSdkClient_ReadChangesExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientReadChangesRequestInterface))
+		var arg0 client.SdkClientReadChangesRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientReadChangesRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1874,14 +2072,20 @@ type MockSdkClient_ReadExecute_Call struct {
 }
 
 // ReadExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientReadRequestInterface
 func (_e *MockSdkClient_Expecter) ReadExecute(request interface{}) *MockSdkClient_ReadExecute_Call {
 	return &MockSdkClient_ReadExecute_Call{Call: _e.mock.On("ReadExecute", request)}
 }
 
 func (_c *MockSdkClient_ReadExecute_Call) Run(run func(request client.SdkClientReadRequestInterface)) *MockSdkClient_ReadExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientReadRequestInterface))
+		var arg0 client.SdkClientReadRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientReadRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1921,14 +2125,20 @@ type MockSdkClient_ReadLatestAuthorizationModel_Call struct {
 }
 
 // ReadLatestAuthorizationModel is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) ReadLatestAuthorizationModel(ctx interface{}) *MockSdkClient_ReadLatestAuthorizationModel_Call {
 	return &MockSdkClient_ReadLatestAuthorizationModel_Call{Call: _e.mock.On("ReadLatestAuthorizationModel", ctx)}
 }
 
 func (_c *MockSdkClient_ReadLatestAuthorizationModel_Call) Run(run func(ctx context.Context)) *MockSdkClient_ReadLatestAuthorizationModel_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -1977,14 +2187,20 @@ type MockSdkClient_ReadLatestAuthorizationModelExecute_Call struct {
 }
 
 // ReadLatestAuthorizationModelExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientReadLatestAuthorizationModelRequestInterface
 func (_e *MockSdkClient_Expecter) ReadLatestAuthorizationModelExecute(request interface{}) *MockSdkClient_ReadLatestAuthorizationModelExecute_Call {
 	return &MockSdkClient_ReadLatestAuthorizationModelExecute_Call{Call: _e.mock.On("ReadLatestAuthorizationModelExecute", request)}
 }
 
 func (_c *MockSdkClient_ReadLatestAuthorizationModelExecute_Call) Run(run func(request client.SdkClientReadLatestAuthorizationModelRequestInterface)) *MockSdkClient_ReadLatestAuthorizationModelExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientReadLatestAuthorizationModelRequestInterface))
+		var arg0 client.SdkClientReadLatestAuthorizationModelRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientReadLatestAuthorizationModelRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2022,14 +2238,20 @@ type MockSdkClient_SetAuthorizationModelId_Call struct {
 }
 
 // SetAuthorizationModelId is a helper method to define mock.On call
-//   - authorizationModelId
+//   - authorizationModelId string
 func (_e *MockSdkClient_Expecter) SetAuthorizationModelId(authorizationModelId interface{}) *MockSdkClient_SetAuthorizationModelId_Call {
 	return &MockSdkClient_SetAuthorizationModelId_Call{Call: _e.mock.On("SetAuthorizationModelId", authorizationModelId)}
 }
 
 func (_c *MockSdkClient_SetAuthorizationModelId_Call) Run(run func(authorizationModelId string)) *MockSdkClient_SetAuthorizationModelId_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2067,14 +2289,20 @@ type MockSdkClient_SetStoreId_Call struct {
 }
 
 // SetStoreId is a helper method to define mock.On call
-//   - storeId
+//   - storeId string
 func (_e *MockSdkClient_Expecter) SetStoreId(storeId interface{}) *MockSdkClient_SetStoreId_Call {
 	return &MockSdkClient_SetStoreId_Call{Call: _e.mock.On("SetStoreId", storeId)}
 }
 
 func (_c *MockSdkClient_SetStoreId_Call) Run(run func(storeId string)) *MockSdkClient_SetStoreId_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2114,14 +2342,20 @@ type MockSdkClient_Write_Call struct {
 }
 
 // Write is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) Write(ctx interface{}) *MockSdkClient_Write_Call {
 	return &MockSdkClient_Write_Call{Call: _e.mock.On("Write", ctx)}
 }
 
 func (_c *MockSdkClient_Write_Call) Run(run func(ctx context.Context)) *MockSdkClient_Write_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2161,14 +2395,20 @@ type MockSdkClient_WriteAssertions_Call struct {
 }
 
 // WriteAssertions is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) WriteAssertions(ctx interface{}) *MockSdkClient_WriteAssertions_Call {
 	return &MockSdkClient_WriteAssertions_Call{Call: _e.mock.On("WriteAssertions", ctx)}
 }
 
 func (_c *MockSdkClient_WriteAssertions_Call) Run(run func(ctx context.Context)) *MockSdkClient_WriteAssertions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2217,14 +2457,20 @@ type MockSdkClient_WriteAssertionsExecute_Call struct {
 }
 
 // WriteAssertionsExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientWriteAssertionsRequestInterface
 func (_e *MockSdkClient_Expecter) WriteAssertionsExecute(request interface{}) *MockSdkClient_WriteAssertionsExecute_Call {
 	return &MockSdkClient_WriteAssertionsExecute_Call{Call: _e.mock.On("WriteAssertionsExecute", request)}
 }
 
 func (_c *MockSdkClient_WriteAssertionsExecute_Call) Run(run func(request client.SdkClientWriteAssertionsRequestInterface)) *MockSdkClient_WriteAssertionsExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientWriteAssertionsRequestInterface))
+		var arg0 client.SdkClientWriteAssertionsRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientWriteAssertionsRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2264,14 +2510,20 @@ type MockSdkClient_WriteAuthorizationModel_Call struct {
 }
 
 // WriteAuthorizationModel is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) WriteAuthorizationModel(ctx interface{}) *MockSdkClient_WriteAuthorizationModel_Call {
 	return &MockSdkClient_WriteAuthorizationModel_Call{Call: _e.mock.On("WriteAuthorizationModel", ctx)}
 }
 
 func (_c *MockSdkClient_WriteAuthorizationModel_Call) Run(run func(ctx context.Context)) *MockSdkClient_WriteAuthorizationModel_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2320,14 +2572,20 @@ type MockSdkClient_WriteAuthorizationModelExecute_Call struct {
 }
 
 // WriteAuthorizationModelExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientWriteAuthorizationModelRequestInterface
 func (_e *MockSdkClient_Expecter) WriteAuthorizationModelExecute(request interface{}) *MockSdkClient_WriteAuthorizationModelExecute_Call {
 	return &MockSdkClient_WriteAuthorizationModelExecute_Call{Call: _e.mock.On("WriteAuthorizationModelExecute", request)}
 }
 
 func (_c *MockSdkClient_WriteAuthorizationModelExecute_Call) Run(run func(request client.SdkClientWriteAuthorizationModelRequestInterface)) *MockSdkClient_WriteAuthorizationModelExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientWriteAuthorizationModelRequestInterface))
+		var arg0 client.SdkClientWriteAuthorizationModelRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientWriteAuthorizationModelRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2376,14 +2634,20 @@ type MockSdkClient_WriteExecute_Call struct {
 }
 
 // WriteExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientWriteRequestInterface
 func (_e *MockSdkClient_Expecter) WriteExecute(request interface{}) *MockSdkClient_WriteExecute_Call {
 	return &MockSdkClient_WriteExecute_Call{Call: _e.mock.On("WriteExecute", request)}
 }
 
 func (_c *MockSdkClient_WriteExecute_Call) Run(run func(request client.SdkClientWriteRequestInterface)) *MockSdkClient_WriteExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientWriteRequestInterface))
+		var arg0 client.SdkClientWriteRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientWriteRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2423,14 +2687,20 @@ type MockSdkClient_WriteTuples_Call struct {
 }
 
 // WriteTuples is a helper method to define mock.On call
-//   - ctx
+//   - ctx context.Context
 func (_e *MockSdkClient_Expecter) WriteTuples(ctx interface{}) *MockSdkClient_WriteTuples_Call {
 	return &MockSdkClient_WriteTuples_Call{Call: _e.mock.On("WriteTuples", ctx)}
 }
 
 func (_c *MockSdkClient_WriteTuples_Call) Run(run func(ctx context.Context)) *MockSdkClient_WriteTuples_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2479,14 +2749,20 @@ type MockSdkClient_WriteTuplesExecute_Call struct {
 }
 
 // WriteTuplesExecute is a helper method to define mock.On call
-//   - request
+//   - request client.SdkClientWriteTuplesRequestInterface
 func (_e *MockSdkClient_Expecter) WriteTuplesExecute(request interface{}) *MockSdkClient_WriteTuplesExecute_Call {
 	return &MockSdkClient_WriteTuplesExecute_Call{Call: _e.mock.On("WriteTuplesExecute", request)}
 }
 
 func (_c *MockSdkClient_WriteTuplesExecute_Call) Run(run func(request client.SdkClientWriteTuplesRequestInterface)) *MockSdkClient_WriteTuplesExecute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.SdkClientWriteTuplesRequestInterface))
+		var arg0 client.SdkClientWriteTuplesRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientWriteTuplesRequestInterface)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2553,14 +2829,20 @@ type MockSdkClientReadAuthorizationModelRequestInterface_Body_Call struct {
 }
 
 // Body is a helper method to define mock.On call
-//   - body
+//   - body client.ClientReadAuthorizationModelRequest
 func (_e *MockSdkClientReadAuthorizationModelRequestInterface_Expecter) Body(body interface{}) *MockSdkClientReadAuthorizationModelRequestInterface_Body_Call {
 	return &MockSdkClientReadAuthorizationModelRequestInterface_Body_Call{Call: _e.mock.On("Body", body)}
 }
 
 func (_c *MockSdkClientReadAuthorizationModelRequestInterface_Body_Call) Run(run func(body client.ClientReadAuthorizationModelRequest)) *MockSdkClientReadAuthorizationModelRequestInterface_Body_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientReadAuthorizationModelRequest))
+		var arg0 client.ClientReadAuthorizationModelRequest
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientReadAuthorizationModelRequest)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2885,14 +3167,20 @@ type MockSdkClientReadAuthorizationModelRequestInterface_Options_Call struct {
 }
 
 // Options is a helper method to define mock.On call
-//   - options
+//   - options client.ClientReadAuthorizationModelOptions
 func (_e *MockSdkClientReadAuthorizationModelRequestInterface_Expecter) Options(options interface{}) *MockSdkClientReadAuthorizationModelRequestInterface_Options_Call {
 	return &MockSdkClientReadAuthorizationModelRequestInterface_Options_Call{Call: _e.mock.On("Options", options)}
 }
 
 func (_c *MockSdkClientReadAuthorizationModelRequestInterface_Options_Call) Run(run func(options client.ClientReadAuthorizationModelOptions)) *MockSdkClientReadAuthorizationModelRequestInterface_Options_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientReadAuthorizationModelOptions))
+		var arg0 client.ClientReadAuthorizationModelOptions
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientReadAuthorizationModelOptions)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -2959,14 +3247,20 @@ type MockSdkClientReadRequestInterface_Body_Call struct {
 }
 
 // Body is a helper method to define mock.On call
-//   - body
+//   - body client.ClientReadRequest
 func (_e *MockSdkClientReadRequestInterface_Expecter) Body(body interface{}) *MockSdkClientReadRequestInterface_Body_Call {
 	return &MockSdkClientReadRequestInterface_Body_Call{Call: _e.mock.On("Body", body)}
 }
 
 func (_c *MockSdkClientReadRequestInterface_Body_Call) Run(run func(body client.ClientReadRequest)) *MockSdkClientReadRequestInterface_Body_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientReadRequest))
+		var arg0 client.ClientReadRequest
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientReadRequest)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -3245,14 +3539,20 @@ type MockSdkClientReadRequestInterface_Options_Call struct {
 }
 
 // Options is a helper method to define mock.On call
-//   - options
+//   - options client.ClientReadOptions
 func (_e *MockSdkClientReadRequestInterface_Expecter) Options(options interface{}) *MockSdkClientReadRequestInterface_Options_Call {
 	return &MockSdkClientReadRequestInterface_Options_Call{Call: _e.mock.On("Options", options)}
 }
 
 func (_c *MockSdkClientReadRequestInterface_Options_Call) Run(run func(options client.ClientReadOptions)) *MockSdkClientReadRequestInterface_Options_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientReadOptions))
+		var arg0 client.ClientReadOptions
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientReadOptions)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -3319,14 +3619,20 @@ type MockSdkClientWriteRequestInterface_Body_Call struct {
 }
 
 // Body is a helper method to define mock.On call
-//   - body
+//   - body client.ClientWriteRequest
 func (_e *MockSdkClientWriteRequestInterface_Expecter) Body(body interface{}) *MockSdkClientWriteRequestInterface_Body_Call {
 	return &MockSdkClientWriteRequestInterface_Body_Call{Call: _e.mock.On("Body", body)}
 }
 
 func (_c *MockSdkClientWriteRequestInterface_Body_Call) Run(run func(body client.ClientWriteRequest)) *MockSdkClientWriteRequestInterface_Body_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientWriteRequest))
+		var arg0 client.ClientWriteRequest
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientWriteRequest)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -3651,14 +3957,20 @@ type MockSdkClientWriteRequestInterface_Options_Call struct {
 }
 
 // Options is a helper method to define mock.On call
-//   - options
+//   - options client.ClientWriteOptions
 func (_e *MockSdkClientWriteRequestInterface_Expecter) Options(options interface{}) *MockSdkClientWriteRequestInterface_Options_Call {
 	return &MockSdkClientWriteRequestInterface_Options_Call{Call: _e.mock.On("Options", options)}
 }
 
 func (_c *MockSdkClientWriteRequestInterface_Options_Call) Run(run func(options client.ClientWriteOptions)) *MockSdkClientWriteRequestInterface_Options_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientWriteOptions))
+		var arg0 client.ClientWriteOptions
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientWriteOptions)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -3725,14 +4037,20 @@ type MockSdkClientDeleteTuplesRequestInterface_Body_Call struct {
 }
 
 // Body is a helper method to define mock.On call
-//   - body
+//   - body client.ClientDeleteTuplesBody
 func (_e *MockSdkClientDeleteTuplesRequestInterface_Expecter) Body(body interface{}) *MockSdkClientDeleteTuplesRequestInterface_Body_Call {
 	return &MockSdkClientDeleteTuplesRequestInterface_Body_Call{Call: _e.mock.On("Body", body)}
 }
 
 func (_c *MockSdkClientDeleteTuplesRequestInterface_Body_Call) Run(run func(body client.ClientDeleteTuplesBody)) *MockSdkClientDeleteTuplesRequestInterface_Body_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientDeleteTuplesBody))
+		var arg0 client.ClientDeleteTuplesBody
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientDeleteTuplesBody)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -3965,14 +4283,20 @@ type MockSdkClientDeleteTuplesRequestInterface_Options_Call struct {
 }
 
 // Options is a helper method to define mock.On call
-//   - options
+//   - options client.ClientWriteOptions
 func (_e *MockSdkClientDeleteTuplesRequestInterface_Expecter) Options(options interface{}) *MockSdkClientDeleteTuplesRequestInterface_Options_Call {
 	return &MockSdkClientDeleteTuplesRequestInterface_Options_Call{Call: _e.mock.On("Options", options)}
 }
 
 func (_c *MockSdkClientDeleteTuplesRequestInterface_Options_Call) Run(run func(options client.ClientWriteOptions)) *MockSdkClientDeleteTuplesRequestInterface_Options_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientWriteOptions))
+		var arg0 client.ClientWriteOptions
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientWriteOptions)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -4039,14 +4363,20 @@ type MockSdkClientCheckRequestInterface_Body_Call struct {
 }
 
 // Body is a helper method to define mock.On call
-//   - body
+//   - body client.ClientCheckRequest
 func (_e *MockSdkClientCheckRequestInterface_Expecter) Body(body interface{}) *MockSdkClientCheckRequestInterface_Body_Call {
 	return &MockSdkClientCheckRequestInterface_Body_Call{Call: _e.mock.On("Body", body)}
 }
 
 func (_c *MockSdkClientCheckRequestInterface_Body_Call) Run(run func(body client.ClientCheckRequest)) *MockSdkClientCheckRequestInterface_Body_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientCheckRequest))
+		var arg0 client.ClientCheckRequest
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientCheckRequest)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -4371,14 +4701,20 @@ type MockSdkClientCheckRequestInterface_Options_Call struct {
 }
 
 // Options is a helper method to define mock.On call
-//   - options
+//   - options client.ClientCheckOptions
 func (_e *MockSdkClientCheckRequestInterface_Expecter) Options(options interface{}) *MockSdkClientCheckRequestInterface_Options_Call {
 	return &MockSdkClientCheckRequestInterface_Options_Call{Call: _e.mock.On("Options", options)}
 }
 
 func (_c *MockSdkClientCheckRequestInterface_Options_Call) Run(run func(options client.ClientCheckOptions)) *MockSdkClientCheckRequestInterface_Options_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientCheckOptions))
+		var arg0 client.ClientCheckOptions
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientCheckOptions)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -4445,14 +4781,20 @@ type MockSdkClientBatchCheckRequestInterface_Body_Call struct {
 }
 
 // Body is a helper method to define mock.On call
-//   - body
+//   - body client.ClientBatchCheckRequest
 func (_e *MockSdkClientBatchCheckRequestInterface_Expecter) Body(body interface{}) *MockSdkClientBatchCheckRequestInterface_Body_Call {
 	return &MockSdkClientBatchCheckRequestInterface_Body_Call{Call: _e.mock.On("Body", body)}
 }
 
 func (_c *MockSdkClientBatchCheckRequestInterface_Body_Call) Run(run func(body client.ClientBatchCheckRequest)) *MockSdkClientBatchCheckRequestInterface_Body_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientBatchCheckRequest))
+		var arg0 client.ClientBatchCheckRequest
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientBatchCheckRequest)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -4685,14 +5027,20 @@ type MockSdkClientBatchCheckRequestInterface_Options_Call struct {
 }
 
 // Options is a helper method to define mock.On call
-//   - options
+//   - options client.BatchCheckOptions
 func (_e *MockSdkClientBatchCheckRequestInterface_Expecter) Options(options interface{}) *MockSdkClientBatchCheckRequestInterface_Options_Call {
 	return &MockSdkClientBatchCheckRequestInterface_Options_Call{Call: _e.mock.On("Options", options)}
 }
 
 func (_c *MockSdkClientBatchCheckRequestInterface_Options_Call) Run(run func(options client.BatchCheckOptions)) *MockSdkClientBatchCheckRequestInterface_Options_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.BatchCheckOptions))
+		var arg0 client.BatchCheckOptions
+		if args[0] != nil {
+			arg0 = args[0].(client.BatchCheckOptions)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -4759,14 +5107,20 @@ type MockSdkClientListObjectsRequestInterface_Body_Call struct {
 }
 
 // Body is a helper method to define mock.On call
-//   - body
+//   - body client.ClientListObjectsRequest
 func (_e *MockSdkClientListObjectsRequestInterface_Expecter) Body(body interface{}) *MockSdkClientListObjectsRequestInterface_Body_Call {
 	return &MockSdkClientListObjectsRequestInterface_Body_Call{Call: _e.mock.On("Body", body)}
 }
 
 func (_c *MockSdkClientListObjectsRequestInterface_Body_Call) Run(run func(body client.ClientListObjectsRequest)) *MockSdkClientListObjectsRequestInterface_Body_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientListObjectsRequest))
+		var arg0 client.ClientListObjectsRequest
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientListObjectsRequest)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -5091,14 +5445,20 @@ type MockSdkClientListObjectsRequestInterface_Options_Call struct {
 }
 
 // Options is a helper method to define mock.On call
-//   - options
+//   - options client.ClientListObjectsOptions
 func (_e *MockSdkClientListObjectsRequestInterface_Expecter) Options(options interface{}) *MockSdkClientListObjectsRequestInterface_Options_Call {
 	return &MockSdkClientListObjectsRequestInterface_Options_Call{Call: _e.mock.On("Options", options)}
 }
 
 func (_c *MockSdkClientListObjectsRequestInterface_Options_Call) Run(run func(options client.ClientListObjectsOptions)) *MockSdkClientListObjectsRequestInterface_Options_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientListObjectsOptions))
+		var arg0 client.ClientListObjectsOptions
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientListObjectsOptions)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -5165,14 +5525,20 @@ type MockSdkClientListUsersRequestInterface_Body_Call struct {
 }
 
 // Body is a helper method to define mock.On call
-//   - body
+//   - body client.ClientListUsersRequest
 func (_e *MockSdkClientListUsersRequestInterface_Expecter) Body(body interface{}) *MockSdkClientListUsersRequestInterface_Body_Call {
 	return &MockSdkClientListUsersRequestInterface_Body_Call{Call: _e.mock.On("Body", body)}
 }
 
 func (_c *MockSdkClientListUsersRequestInterface_Body_Call) Run(run func(body client.ClientListUsersRequest)) *MockSdkClientListUsersRequestInterface_Body_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientListUsersRequest))
+		var arg0 client.ClientListUsersRequest
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientListUsersRequest)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -5497,14 +5863,20 @@ type MockSdkClientListUsersRequestInterface_Options_Call struct {
 }
 
 // Options is a helper method to define mock.On call
-//   - options
+//   - options client.ClientListUsersOptions
 func (_e *MockSdkClientListUsersRequestInterface_Expecter) Options(options interface{}) *MockSdkClientListUsersRequestInterface_Options_Call {
 	return &MockSdkClientListUsersRequestInterface_Options_Call{Call: _e.mock.On("Options", options)}
 }
 
 func (_c *MockSdkClientListUsersRequestInterface_Options_Call) Run(run func(options client.ClientListUsersOptions)) *MockSdkClientListUsersRequestInterface_Options_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(client.ClientListUsersOptions))
+		var arg0 client.ClientListUsersOptions
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientListUsersOptions)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
