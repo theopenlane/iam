@@ -338,6 +338,7 @@ func (tm *TokenManager) RemoveSigningKey(keyID ulid.ULID) {
 	// If the removed key was active, rotate to the newest remaining key
 	if tm.currentKeyID.Compare(keyID) == 0 {
 		var latestID ulid.ULID
+
 		var latestKey *rsa.PrivateKey
 
 		for id, key := range tm.signingKeys {

@@ -33,3 +33,23 @@ func TestClaimsParseUserID(t *testing.T) {
 	claims.UserID = userID.String()
 	require.Equal(t, userID, claims.ParseUserID())
 }
+
+func TestClaimsHasScope(t *testing.T) {
+	claims := &tokens.Claims{}
+	require.False(t, claims.HasScope("read", "programs"))
+
+	claims.Scopes = tokens.PermissionScopes{
+		Read:  []string{"programs"},
+		Write: []string{"tasks"},
+		Admin: []string{"controls"},
+	}
+
+	require.True(t, claims.HasScope("read", "programs"))
+	require.False(t, claims.HasScope("read", "tasks"))
+
+	require.True(t, claims.HasScope("write", "tasks"))
+	require.False(t, claims.HasScope("write", "programs"))
+
+	require.True(t, claims.HasScope("admin", "controls"))
+	require.False(t, claims.HasScope("admin", "programs"))
+}
