@@ -1,11 +1,20 @@
 package tokens
 
 import (
+	"slices"
+
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/oklog/ulid/v2"
 
 	"github.com/theopenlane/utils/ulids"
 )
+
+// PermissionScopes represents a set of objects that can be accessed for each permission level
+type PermissionScopes struct {
+	Read  []string `json:"read,omitempty"`
+	Write []string `json:"write,omitempty"`
+	Admin []string `json:"admin,omitempty"`
+}
 
 // Claims implements custom claims and extends the `jwt.RegisteredClaims` struct; we will store user-related elements here (and thus in the JWT Token) for reference / validation
 type Claims struct {
@@ -14,6 +23,8 @@ type Claims struct {
 	UserID string `json:"user_id,omitempty"`
 	// OrgID is the internal generated mapping ID for the organization the JWT token is valid for
 	OrgID string `json:"org,omitempty"`
+	// Scopes lists objects that can be accessed for each permission level
+	Scopes PermissionScopes `json:"scopes,omitempty"`
 }
 
 // ParseUserID returns the ID of the user from the Subject of the claims
@@ -34,4 +45,23 @@ func (c Claims) ParseOrgID() ulid.ULID {
 	}
 
 	return orgID
+}
+
+// HasScope returns true if the scope exists in the Scopes slice of the claims
+// HasScope returns true if the token grants the given permission level on the provided object name
+func (c Claims) HasScope(level, object string) bool {
+	var list []string
+
+	switch level {
+	case "read":
+		list = c.Scopes.Read
+	case "write":
+		list = c.Scopes.Write
+	case "admin":
+		list = c.Scopes.Admin
+	default:
+		return false
+	}
+
+	return slices.Contains(list, object)
 }

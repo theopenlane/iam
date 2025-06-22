@@ -68,6 +68,7 @@ func TestIsExpired(t *testing.T) {
 	t.Run("Valid Token", func(t *testing.T) {
 		key, err := rsa.GenerateKey(rand.Reader, 1024) //nolint:gosec
 		require.NoError(t, err)
+
 		conf := tokens.Config{
 			Audience:        "http://localhost:3000",
 			Issuer:          "http://localhost:3001",

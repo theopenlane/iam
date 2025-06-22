@@ -32,6 +32,28 @@ The goal of separating out the code that lives within this repo from the `core` 
 
 You can see practical examples with basic web interface setups within the `core` repository [here](https://github.com/theopenlane/core/tree/main/pkg/testutils)
 
+### JWT Scopes
+
+JWT claims can support per-object scopes. When integrating with [core](https://github.com/theopenlane/core) the scopes can be added in `authmanager` when creating the token pair.
+
+```go
+func createClaimsWithOrgScopes(userID, orgID string) *tokens.Claims {
+	return &tokens.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: userID,
+		},
+		UserID: userID,
+		OrgID:  orgID,
+		Scopes: tokens.PermissionScopes{
+			Read:  []string{"programs", "controls"},
+			Write: []string{"tasks"},
+		},
+	}
+}
+```
+
+See [tokens/_examples/claims_scopes.go](tokens/_examples/authmanager/claims_scopes.go)
+for a minimal example
 
 ## IAM/FGAX
 
