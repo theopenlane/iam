@@ -25,6 +25,9 @@ type Claims struct {
 	OrgID string `json:"org,omitempty"`
 	// Scopes lists objects that can be accessed for each permission level
 	Scopes PermissionScopes `json:"scopes,omitempty"`
+
+	// TrustCenterID is the internal generated mapping ID for the trust center the JWT token is valid for
+	TrustCenterID string `json:"trust_center_id,omitempty"`
 }
 
 // ParseUserID returns the ID of the user from the Subject of the claims
