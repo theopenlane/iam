@@ -22,7 +22,7 @@ type Config struct {
 	// HTTPOnly indicates whether the session cookie should be accessible only via HTTP(S) and not JavaScript
 	HTTPOnly bool `json:"httpOnly" koanf:"httpOnly" default:"true"`
 	// SameSite indicates the SameSite attribute for the session cookie
-	SameSite http.SameSite `json:"sameSite" koanf:"sameSite" default:"Strict"`
+	SameSite string `json:"sameSite" koanf:"sameSite" default:"Strict"`
 }
 
 // Session represents state values maintained in a sessions Store
