@@ -42,6 +42,7 @@ func NewSession[T any](store Store[T], name string) *Session[T] {
 	}
 }
 
+// SetName sets the name of the session
 func (s *Session[T]) SetName(name string) {
 	s.name = name
 }

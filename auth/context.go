@@ -95,6 +95,8 @@ func AuthenticatedUserFromContextOrFunc(ctx context.Context, f func() *Authentic
 	return contextx.FromOrFunc(ctx, f)
 }
 
+// AnonymousTrustCenterUser contains user information for anonymous trust center access
+// This allows unauthenticated users to access specific trust center resources
 type AnonymousTrustCenterUser struct {
 	// SubjectID is the user ID of the authenticated user or the api token ID if the user is an API token
 	SubjectID string
@@ -106,13 +108,16 @@ type AnonymousTrustCenterUser struct {
 	OrganizationID string
 	// AuthenticationType is the type of authentication used to authenticate the user (JWT, PAT, API Token)
 	AuthenticationType AuthenticationType
-	TrustCenterID      string
+	// TrustCenterID is the ID of the trust center the user has access to
+	TrustCenterID string
 }
 
+// WithAnonymousTrustCenterUser sets the anonymous trust center user in the context
 func WithAnonymousTrustCenterUser(ctx context.Context, user *AnonymousTrustCenterUser) context.Context {
 	return contextx.With(ctx, user)
 }
 
+// AnonymousTrustCenterUserFromContext retrieves the anonymous trust center user from the context
 func AnonymousTrustCenterUserFromContext(ctx context.Context) (*AnonymousTrustCenterUser, bool) {
 	return contextx.From[*AnonymousTrustCenterUser](ctx)
 }
