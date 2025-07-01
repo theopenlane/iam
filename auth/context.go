@@ -47,6 +47,9 @@ type OrgSubscriptionContextKey struct{}
 // AcmeSolverContextKey is the context key name for the acme solver context
 type AcmeSolverContextKey struct{}
 
+// TrustCenterContextKey is the context key name for the trust center context
+type TrustCenterContextKey struct{}
+
 // AuthenticatedUser contains the user and organization ID for the authenticated user
 type AuthenticatedUser struct {
 	// SubjectID is the user ID of the authenticated user or the api token ID if the user is an API token
@@ -90,6 +93,33 @@ func AuthenticatedUserFromContextOr(ctx context.Context, def *AuthenticatedUser)
 // AuthenticatedUserFromContextOrFunc retrieves the authenticated user from the context or returns the result of the provided function if not found
 func AuthenticatedUserFromContextOrFunc(ctx context.Context, f func() *AuthenticatedUser) *AuthenticatedUser {
 	return contextx.FromOrFunc(ctx, f)
+}
+
+// AnonymousTrustCenterUser contains user information for anonymous trust center access
+// This allows unauthenticated users to access specific trust center resources
+type AnonymousTrustCenterUser struct {
+	// SubjectID is the user ID of the authenticated user or the api token ID if the user is an API token
+	SubjectID string
+	// SubjectName is the name of the authenticated user
+	SubjectName string
+	// SubjectEmail is the email of the authenticated user
+	SubjectEmail string
+	// OrganizationID is the organization ID of the authenticated user
+	OrganizationID string
+	// AuthenticationType is the type of authentication used to authenticate the user (JWT, PAT, API Token)
+	AuthenticationType AuthenticationType
+	// TrustCenterID is the ID of the trust center the user has access to
+	TrustCenterID string
+}
+
+// WithAnonymousTrustCenterUser sets the anonymous trust center user in the context
+func WithAnonymousTrustCenterUser(ctx context.Context, user *AnonymousTrustCenterUser) context.Context {
+	return contextx.With(ctx, user)
+}
+
+// AnonymousTrustCenterUserFromContext retrieves the anonymous trust center user from the context
+func AnonymousTrustCenterUserFromContext(ctx context.Context) (*AnonymousTrustCenterUser, bool) {
+	return contextx.From[*AnonymousTrustCenterUser](ctx)
 }
 
 // WithAccessToken sets the access token in the context
@@ -212,4 +242,31 @@ func GetAuthenticatedUserContextOr(c echo.Context, def *AuthenticatedUser) *Auth
 // GetAuthenticatedUserContextOrFunc retrieves the authenticated user from the echo context or returns the result of the provided function if not found
 func GetAuthenticatedUserContextOrFunc(c echo.Context, f func() *AuthenticatedUser) *AuthenticatedUser {
 	return AuthenticatedUserFromContextOrFunc(c.Request().Context(), f)
+}
+
+// SetAnonymousTrustCenterUserContext sets the anonymous trust center user context in the echo context
+func SetAnonymousTrustCenterUserContext(c echo.Context, user *AnonymousTrustCenterUser) {
+	ctx := c.Request().Context()
+	ctx = WithAnonymousTrustCenterUser(ctx, user)
+	c.SetRequest(c.Request().WithContext(ctx))
+}
+
+// GetAnonymousTrustCenterUserContext retrieves the anonymous trust center user from the echo context
+func GetAnonymousTrustCenterUserContext(c echo.Context) (*AnonymousTrustCenterUser, bool) {
+	return AnonymousTrustCenterUserFromContext(c.Request().Context())
+}
+
+// MustGetAnonymousTrustCenterUserContext retrieves the anonymous trust center user from the echo context or panics if not found
+func MustGetAnonymousTrustCenterUserContext(c echo.Context) *AnonymousTrustCenterUser {
+	return contextx.MustFrom[*AnonymousTrustCenterUser](c.Request().Context())
+}
+
+// GetAnonymousTrustCenterUserContextOr retrieves the anonymous trust center user from the echo context or returns the provided default value if not found
+func GetAnonymousTrustCenterUserContextOr(c echo.Context, def *AnonymousTrustCenterUser) *AnonymousTrustCenterUser {
+	return contextx.FromOr(c.Request().Context(), def)
+}
+
+// GetAnonymousTrustCenterUserContextOrFunc retrieves the anonymous trust center user from the echo context or returns the result of the provided function if not found
+func GetAnonymousTrustCenterUserContextOrFunc(c echo.Context, f func() *AnonymousTrustCenterUser) *AnonymousTrustCenterUser {
+	return contextx.FromOrFunc(c.Request().Context(), f)
 }
