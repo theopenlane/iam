@@ -204,6 +204,8 @@ func CheckAny(t *testing.T, c *MockSdkClient, allowed bool) {
 
 	cr.EXPECT().Execute().Return(&resp, nil)
 
+	cr.EXPECT().Options(mock.Anything).Return(cr)
+
 	cr.EXPECT().Body(mock.Anything).Return(cr)
 
 	c.EXPECT().Check(mock.Anything).Return(cr)
@@ -218,6 +220,8 @@ func BatchCheck(t *testing.T, c *MockSdkClient, res map[string]openfga.BatchChec
 	}
 
 	batch.EXPECT().Execute().Return(&checkResp, nil)
+
+	batch.EXPECT().Options(mock.Anything).Return(batch)
 
 	batch.EXPECT().Body(mock.Anything).Return(batch)
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/rs/zerolog/log"
 	"github.com/theopenlane/utils/ulids"
@@ -19,6 +20,13 @@ const (
 	organizationObject = "organization"
 	groupObject        = "group"
 	roleObject         = "role"
+)
+
+var (
+	defaultConsistency       = openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY
+	highConsistency          = openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY
+	batchSizeLimit     int32 = 100
+	batchParallelLimit int32 = 10
 )
 
 // AccessCheck is a struct to hold the information needed to check access
@@ -74,7 +82,13 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 	results, err := c.Ofga.BatchCheck(ctx).Body(
 		ofgaclient.ClientBatchCheckRequest{
 			Checks: checkRequests,
-		}).Execute()
+		}).
+		Options(ofgaclient.BatchCheckOptions{
+			Consistency:         &defaultConsistency,
+			MaxBatchSize:        &batchSizeLimit,
+			MaxParallelRequests: &batchParallelLimit,
+		}).
+		Execute()
 	if err != nil || results == nil {
 		return nil, err
 	}
@@ -119,7 +133,17 @@ func (c *Client) CheckAccess(ctx context.Context, ac AccessCheck) (bool, error) 
 		return false, err
 	}
 
-	return c.checkTuple(ctx, *checkReq)
+	return c.checkTupleMinimizeLatency(ctx, *checkReq)
+}
+
+// CheckAccess checks if the user has access to the object type with the given relation
+func (c *Client) CheckAccessHighConsistency(ctx context.Context, ac AccessCheck) (bool, error) {
+	checkReq, err := toCheckRequest(ac)
+	if err != nil {
+		return false, err
+	}
+
+	return c.checkTupleHighConsistency(ctx, *checkReq)
 }
 
 func toBatchCheckItem(ac AccessCheck) (*ofgaclient.ClientBatchCheckItem, error) {
@@ -260,9 +284,22 @@ func (c *Client) CheckGroupAccess(ctx context.Context, ac AccessCheck) (bool, er
 	return c.CheckAccess(ctx, ac)
 }
 
+// checkTupleMinimizeLatency checks the openFGA store for provided relationship tuple using minimize latency consistency
+func (c *Client) checkTupleMinimizeLatency(ctx context.Context, check ofgaclient.ClientCheckRequest) (bool, error) {
+	return c.checkTuple(ctx, check, &defaultConsistency)
+}
+
+// checkTupleHighConsistency checks the openFGA store for provided relationship tuple using high consistency
+func (c *Client) checkTupleHighConsistency(ctx context.Context, check ofgaclient.ClientCheckRequest) (bool, error) {
+	return c.checkTuple(ctx, check, &highConsistency)
+}
+
 // checkTuple checks the openFGA store for provided relationship tuple
-func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckRequest) (bool, error) {
-	data, err := c.Ofga.Check(ctx).Body(check).Execute()
+func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckRequest, consistency *openfga.ConsistencyPreference) (bool, error) {
+	data, err := c.Ofga.Check(ctx).Body(check).
+		Options(ofgaclient.ClientCheckOptions{
+			Consistency: consistency,
+		}).Execute()
 	if err != nil {
 		log.Error().Err(err).Interface("tuple", check).Msg("error checking tuple")
 
@@ -277,7 +314,13 @@ func (c *Client) batchCheckTuples(ctx context.Context, checks []ofgaclient.Clien
 	res, err := c.Ofga.BatchCheck(ctx).Body(
 		ofgaclient.ClientBatchCheckRequest{
 			Checks: checks,
-		}).Execute()
+		}).
+		Options(ofgaclient.BatchCheckOptions{
+			Consistency:         &defaultConsistency,
+			MaxBatchSize:        &batchSizeLimit,
+			MaxParallelRequests: &batchParallelLimit,
+		}).
+		Execute()
 	if err != nil || res == nil {
 		return nil, err
 	}
