@@ -55,7 +55,7 @@ func TestCheckTuple(t *testing.T) {
 			mock_fga.CheckAny(t, c, tc.expectedRes)
 
 			// do request
-			valid, err := mc.checkTuple(context.Background(), body)
+			valid, err := mc.checkTupleMinimizeLatency(context.Background(), body)
 
 			if tc.errRes != "" {
 				assert.Error(t, err)
