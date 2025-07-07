@@ -8,7 +8,7 @@ steps:
       - label: ":golang: go generate"
         key: "generate"
         plugins:
-          - docker#v5.12.0:
+          - docker#v5.13.0:
               image: "ghcr.io/theopenlane/build-image:latest"
               always-pull: true
               command: ["task", "ci"]
@@ -21,7 +21,7 @@ steps:
       - label: ":golangci-lint: lint :lint-roller:"
         key: "lint"
         plugins:
-          - docker#v5.12.0:
+          - docker#v5.13.0:
               image: "ghcr.io/theopenlane/build-image:latest"
               always-pull: true
               cancel_on_build_failing: true
@@ -31,7 +31,7 @@ steps:
       - label: ":golang: go test"
         key: "go_test"
         plugins:
-          - docker#v5.12.0:
+          - docker#v5.13.0:
               image: "ghcr.io/theopenlane/build-image:latest"
               always-pull: true
               command: ["task", "go:test:cover"]
@@ -39,7 +39,7 @@ steps:
       - label: ":test_tube: generate example"
         key: "example_generate"
         plugins:
-          - docker#v5.12.0:
+          - docker#v5.13.0:
               image: "ghcr.io/theopenlane/build-image:latest"
               always-pull: true
               workdir: "/fgax"
@@ -57,7 +57,7 @@ steps:
           - artifacts#v1.9.4:
               download: "coverage.out"
               step: "go_test"
-          - docker#v5.12.0:
+          - docker#v5.13.0:
               image: "sonarsource/sonar-scanner-cli:11.2"
               environment:
                 - "SONAR_TOKEN"
@@ -74,7 +74,7 @@ steps:
           - artifacts#v1.9.4:
               download: coverage.out
               step: "go_test"
-          - docker#v5.12.0:
+          - docker#v5.13.0:
               image: "sonarsource/sonar-scanner-cli:11.2"
               environment:
                 - "SONAR_TOKEN"
