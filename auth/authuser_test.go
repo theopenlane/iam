@@ -313,3 +313,44 @@ func TestGetAuthTypeFromContext(t *testing.T) {
 		})
 	}
 }
+
+func TestIsSystemAdminFromContext(t *testing.T) {
+	testCases := []struct {
+		name     string
+		au       *auth.AuthenticatedUser
+		expected bool
+	}{
+		{
+			name: "system admin",
+			au: &auth.AuthenticatedUser{
+				IsSystemAdmin: true,
+			},
+			expected: true,
+		},
+		{
+			name: "not a system admin",
+			au: &auth.AuthenticatedUser{
+				IsSystemAdmin: false,
+			},
+			expected: false,
+		},
+		{
+			name:     "no authenticated user",
+			au:       nil,
+			expected: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			if tc.au != nil {
+				ctx = auth.WithAuthenticatedUser(ctx, tc.au)
+			}
+
+			got := auth.IsSystemAdminFromContext(ctx)
+
+			assert.Equal(t, tc.expected, got)
+		})
+	}
+}

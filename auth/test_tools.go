@@ -93,6 +93,27 @@ func NewTestContextWithOrgID(sub, orgID string) context.Context {
 	return reqCtx
 }
 
+// NewTestContextForSystemAdmin creates a context with a fake system admin user
+func NewTestContextForSystemAdmin(sub, orgID string) context.Context {
+	ec := echocontext.NewTestEchoContext()
+
+	claims := newValidClaimsOrgID(sub, orgID)
+
+	SetAuthenticatedUserContext(ec, &AuthenticatedUser{
+		SubjectID:          claims.UserID,
+		OrganizationID:     claims.OrgID,
+		OrganizationIDs:    []string{claims.OrgID},
+		AuthenticationType: JWTAuthentication,
+		IsSystemAdmin:      true,
+	})
+
+	reqCtx := contextx.With(ec.Request().Context(), ec)
+
+	ec.SetRequest(ec.Request().WithContext(reqCtx))
+
+	return reqCtx
+}
+
 // NewTestContextWithSubscription creates a context with an active subscription for testing purposes only
 func NewTestContextWithSubscription(subscription bool) context.Context {
 	ec := echocontext.NewTestEchoContext()
