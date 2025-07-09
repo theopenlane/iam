@@ -122,6 +122,8 @@ func ListOnce(t *testing.T, c *MockSdkClient, allowedObjects []string, err error
 
 	lr.EXPECT().Execute().Return(&resp, err)
 
+	lr.EXPECT().Options(mock.Anything).Return(lr)
+
 	lr.EXPECT().Body(mock.Anything).Return(lr)
 
 	c.EXPECT().ListObjects(mock.Anything).Return(lr).Once()
@@ -135,6 +137,8 @@ func ListUsers(t *testing.T, c *MockSdkClient, allowedUsers []openfga.User, err 
 	resp.SetUsers(allowedUsers)
 
 	lr.EXPECT().Execute().Return(&resp, err)
+
+	lr.EXPECT().Options(mock.Anything).Return(lr)
 
 	lr.EXPECT().Body(mock.Anything).Return(lr)
 

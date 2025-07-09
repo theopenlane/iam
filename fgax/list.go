@@ -83,7 +83,11 @@ func (c *Client) ListUserRequest(ctx context.Context, req ListRequest) (*ofgacli
 
 // listObjects checks the openFGA store for all objects associated with a user+relation
 func (c *Client) listObjects(ctx context.Context, req ofgaclient.ClientListObjectsRequest) (*ofgaclient.ClientListObjectsResponse, error) {
-	list, err := c.Ofga.ListObjects(ctx).Body(req).Execute()
+	list, err := c.Ofga.ListObjects(ctx).Body(req).
+		Options(ofgaclient.ClientListObjectsOptions{
+			Consistency: &defaultConsistency,
+		}).
+		Execute()
 	if err != nil {
 		log.Error().Err(err).Interface("request", req).Msg("error listing objects")
 
@@ -95,7 +99,11 @@ func (c *Client) listObjects(ctx context.Context, req ofgaclient.ClientListObjec
 
 // listUsers checks the openFGA store for all users associated with a object+relation
 func (c *Client) listUsers(ctx context.Context, req ofgaclient.ClientListUsersRequest) (*ofgaclient.ClientListUsersResponse, error) {
-	list, err := c.Ofga.ListUsers(ctx).Body(req).Execute()
+	list, err := c.Ofga.ListUsers(ctx).Body(req).
+		Options(ofgaclient.ClientListUsersOptions{
+			Consistency: &defaultConsistency,
+		}).
+		Execute()
 	if err != nil {
 		log.Error().Err(err).Interface("request", req).Msg("error listing users")
 
