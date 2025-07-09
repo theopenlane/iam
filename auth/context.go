@@ -68,6 +68,8 @@ type AuthenticatedUser struct {
 	AuthenticationType AuthenticationType
 	// ActiveSubscription is the active subscription for the user
 	ActiveSubscription bool
+	// IsSystemAdmin indicates if the user is a system admin
+	IsSystemAdmin bool
 }
 
 // WithAuthenticatedUser sets the authenticated user in the context

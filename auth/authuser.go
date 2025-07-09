@@ -186,3 +186,27 @@ func GetSubscriptionFromContext(ctx context.Context) bool {
 
 	return au.ActiveSubscription
 }
+
+// SetSystemAdminInContext sets the system admin flag in the context
+func SetSystemAdminInContext(ctx context.Context, isAdmin bool) error {
+	au, ok := AuthenticatedUserFromContext(ctx)
+	if !ok || au == nil {
+		return ErrNoAuthUser
+	}
+
+	au.IsSystemAdmin = isAdmin
+
+	WithAuthenticatedUser(ctx, au)
+
+	return nil
+}
+
+// IsSystemAdminFromContext checks if the user is a system admin
+func IsSystemAdminFromContext(ctx context.Context) bool {
+	au, ok := AuthenticatedUserFromContext(ctx)
+	if !ok || au == nil {
+		return false
+	}
+
+	return au.IsSystemAdmin
+}
