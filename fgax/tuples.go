@@ -271,7 +271,7 @@ func (c *Client) checkWriteResponse(resp *ofgaclient.ClientWriteResponse, err er
 
 	// if we don't ignore duplicate key errors, return the errors now
 	if !c.IgnoreDuplicateKeyError {
-		log.Info().Err(err).Interface("writes", resp.Writes).Interface("deletes", resp.Deletes).Msg("error writing relationship tuples")
+		log.Debug().Err(err).Interface("writes", resp.Writes).Interface("deletes", resp.Deletes).Msg("error writing relationship tuples")
 
 		return err
 	}
@@ -279,7 +279,7 @@ func (c *Client) checkWriteResponse(resp *ofgaclient.ClientWriteResponse, err er
 	for _, writes := range resp.Writes {
 		if writes.Error != nil {
 			if strings.Contains(writes.Error.Error(), writeAlreadyExistsError) {
-				log.Warn().Err(writes.Error).Msg("relationship tuple already exists, skipping")
+				log.Debug().Err(writes.Error).Msg("relationship tuple already exists, skipping")
 
 				continue
 			}
@@ -298,7 +298,7 @@ func (c *Client) checkWriteResponse(resp *ofgaclient.ClientWriteResponse, err er
 	for _, deletes := range resp.Deletes {
 		if deletes.Error != nil {
 			if strings.Contains(deletes.Error.Error(), deleteDoesNotExistError) {
-				log.Warn().Err(deletes.Error).Msg("relationship does not exist, skipping")
+				log.Debug().Err(deletes.Error).Msg("relationship does not exist, skipping")
 
 				continue
 			}
