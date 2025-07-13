@@ -14,7 +14,7 @@ type Config struct {
 	// EncryptionKey must be a 16, 32, or 64 character string used to encode the cookie
 	EncryptionKey string `json:"encryptionKey" koanf:"encryptionKey" default:"encryptionsecret"`
 	// Domain is the domain for the cookie, leave empty to use the default value of the server
-	Domain string `json:"domain" koanf:"domain" default:""`
+	Domain string `json:"domain" koanf:"domain" default:"" domain:"inherit"`
 	// MaxAge is the maximum age of the session cookie in seconds. After this time, the cookie will be invalidated
 	MaxAge int `json:"maxAge" koanf:"maxAge" default:"3600"` // 1 hour by default in seconds
 	// Secure indicates whether the session cookie should only be sent over HTTPS

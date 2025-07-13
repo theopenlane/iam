@@ -13,11 +13,11 @@ type Config struct {
 	// CodeLength is the length of the OTP code
 	CodeLength int `json:"codeLength" koanf:"codeLength" default:"6"`
 	// Issuer is the issuer for TOTP codes
-	Issuer string `json:"issuer" koanf:"issuer" default:""`
+	Issuer string `json:"issuer" koanf:"issuer" default:"" domain:"inherit"`
 	// WithRedis configures the service with a redis client
 	WithRedis bool `json:"redis" koanf:"redis" default:"true"`
 	// Secret stores a versioned secret key for cryptography functions
-	Secret string `json:"secret" koanf:"secret"`
+	Secret string `json:"secret" koanf:"secret" sensitive:"true"`
 	// RecoveryCodeCount is the number of recovery codes to generate
 	RecoveryCodeCount int `json:"recoveryCodeCount" koanf:"recoveryCodeCount" default:"16"`
 	// RecoveryCodeLength is the length of a recovery code

@@ -44,11 +44,11 @@ type Config struct {
 // Credentials for the openFGA client
 type Credentials struct {
 	// APIToken is the token to use for the client, required if using API token authentication
-	APIToken string `json:"apiToken" koanf:"apiToken" jsonschema:"description=api token for the openFGA client, required if using pre-shared key authentication"`
+	APIToken string `json:"apiToken" koanf:"apiToken" jsonschema:"description=api token for the openFGA client, required if using pre-shared key authentication" sensitive:"true"`
 	// ClientID is the client ID to use for the client, required if using client credentials
 	ClientID string `json:"clientId" koanf:"clientId" jsonschema:"description=client id for the openFGA client, required if using client credentials authentication"`
 	// ClientSecret is the client secret to use for the client, required if using client credentials
-	ClientSecret string `json:"clientSecret" koanf:"clientSecret" jsonschema:"description=client secret for the openFGA client, required if using client credentials authentication"`
+	ClientSecret string `json:"clientSecret" koanf:"clientSecret" jsonschema:"description=client secret for the openFGA client, required if using client credentials authentication" sensitive:"true"`
 	// Audience is the audience to use for the client, required if using client credentials
 	Audience string `json:"audience" koanf:"audience" jsonschema:"description=audience for the openFGA client"`
 	// Issuer is the issuer to use for the client, required if using client credentials

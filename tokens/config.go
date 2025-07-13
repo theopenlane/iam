@@ -7,11 +7,11 @@ type Config struct {
 	// KID represents the Key ID used in the configuration.
 	KID string `json:"kid" koanf:"kid" jsonschema:"required"`
 	// Audience represents the target audience for the tokens.
-	Audience string `json:"audience" koanf:"audience" jsonschema:"required" default:"https://theopenlane.io"`
+	Audience string `json:"audience" koanf:"audience" jsonschema:"required" default:"https://theopenlane.io" domain:"inherit" domainPrefix:"https://api"`
 	// RefreshAudience represents the audience for refreshing tokens.
-	RefreshAudience string `json:"refreshAudience" koanf:"refreshAudience"`
+	RefreshAudience string `json:"refreshAudience" koanf:"refreshAudience" domain:"inherit" domainPrefix:"https://api"`
 	// Issuer represents the issuer of the tokens
-	Issuer string `json:"issuer" koanf:"issuer" jsonschema:"required" default:"https://auth.theopenlane.io" `
+	Issuer string `json:"issuer" koanf:"issuer" jsonschema:"required" default:"https://auth.theopenlane.io" domain:"inherit" domainPrefix:"https://api"`
 	// AccessDuration represents the duration of the access token is valid for
 	AccessDuration time.Duration `json:"accessDuration" koanf:"accessDuration" default:"1h"`
 	// RefreshDuration represents the duration of the refresh token is valid for
@@ -19,7 +19,7 @@ type Config struct {
 	// RefreshOverlap represents the overlap time for a refresh and access token
 	RefreshOverlap time.Duration `json:"refreshOverlap" koanf:"refreshOverlap" default:"-15m" `
 	// JWKSEndpoint represents the endpoint for the JSON Web Key Set
-	JWKSEndpoint string `json:"jwksEndpoint" koanf:"jwksEndpoint" default:"https://api.theopenlane.io/.well-known/jwks.json"`
+	JWKSEndpoint string `json:"jwksEndpoint" koanf:"jwksEndpoint" default:"https://api.theopenlane.io/.well-known/jwks.json" domain:"inherit" domainPrefix:"https://api" domainSuffix:"/.well-known/jwks.json"`
 	// Keys represents the key pairs used for signing the tokens
 	Keys map[string]string `json:"keys" koanf:"keys" jsonschema:"required"`
 	// GenerateKeys is a boolean to determine if the keys should be generated
