@@ -30,7 +30,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.37.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.37.0
 	github.com/theopenlane/echox v0.2.4
-	github.com/theopenlane/entx v0.7.2
+	github.com/theopenlane/entx v0.11.2
 	github.com/theopenlane/utils v0.4.7
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.30.0
