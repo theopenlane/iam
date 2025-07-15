@@ -131,17 +131,15 @@ func IsAPITokenAuthentication(ctx context.Context) bool {
 // SetOrganizationIDInAuthContext sets the organization ID in the auth context
 // this should only be used when creating a new organization and subsequent updates
 // need to happen in the context of the new organization
-func SetOrganizationIDInAuthContext(ctx context.Context, orgID string) error {
+func SetOrganizationIDInAuthContext(ctx context.Context, orgID string) (context.Context, error) {
 	au, ok := AuthenticatedUserFromContext(ctx)
 	if !ok || au == nil {
-		return ErrNoAuthUser
+		return ctx, ErrNoAuthUser
 	}
 
 	au.OrganizationID = orgID
 
-	WithAuthenticatedUser(ctx, au)
-
-	return nil
+	return WithAuthenticatedUser(ctx, au), nil
 }
 
 // AddOrganizationIDToContext appends an authorized organization ID to the context.
@@ -149,32 +147,28 @@ func SetOrganizationIDInAuthContext(ctx context.Context, orgID string) error {
 // determined by the claims or the token. This is only used in cases where the
 // a user is newly authorized to an organization and the organization ID is not
 // in the token claims
-func AddOrganizationIDToContext(ctx context.Context, orgID string) error {
+func AddOrganizationIDToContext(ctx context.Context, orgID string) (context.Context, error) {
 	au, ok := AuthenticatedUserFromContext(ctx)
 	if !ok || au == nil {
-		return ErrNoAuthUser
+		return ctx, ErrNoAuthUser
 	}
 
 	// append the organization ID to the list of organization IDs
 	au.OrganizationIDs = append(au.OrganizationIDs, orgID)
 
-	WithAuthenticatedUser(ctx, au)
-
-	return nil
+	return WithAuthenticatedUser(ctx, au), nil
 }
 
 // AddSubscriptionToContext appends a subscription to the context
-func AddSubscriptionToContext(ctx context.Context, subscription bool) error {
+func AddSubscriptionToContext(ctx context.Context, subscription bool) (context.Context, error) {
 	au, ok := AuthenticatedUserFromContext(ctx)
 	if !ok || au == nil {
-		return ErrNoAuthUser
+		return ctx, ErrNoAuthUser
 	}
 
 	au.ActiveSubscription = subscription
 
-	WithAuthenticatedUser(ctx, au)
-
-	return nil
+	return WithAuthenticatedUser(ctx, au), nil
 }
 
 // GetSubscriptionFromContext returns the active subscription from the context
@@ -188,17 +182,15 @@ func GetSubscriptionFromContext(ctx context.Context) bool {
 }
 
 // SetSystemAdminInContext sets the system admin flag in the context
-func SetSystemAdminInContext(ctx context.Context, isAdmin bool) error {
+func SetSystemAdminInContext(ctx context.Context, isAdmin bool) (context.Context, error) {
 	au, ok := AuthenticatedUserFromContext(ctx)
 	if !ok || au == nil {
-		return ErrNoAuthUser
+		return ctx, ErrNoAuthUser
 	}
 
 	au.IsSystemAdmin = isAdmin
 
-	WithAuthenticatedUser(ctx, au)
-
-	return nil
+	return WithAuthenticatedUser(ctx, au), nil
 }
 
 // IsSystemAdminFromContext checks if the user is a system admin

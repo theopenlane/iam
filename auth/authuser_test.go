@@ -110,7 +110,7 @@ func TestGetOrganizationIDsFromContext(t *testing.T) {
 
 	multiOrgValidCtx := auth.NewTestContextWithOrgID(ulids.New().String(), orgID1)
 
-	err := auth.AddOrganizationIDToContext(multiOrgValidCtx, orgID2)
+	_, err := auth.AddOrganizationIDToContext(multiOrgValidCtx, orgID2)
 	require.NoError(t, err)
 
 	invalidUserCtx := auth.NewTestContextWithOrgID(ulids.Null.String(), ulids.Null.String())
@@ -173,7 +173,7 @@ func TestGetSubscriptionFromContext(t *testing.T) {
 	invalidSubscription := false
 
 	validCtx := auth.NewTestContextWithValidUser(ulids.New().String())
-	if err := auth.AddSubscriptionToContext(validCtx, true); err != nil {
+	if _, err := auth.AddSubscriptionToContext(validCtx, true); err != nil {
 		t.Fatal(err)
 	}
 
