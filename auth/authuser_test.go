@@ -110,8 +110,13 @@ func TestGetOrganizationIDsFromContext(t *testing.T) {
 
 	multiOrgValidCtx := auth.NewTestContextWithOrgID(ulids.New().String(), orgID1)
 
-	_, err := auth.AddOrganizationIDToContext(multiOrgValidCtx, orgID2)
+	ctx, err := auth.AddOrganizationIDToContext(multiOrgValidCtx, orgID2)
 	require.NoError(t, err)
+
+	// ensure the second org ID is added
+	au, err := auth.GetAuthenticatedUserFromContext(ctx)
+	require.NoError(t, err)
+	assert.Contains(t, au.OrganizationIDs, orgID2)
 
 	invalidUserCtx := auth.NewTestContextWithOrgID(ulids.Null.String(), ulids.Null.String())
 
