@@ -27,8 +27,8 @@ require (
 	github.com/samber/lo v1.51.0
 	github.com/stoewer/go-strcase v1.3.1
 	github.com/stretchr/testify v1.10.0
-	github.com/testcontainers/testcontainers-go v0.37.0
-	github.com/testcontainers/testcontainers-go/modules/openfga v0.37.0
+	github.com/testcontainers/testcontainers-go v0.38.0
+	github.com/testcontainers/testcontainers-go/modules/openfga v0.38.0
 	github.com/theopenlane/echox v0.2.4
 	github.com/theopenlane/entx v0.7.2
 	github.com/theopenlane/utils v0.4.7
@@ -75,7 +75,7 @@ require (
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
-	github.com/ebitengine/purego v0.8.2 // indirect
+	github.com/ebitengine/purego v0.8.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -143,7 +143,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
-	github.com/shirou/gopsutil/v4 v4.25.1 // indirect
+	github.com/shirou/gopsutil/v4 v4.25.5 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
