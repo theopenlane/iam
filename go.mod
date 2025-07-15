@@ -11,7 +11,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/docker/docker v28.3.2+incompatible
 	github.com/go-webauthn/webauthn v0.13.3
-	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/golang-jwt/jwt/v5 v5.2.3
 	github.com/google/go-github/v72 v72.0.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/lestrrat-go/httprc/v3 v3.0.0
