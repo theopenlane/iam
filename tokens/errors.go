@@ -88,6 +88,21 @@ var (
 
 	// ErrTokenInvalid is returned when unable to verify the token with the signature and secret provided
 	ErrTokenInvalid = errors.New("unable to verify token")
+
+	// ErrInvalidToken is returned when a token is invalid
+	ErrInvalidToken = errors.New("invalid token")
+
+	// ErrMissingImpersonationType is returned when the impersonation type is missing
+	ErrMissingImpersonationType = errors.New("impersonation token missing type")
+
+	// ErrMissingImpersonatorID is returned when the impersonator ID is missing
+	ErrMissingImpersonatorID = errors.New("impersonation token missing impersonator ID")
+
+	// ErrMissingTargetUserID is returned when the target user ID is missing
+	ErrMissingTargetUserID = errors.New("impersonation token missing target user ID")
+
+	// ErrInvalidSigningMethod is returned when the signing method is invalid
+	ErrInvalidSigningMethod = errors.New("invalid signing method")
 )
 
 // The errors that might occur when parsing and validating a token
