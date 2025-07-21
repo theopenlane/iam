@@ -50,6 +50,11 @@ type AcmeSolverContextKey struct{}
 // TrustCenterContextKey is the context key name for the trust center context
 type TrustCenterContextKey struct{}
 
+// SystemAdminContextKey holds the original system admin user when user context switching occurs
+type SystemAdminContextKey struct {
+	AdminUser *AuthenticatedUser
+}
+
 // AuthenticatedUser contains the user and organization ID for the authenticated user
 type AuthenticatedUser struct {
 	// SubjectID is the user ID of the authenticated user or the api token ID if the user is an API token
@@ -271,4 +276,18 @@ func GetAnonymousTrustCenterUserContextOr(c echo.Context, def *AnonymousTrustCen
 // GetAnonymousTrustCenterUserContextOrFunc retrieves the anonymous trust center user from the echo context or returns the result of the provided function if not found
 func GetAnonymousTrustCenterUserContextOrFunc(c echo.Context, f func() *AnonymousTrustCenterUser) *AnonymousTrustCenterUser {
 	return contextx.FromOrFunc(c.Request().Context(), f)
+}
+
+// WithSystemAdminContext sets the original system admin user in the context when user context switching occurs
+func WithSystemAdminContext(ctx context.Context, adminUser *AuthenticatedUser) context.Context {
+	return contextx.With(ctx, &SystemAdminContextKey{AdminUser: adminUser})
+}
+
+// SystemAdminFromContext retrieves the original system admin user when user context switching is active
+func SystemAdminFromContext(ctx context.Context) (*AuthenticatedUser, bool) {
+	adminCtx, ok := contextx.From[*SystemAdminContextKey](ctx)
+	if !ok {
+		return nil, false
+	}
+	return adminCtx.AdminUser, true
 }

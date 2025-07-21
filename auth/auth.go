@@ -19,11 +19,18 @@ const (
 	AccessTokenCookie = "access_token"
 	// RefreshTokenCookie is the key used in cookies to represent the refresh token
 	RefreshTokenCookie = "refresh_token"
+	// UserIDHeader is the header used by system admins to specify target user ID
+	UserIDHeader = "X-User-ID"
+	// OrganizationIDHeader is the header used by system admins to specify target organization ID
+	OrganizationIDHeader = "X-Organization-ID"
+	// ImpersonationScheme is the authorization scheme for impersonation tokens
+	ImpersonationScheme = "Impersonation"
 )
 
 // used to extract the access token from the header
 var (
-	bearer = regexp.MustCompile(`^\s*[Bb]earer\s+([a-zA-Z0-9_\-\.]+)\s*$`)
+	bearer        = regexp.MustCompile(`^\s*[Bb]earer\s+([a-zA-Z0-9_\-\.]+)\s*$`)
+	impersonation = regexp.MustCompile(`^\s*` + ImpersonationScheme + `\s+([a-zA-Z0-9_\-\.]+)\s*$`)
 )
 
 // GetBearerToken retrieves the bearer token from the authorization header and parses it
@@ -112,4 +119,35 @@ func CookieExpired(cookie *http.Cookie) bool {
 	}
 
 	return false
+}
+
+// GetImpersonationToken retrieves the impersonation token from the authorization header
+// and parses it to return only the token component. If the header is missing or malformed,
+// an error is returned.
+func GetImpersonationToken(c echo.Context) (string, error) {
+	if h := c.Request().Header.Get(Authorization); h != "" {
+		match := impersonation.FindStringSubmatch(h)
+		if len(match) == 2 { //nolint:mnd
+			return match[1], nil
+		}
+	}
+
+	return "", ErrNoAuthorization
+}
+
+// GetUserContextHeaders retrieves the user context headers used by system admins
+// to specify which user context to operate under. Returns the user ID and organization ID
+// from the X-User-ID and X-Organization-ID headers respectively.
+func GetUserContextHeaders(c echo.Context) (userID, orgID string) {
+	userID = c.Request().Header.Get(UserIDHeader)
+	orgID = c.Request().Header.Get(OrganizationIDHeader)
+
+	return userID, orgID
+}
+
+// HasUserContextHeaders checks if both required user context headers are present
+func HasUserContextHeaders(c echo.Context) bool {
+	userID, orgID := GetUserContextHeaders(c)
+
+	return userID != "" && orgID != ""
 }

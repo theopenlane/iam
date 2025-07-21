@@ -1,6 +1,7 @@
 package tokens
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"github.com/lestrrat-go/jwx/v3/jwa"
 	"github.com/lestrrat-go/jwx/v3/jwk"
 	"github.com/oklog/ulid/v2"
+	"github.com/theopenlane/utils/ulids"
 )
 
 const DefaultRefreshAudience = "https://auth.theopenlane.io/v1/refresh"
@@ -141,6 +143,94 @@ func (tm *TokenManager) Sign(token *jwt.Token) (string, error) {
 
 	// Return the signed string
 	return token.SignedString(tm.currentKey)
+}
+
+// CreateImpersonationToken creates a JWT token for user impersonation
+func (tm *TokenManager) CreateImpersonationToken(ctx context.Context, opts CreateImpersonationTokenOptions) (string, error) {
+	if opts.Duration == 0 {
+		// Default duration based on impersonation type
+		switch opts.Type {
+		case "support":
+			opts.Duration = 4 * time.Hour // Support sessions should be short-lived
+		case "job":
+			opts.Duration = 24 * time.Hour // Jobs might run longer
+		case "admin":
+			opts.Duration = 1 * time.Hour // Admin impersonation should be very short
+		default:
+			opts.Duration = 1 * time.Hour
+		}
+	}
+
+	now := time.Now()
+	sessionID := ulids.New().String()
+
+	claims := &ImpersonationClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(opts.Duration)),
+			NotBefore: jwt.NewNumericDate(now),
+			Issuer:    tm.conf.Issuer,
+			Subject:   opts.TargetUserID,
+			Audience:  jwt.ClaimStrings{tm.conf.Audience},
+			ID:        sessionID,
+		},
+		UserID:            opts.TargetUserID,
+		OrgID:             opts.OrganizationID,
+		ImpersonatorID:    opts.ImpersonatorID,
+		ImpersonatorEmail: opts.ImpersonatorEmail,
+		Type:              opts.Type,
+		Reason:            opts.Reason,
+		SessionID:         sessionID,
+		Scopes:            opts.Scopes,
+		TargetUserEmail:   opts.TargetUserEmail,
+		OriginalToken:     opts.OriginalToken,
+	}
+
+	token := jwt.NewWithClaims(signingMethod, claims)
+
+	// Add key ID to header
+	if tm.conf.KID != "" {
+		token.Header["kid"] = tm.conf.KID
+	}
+
+	return tm.Sign(token)
+}
+
+// ValidateImpersonationToken validates and parses an impersonation token
+func (tm *TokenManager) ValidateImpersonationToken(ctx context.Context, tokenString string) (*ImpersonationClaims, error) {
+	var token *jwt.Token
+	claims := &ImpersonationClaims{}
+
+	// Parse with validation
+	parser := jwt.NewParser(
+		jwt.WithValidMethods([]string{signingMethod.Alg()}),
+		jwt.WithAudience(tm.conf.Audience),
+		jwt.WithIssuer(tm.conf.Issuer),
+	)
+
+	token, err := parser.ParseWithClaims(tokenString, claims, tm.keyFunc)
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, ErrInvalidToken
+	}
+
+	// Additional validation specific to impersonation
+	if claims.Type == "" {
+		return nil, ErrMissingImpersonationType
+	}
+
+	if claims.ImpersonatorID == "" {
+		return nil, ErrMissingImpersonatorID
+	}
+
+	if claims.UserID == "" {
+		return nil, ErrMissingTargetUserID
+	}
+
+	return claims, nil
 }
 
 // CreateTokenPair returns signed access and refresh tokens for the specified claims in one step since usually you want both access and refresh tokens at the same time
@@ -450,4 +540,100 @@ func IsExpired(tks string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// ImpersonationClaims extends the standard JWT claims with impersonation-specific information
+type ImpersonationClaims struct {
+	jwt.RegisteredClaims
+	// UserID is the user being impersonated
+	UserID string `json:"user_id,omitempty"`
+	// OrgID is the organization context
+	OrgID string `json:"org,omitempty"`
+	// ImpersonatorID is the user doing the impersonation
+	ImpersonatorID string `json:"impersonator_id"`
+	// ImpersonatorEmail is the email of the impersonator
+	ImpersonatorEmail string `json:"impersonator_email"`
+	// Type indicates the type of impersonation (support, job, admin)
+	Type string `json:"type"`
+	// Reason for the impersonation
+	Reason string `json:"reason"`
+	// SessionID uniquely identifies this impersonation session
+	SessionID string `json:"session_id"`
+	// Scopes defines what actions are allowed
+	Scopes []string `json:"scopes"`
+	// TargetUserEmail is the email of the user being impersonated
+	TargetUserEmail string `json:"target_user_email"`
+	// OriginalToken stores the original user's token for reference
+	OriginalToken string `json:"original_token,omitempty"`
+}
+
+// CreateImpersonationTokenOptions contains options for creating impersonation tokens
+type CreateImpersonationTokenOptions struct {
+	ImpersonatorID    string
+	ImpersonatorEmail string
+	TargetUserID      string
+	TargetUserEmail   string
+	OrganizationID    string
+	Type              string
+	Reason            string
+	Duration          time.Duration
+	Scopes            []string
+	OriginalToken     string
+}
+
+// ParseUserID returns the target user ID from impersonation claims
+func (c ImpersonationClaims) ParseUserID() ulid.ULID {
+	userID, err := ulid.Parse(c.UserID)
+	if err != nil {
+		return ulids.Null
+	}
+	return userID
+}
+
+// ParseOrgID returns the organization ID from impersonation claims
+func (c ImpersonationClaims) ParseOrgID() ulid.ULID {
+	orgID, err := ulid.Parse(c.OrgID)
+	if err != nil {
+		return ulids.Null
+	}
+	return orgID
+}
+
+// ParseImpersonatorID returns the impersonator user ID from claims
+func (c ImpersonationClaims) ParseImpersonatorID() ulid.ULID {
+	impersonatorID, err := ulid.Parse(c.ImpersonatorID)
+	if err != nil {
+		return ulids.Null
+	}
+	return impersonatorID
+}
+
+// HasScope checks if the impersonation token has a specific scope
+func (c ImpersonationClaims) HasScope(scope string) bool {
+	for _, s := range c.Scopes {
+		if s == scope || s == "*" {
+			return true
+		}
+	}
+	return false
+}
+
+// GetSessionID returns the session ID for this impersonation
+func (c ImpersonationClaims) GetSessionID() string {
+	return c.SessionID
+}
+
+// IsJobImpersonation returns true if this is a job impersonation token
+func (c ImpersonationClaims) IsJobImpersonation() bool {
+	return c.Type == "job"
+}
+
+// IsSupportImpersonation returns true if this is a support impersonation token
+func (c ImpersonationClaims) IsSupportImpersonation() bool {
+	return c.Type == "support"
+}
+
+// IsAdminImpersonation returns true if this is an admin impersonation token
+func (c ImpersonationClaims) IsAdminImpersonation() bool {
+	return c.Type == "admin"
 }
