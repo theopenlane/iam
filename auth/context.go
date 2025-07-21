@@ -289,5 +289,6 @@ func SystemAdminFromContext(ctx context.Context) (*AuthenticatedUser, bool) {
 	if !ok {
 		return nil, false
 	}
+
 	return adminCtx.AdminUser, true
 }

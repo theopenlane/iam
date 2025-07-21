@@ -55,6 +55,7 @@ func (i *ImpersonationContext) HasScope(scope string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 

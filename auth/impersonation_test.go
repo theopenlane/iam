@@ -41,10 +41,10 @@ func TestImpersonationContext(t *testing.T) {
 
 func TestImpersonationContext_HasScope(t *testing.T) {
 	tests := []struct {
-		name   string
-		ctx    *ImpersonationContext
-		scope  string
-		want   bool
+		name  string
+		ctx   *ImpersonationContext
+		scope string
+		want  bool
 	}{
 		{
 			name: "has exact scope",
@@ -266,10 +266,8 @@ func TestGetEffectiveUser(t *testing.T) {
 			wantOk: true,
 		},
 		{
-			name: "no user in context",
-			setupCtx: func() context.Context {
-				return context.Background()
-			},
+			name:     "no user in context",
+			setupCtx: context.Background,
 			wantUser: nil,
 			wantOk:   false,
 		},
@@ -280,6 +278,7 @@ func TestGetEffectiveUser(t *testing.T) {
 			ctx := tt.setupCtx()
 			user, ok := GetEffectiveUser(ctx)
 			assert.Equal(t, tt.wantOk, ok)
+
 			if tt.wantOk {
 				assert.Equal(t, tt.wantUser.SubjectID, user.SubjectID)
 				assert.Equal(t, tt.wantUser.SubjectEmail, user.SubjectEmail)

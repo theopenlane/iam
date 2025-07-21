@@ -10,14 +10,16 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/theopenlane/iam/tokens"
 	"github.com/theopenlane/utils/ulids"
+
+	"github.com/theopenlane/iam/tokens"
 )
 
 var testKey *rsa.PrivateKey
 
 func init() {
 	var err error
+
 	testKey, err = rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		panic(err)
@@ -99,7 +101,7 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				Scopes:            []string{"*"},
 			},
 			wantErr: false,
-			verify: func(t *testing.T, token string, opts tokens.CreateImpersonationTokenOptions) {
+			verify: func(t *testing.T, token string, _ tokens.CreateImpersonationTokenOptions) {
 				claims := &tokens.ImpersonationClaims{}
 				parser := jwt.NewParser()
 				_, _, err := parser.ParseUnverified(token, claims)
@@ -123,7 +125,7 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				// Duration not set, should default to 1 hour
 			},
 			wantErr: false,
-			verify: func(t *testing.T, token string, opts tokens.CreateImpersonationTokenOptions) {
+			verify: func(t *testing.T, token string, _ tokens.CreateImpersonationTokenOptions) {
 				claims := &tokens.ImpersonationClaims{}
 				parser := jwt.NewParser()
 				_, _, err := parser.ParseUnverified(token, claims)
@@ -145,7 +147,7 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				Reason:            "custom action",
 			},
 			wantErr: false,
-			verify: func(t *testing.T, token string, opts tokens.CreateImpersonationTokenOptions) {
+			verify: func(t *testing.T, token string, _ tokens.CreateImpersonationTokenOptions) {
 				claims := &tokens.ImpersonationClaims{}
 				parser := jwt.NewParser()
 				_, _, err := parser.ParseUnverified(token, claims)
@@ -168,7 +170,7 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				// Duration not set, should default to 4 hours
 			},
 			wantErr: false,
-			verify: func(t *testing.T, token string, opts tokens.CreateImpersonationTokenOptions) {
+			verify: func(t *testing.T, token string, _ tokens.CreateImpersonationTokenOptions) {
 				claims := &tokens.ImpersonationClaims{}
 				parser := jwt.NewParser()
 				_, _, err := parser.ParseUnverified(token, claims)
@@ -191,7 +193,7 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				// Duration not set, should default to 24 hours
 			},
 			wantErr: false,
-			verify: func(t *testing.T, token string, opts tokens.CreateImpersonationTokenOptions) {
+			verify: func(t *testing.T, token string, _ tokens.CreateImpersonationTokenOptions) {
 				claims := &tokens.ImpersonationClaims{}
 				parser := jwt.NewParser()
 				_, _, err := parser.ParseUnverified(token, claims)
@@ -211,6 +213,7 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				assert.Error(t, err)
 				return
 			}
+
 			assert.NoError(t, err)
 			assert.NotEmpty(t, token)
 
@@ -455,14 +458,17 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 			claims, err := tm.ValidateImpersonationToken(ctx, token)
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				if tt.errCheck != nil {
 					tt.errCheck(t, err)
 				}
+
 				return
 			}
 
 			assert.NoError(t, err)
 			assert.NotNil(t, claims)
+
 			if tt.verify != nil {
 				tt.verify(t, claims)
 			}

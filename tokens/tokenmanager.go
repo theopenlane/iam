@@ -145,19 +145,27 @@ func (tm *TokenManager) Sign(token *jwt.Token) (string, error) {
 	return token.SignedString(tm.currentKey)
 }
 
+const (
+	// Default durations for different impersonation types
+	supportImpersonationDuration = 4 * time.Hour  // Support sessions should be short-lived
+	jobImpersonationDuration     = 24 * time.Hour // Jobs might run longer
+	adminImpersonationDuration   = 1 * time.Hour  // Admin impersonation should be very short
+	defaultImpersonationDuration = 1 * time.Hour  // Default for unknown types
+)
+
 // CreateImpersonationToken creates a JWT token for user impersonation
-func (tm *TokenManager) CreateImpersonationToken(ctx context.Context, opts CreateImpersonationTokenOptions) (string, error) {
+func (tm *TokenManager) CreateImpersonationToken(_ context.Context, opts CreateImpersonationTokenOptions) (string, error) {
 	if opts.Duration == 0 {
 		// Default duration based on impersonation type
 		switch opts.Type {
 		case "support":
-			opts.Duration = 4 * time.Hour // Support sessions should be short-lived
+			opts.Duration = supportImpersonationDuration
 		case "job":
-			opts.Duration = 24 * time.Hour // Jobs might run longer
+			opts.Duration = jobImpersonationDuration
 		case "admin":
-			opts.Duration = 1 * time.Hour // Admin impersonation should be very short
+			opts.Duration = adminImpersonationDuration
 		default:
-			opts.Duration = 1 * time.Hour
+			opts.Duration = defaultImpersonationDuration
 		}
 	}
 
@@ -197,8 +205,9 @@ func (tm *TokenManager) CreateImpersonationToken(ctx context.Context, opts Creat
 }
 
 // ValidateImpersonationToken validates and parses an impersonation token
-func (tm *TokenManager) ValidateImpersonationToken(ctx context.Context, tokenString string) (*ImpersonationClaims, error) {
+func (tm *TokenManager) ValidateImpersonationToken(_ context.Context, tokenString string) (*ImpersonationClaims, error) {
 	var token *jwt.Token
+
 	claims := &ImpersonationClaims{}
 
 	// Parse with validation
@@ -587,6 +596,7 @@ func (c ImpersonationClaims) ParseUserID() ulid.ULID {
 	if err != nil {
 		return ulids.Null
 	}
+
 	return userID
 }
 
@@ -596,6 +606,7 @@ func (c ImpersonationClaims) ParseOrgID() ulid.ULID {
 	if err != nil {
 		return ulids.Null
 	}
+
 	return orgID
 }
 
@@ -605,6 +616,7 @@ func (c ImpersonationClaims) ParseImpersonatorID() ulid.ULID {
 	if err != nil {
 		return ulids.Null
 	}
+
 	return impersonatorID
 }
 
@@ -615,6 +627,7 @@ func (c ImpersonationClaims) HasScope(scope string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 

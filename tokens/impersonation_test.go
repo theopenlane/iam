@@ -163,29 +163,28 @@ func TestCreateImpersonationTokenOptions(t *testing.T) {
 func TestImpersonationTokenManager_DefaultDurations(t *testing.T) {
 	// This test verifies the default duration logic that would be used
 	// in CreateImpersonationToken when Duration is 0
-
 	tests := []struct {
-		name            string
+		name              string
 		impersonationType string
 		expectedDuration  time.Duration
 	}{
 		{
-			name:            "support impersonation",
+			name:              "support impersonation",
 			impersonationType: "support",
 			expectedDuration:  4 * time.Hour,
 		},
 		{
-			name:            "job impersonation",
+			name:              "job impersonation",
 			impersonationType: "job",
 			expectedDuration:  24 * time.Hour,
 		},
 		{
-			name:            "admin impersonation",
+			name:              "admin impersonation",
 			impersonationType: "admin",
 			expectedDuration:  1 * time.Hour,
 		},
 		{
-			name:            "unknown type defaults to 1 hour",
+			name:              "unknown type defaults to 1 hour",
 			impersonationType: "unknown",
 			expectedDuration:  1 * time.Hour,
 		},
@@ -195,6 +194,7 @@ func TestImpersonationTokenManager_DefaultDurations(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// This simulates the default duration logic from CreateImpersonationToken
 			var duration time.Duration
+
 			switch tt.impersonationType {
 			case "support":
 				duration = 4 * time.Hour
@@ -214,7 +214,6 @@ func TestImpersonationTokenManager_DefaultDurations(t *testing.T) {
 func TestImpersonationTokenManager_ValidationChecks(t *testing.T) {
 	// This test covers the validation logic that would be used
 	// in ValidateImpersonationToken
-
 	tests := []struct {
 		name    string
 		claims  *ImpersonationClaims
@@ -267,13 +266,14 @@ func TestImpersonationTokenManager_ValidationChecks(t *testing.T) {
 			// Simulate the validation checks from ValidateImpersonationToken
 			var err error
 
-			if tt.claims.Type == "" {
+			switch {
+			case tt.claims.Type == "":
 				err = assert.AnError
 				assert.Contains(t, "impersonation token missing type", "impersonation token missing type")
-			} else if tt.claims.ImpersonatorID == "" {
+			case tt.claims.ImpersonatorID == "":
 				err = assert.AnError
 				assert.Contains(t, "impersonation token missing impersonator ID", "impersonation token missing impersonator ID")
-			} else if tt.claims.UserID == "" {
+			case tt.claims.UserID == "":
 				err = assert.AnError
 				assert.Contains(t, "impersonation token missing target user ID", "impersonation token missing target user ID")
 			}
