@@ -71,23 +71,27 @@ func (v *validator) checkBlacklist(ctx context.Context, claims *Claims) error {
 	// Check if specific token is revoked
 	if claims.ID != "" {
 		revoked, err := v.blacklist.IsRevoked(ctx, claims.ID)
+		if revoked {
+			return ErrTokenInvalid
+		}
+
 		if err != nil {
 			// Log the error but continue with fail-open behavior for availability
 			// This matches the design decision in the blacklist implementation
 			log.Debug().Err(err).Str("token_id", claims.ID).Msg("failed to check token blacklist status")
-		} else if revoked {
-			return ErrTokenInvalid
 		}
 	}
 
 	// Check if user is suspended - prefer UserID, fallback to Subject
 	if userID := v.getUserID(claims); userID != "" {
 		suspended, err := v.blacklist.IsUserRevoked(ctx, userID)
+		if suspended {
+			return ErrTokenInvalid
+		}
+
 		if err != nil {
 			// Log the error but continue with fail-open behavior for availability
 			log.Debug().Err(err).Str("user_id", userID).Msg("failed to check user suspension status")
-		} else if suspended {
-			return ErrTokenInvalid
 		}
 	}
 
