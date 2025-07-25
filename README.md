@@ -1,4 +1,4 @@
-[![Build status](https://badge.buildkite.com/3346f9d3732a143a78c4da3eb9dcb8f4e9616a64bebd0cbfbd.svg)](https://buildkite.com/theopenlane/iam)
+[![Build status](https://badge.buildkite.com/3346f9d3732a143a78c4da3eb9dcb8f4e9616a64bebd0cbfbd.svg)](https://buildkite.com/theopenlane/iam?branch=main)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=theopenlane_iam&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=theopenlane_iam)
 [![Go Report Card](https://goreportcard.com/badge/github.com/theopenlane/iam)](https://goreportcard.com/report/github.com/theopenlane/iam)
 [![Go Reference](https://pkg.go.dev/badge/github.com/theopenlane/iam.svg)](https://pkg.go.dev/github.com/theopenlane/iam)

@@ -1,4 +1,0 @@
-- Update Session data to use defined types instead of string map
-- Create type assertions for Session data
-- Refactor functions to use newly defined types + assertions
-- Phase in new_context.go functions over context.go

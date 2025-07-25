@@ -131,8 +131,8 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				_, _, err := parser.ParseUnverified(token, claims)
 				require.NoError(t, err)
 
-				// Check default duration was applied (1 hour for admin)
-				expectedExpiry := time.Now().Add(1 * time.Hour)
+				// Check default duration was applied (15 minutes for admin)
+				expectedExpiry := time.Now().Add(15 * time.Minute)
 				assert.WithinDuration(t, expectedExpiry, claims.ExpiresAt.Time, 5*time.Second)
 			},
 		},
@@ -153,8 +153,8 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				_, _, err := parser.ParseUnverified(token, claims)
 				require.NoError(t, err)
 
-				// Check default duration was applied (1 hour for unknown)
-				expectedExpiry := time.Now().Add(1 * time.Hour)
+				// Check default duration was applied (15 minutes for unknown)
+				expectedExpiry := time.Now().Add(15 * time.Minute)
 				assert.WithinDuration(t, expectedExpiry, claims.ExpiresAt.Time, 5*time.Second)
 			},
 		},
@@ -176,8 +176,8 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				_, _, err := parser.ParseUnverified(token, claims)
 				require.NoError(t, err)
 
-				// Check default duration was applied (4 hours for support)
-				expectedExpiry := time.Now().Add(4 * time.Hour)
+				// Check default duration was applied (30 minutes for support)
+				expectedExpiry := time.Now().Add(30 * time.Minute)
 				assert.WithinDuration(t, expectedExpiry, claims.ExpiresAt.Time, 5*time.Second)
 			},
 		},
@@ -199,8 +199,8 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				_, _, err := parser.ParseUnverified(token, claims)
 				require.NoError(t, err)
 
-				// Check default duration was applied (24 hours for job)
-				expectedExpiry := time.Now().Add(24 * time.Hour)
+				// Check default duration was applied (2 hours for job)
+				expectedExpiry := time.Now().Add(2 * time.Hour)
 				assert.WithinDuration(t, expectedExpiry, claims.ExpiresAt.Time, 5*time.Second)
 			},
 		},

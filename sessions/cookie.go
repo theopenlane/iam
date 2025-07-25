@@ -15,27 +15,32 @@ var (
 	DevCookieName     = "temporary-cookie"
 )
 
-// DefaultCookieConfig configures http.Cookie creation for production (AKA default secure values are set)
-var DefaultCookieConfig = &CookieConfig{
-	Path:     "/",
-	Domain:   "",
-	MaxAge:   defaultMaxAgeSeconds,
-	HTTPOnly: true,
-	Secure:   true,
-	SameSite: http.SameSiteStrictMode,
+// NewCookieConfig creates a new cookie configuration with secure defaults
+func NewCookieConfig(secure bool) *CookieConfig {
+	config := &CookieConfig{
+		Path:     "/",
+		MaxAge:   defaultMaxAgeSeconds,
+		HTTPOnly: true,
+		Secure:   secure,
+	}
+
+	if secure {
+		config.SameSite = http.SameSiteStrictMode
+	} else {
+		config.SameSite = http.SameSiteLaxMode
+	}
+
+	return config
 }
+
+// DefaultCookieConfig configures http.Cookie creation for production (AKA default secure values are set)
+var DefaultCookieConfig = NewCookieConfig(true)
 
 // DebugCookieConfig configures http.Cookie creation for debugging
-var DebugCookieConfig = &CookieConfig{
-	Path:     "/",
-	MaxAge:   defaultMaxAgeSeconds,
-	HTTPOnly: true,
-	Secure:   false, // allow to work over http
-	SameSite: http.SameSiteLaxMode,
-}
+var DebugCookieConfig = NewCookieConfig(false)
 
 // DebugOnlyCookieConfig is different in that it's not a receiver and the name is set, so it can be called directly
-var DebugOnlyCookieConfig = CookieConfig{
+var DebugOnlyCookieConfig = &CookieConfig{
 	Name:     DevCookieName,
 	Path:     "/",
 	MaxAge:   defaultMaxAgeSeconds,
@@ -66,45 +71,31 @@ type CookieConfig struct {
 
 // NewCookie returns a new chocolate chip http.Cookie with the given name, value, and properties from config
 func NewCookie(name, value string, config *CookieConfig) *http.Cookie {
-	if name != "" {
-		cookie := &http.Cookie{
-			Name:     name,
-			Value:    value,
-			Path:     config.Path,
-			Domain:   config.Domain,
-			MaxAge:   config.MaxAge,
-			HttpOnly: config.HTTPOnly,
-			Secure:   config.Secure,
-			SameSite: config.SameSite,
-		}
-
-		if expires, ok := expiresTime(config.MaxAge); ok {
-			cookie.Expires = expires
-		}
-
-		return cookie
+	cookieName := name
+	if cookieName == "" {
+		cookieName = config.Name
 	}
 
-	if name == "" {
-		cookie := &http.Cookie{
-			Name:     config.Name,
-			Value:    value,
-			Path:     config.Path,
-			Domain:   config.Domain,
-			MaxAge:   config.MaxAge,
-			HttpOnly: config.HTTPOnly,
-			Secure:   config.Secure,
-			SameSite: config.SameSite,
-		}
-
-		if expires, ok := expiresTime(config.MaxAge); ok {
-			cookie.Expires = expires
-		}
-
-		return cookie
+	if cookieName == "" {
+		return nil
 	}
 
-	return nil
+	cookie := &http.Cookie{
+		Name:     cookieName,
+		Value:    value,
+		Path:     config.Path,
+		Domain:   config.Domain,
+		MaxAge:   config.MaxAge,
+		HttpOnly: config.HTTPOnly,
+		Secure:   config.Secure,
+		SameSite: config.SameSite,
+	}
+
+	if expires, ok := expiresTime(config.MaxAge); ok {
+		cookie.Expires = expires
+	}
+
+	return cookie
 }
 
 // expiresTime converts a maxAge time in seconds to a time.Time in the future
@@ -149,28 +140,19 @@ func SetCookieB64(w http.ResponseWriter, body []byte, cookieName string, v Cooki
 
 // SetCookie function sets a cookie with the given value and name
 func SetCookie(w http.ResponseWriter, value string, cookieName string, v CookieConfig) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     cookieName,
-		Value:    value,
-		Domain:   v.Domain,
-		Path:     v.Path,
-		MaxAge:   v.MaxAge,
-		Secure:   v.Secure,
-		SameSite: v.SameSite,
-		HttpOnly: v.HTTPOnly,
-	})
+	cookie := NewCookie(cookieName, value, &v)
+	if cookie != nil {
+		http.SetCookie(w, cookie)
+	}
 }
 
 // RemoveCookie function removes a cookie from the HTTP response
 func RemoveCookie(w http.ResponseWriter, cookieName string, v CookieConfig) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     cookieName,
-		Value:    "",
-		Domain:   v.Domain,
-		Path:     v.Path,
-		MaxAge:   -1,
-		Secure:   v.Secure,
-		SameSite: v.SameSite,
-		HttpOnly: v.HTTPOnly,
-	})
+	// Create a cookie with MaxAge -1 to delete it
+	v.MaxAge = -1
+
+	cookie := NewCookie(cookieName, "", &v)
+	if cookie != nil {
+		http.SetCookie(w, cookie)
+	}
 }

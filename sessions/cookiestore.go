@@ -17,6 +17,7 @@ const (
 	WebAuthnKey       = "webauthn"
 )
 
+// Store is an interface that defines methods for managing sessions
 type Store[T any] interface {
 	// New returns a new named Session
 	New(name string) *Session[T]
@@ -58,7 +59,7 @@ func NewCookieStore[T any](config *CookieConfig, keyPairs ...[]byte) Store[T] {
 
 // New returns a new named Session
 func (s *cookieStore[T]) New(name string) *Session[T] {
-	return NewSession[T](s, name)
+	return NewSession(s, name)
 }
 
 // Get returns the named Session from the Request. Returns an error if the

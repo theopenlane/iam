@@ -33,6 +33,7 @@ require (
 	github.com/theopenlane/entx v0.11.2
 	github.com/theopenlane/utils v0.4.7
 	github.com/vmihailenco/msgpack/v5 v5.4.1
+	github.com/zitadel/oidc/v3 v3.42.0
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/tools v0.35.0
 	google.golang.org/api v0.242.0
@@ -126,6 +127,7 @@ require (
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
+	github.com/muhlemmer/gu v0.3.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/natefinch/wrap v0.2.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
@@ -167,6 +169,8 @@ require (
 	github.com/zclconf/go-cty v1.15.0 // indirect
 	github.com/zclconf/go-cty-yaml v1.1.0 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
+	github.com/zitadel/logging v0.6.2 // indirect
+	github.com/zitadel/schema v1.3.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect
