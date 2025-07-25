@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/theopenlane/utils/ulids"
 )
 
@@ -197,7 +196,7 @@ func TestWithImpersonatedUser(t *testing.T) {
 
 	// Retrieve user from context
 	retrieved, ok := ImpersonatedUserFromContext(ctx)
-	require.True(t, ok)
+	assert.True(t, ok)
 	assert.Equal(t, user, retrieved)
 
 	// Test MustImpersonatedUserFromContext

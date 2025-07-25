@@ -11,7 +11,6 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/theopenlane/iam/tokens"
 )
@@ -19,7 +18,7 @@ import (
 func TestRedisTokenBlacklist(t *testing.T) {
 	// Setup miniredis for testing
 	mr, err := miniredis.Run()
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{
@@ -97,7 +96,7 @@ func TestRedisTokenBlacklist(t *testing.T) {
 			tokenID := "revoked-token"
 			// First revoke it
 			err := bl.Revoke(ctx, tokenID, 1*time.Hour)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			// Check if revoked
 			revoked, err := bl.IsRevoked(ctx, tokenID)
@@ -122,12 +121,12 @@ func TestRedisTokenBlacklist(t *testing.T) {
 			tokenID := "expiring-token" //nolint:gosec
 			// Use miniredis FastForward to simulate time passage
 			err := bl.Revoke(ctx, tokenID, 1*time.Second)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			// Verify it's initially revoked
 			revoked, err := bl.IsRevoked(ctx, tokenID)
-			require.NoError(t, err)
-			require.True(t, revoked)
+			assert.NoError(t, err)
+			assert.True(t, revoked)
 
 			// Fast forward time in miniredis to expire the key
 			mr.FastForward(2 * time.Second)
@@ -186,7 +185,7 @@ func TestNoOpTokenBlacklist(t *testing.T) {
 func TestTokenBlacklistIntegration(t *testing.T) {
 	// This test verifies the blacklist works correctly with concurrent operations
 	mr, err := miniredis.Run()
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{
@@ -227,7 +226,7 @@ func TestTokenBlacklistIntegration(t *testing.T) {
 		// Revoke a token
 		tokenID := "concurrent-check-token"
 		err := bl.Revoke(ctx, tokenID, 1*time.Hour)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Check concurrently
 		results := make(chan bool, 10)
@@ -250,7 +249,7 @@ func TestTokenBlacklistIntegration(t *testing.T) {
 // BenchmarkRedisTokenBlacklist provides performance benchmarks
 func BenchmarkRedisTokenBlacklist(b *testing.B) {
 	mr, err := miniredis.Run()
-	require.NoError(b, err)
+	assert.NoError(b, err)
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{
@@ -295,7 +294,7 @@ func BenchmarkRedisTokenBlacklist(b *testing.B) {
 func TestGeneralTokenBlacklist(t *testing.T) {
 	// Setup Redis
 	mr, err := miniredis.Run()
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{
@@ -305,7 +304,7 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 
 	// Setup TokenManager
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	conf := tokens.Config{
 		Audience:        "test-audience",
@@ -315,7 +314,7 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 	}
 
 	tm, err := tokens.NewWithKey(key, conf)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Configure blacklist
 	blacklist := tokens.NewRedisTokenBlacklist(client, "test:general")
@@ -332,21 +331,21 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 
 		// Create access token
 		accessTokenJWT, err := tm.CreateAccessToken(claims)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		tokenString, err := tm.Sign(accessTokenJWT)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Verify token works initially
 		verifiedClaims, err := tm.VerifyWithContext(ctx, tokenString)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assert.Equal(t, "user-123", verifiedClaims.UserID)
 		assert.NotEmpty(t, verifiedClaims.ID)
 
 		// Revoke the token using its JWT ID
 		tokenID := verifiedClaims.ID
 		err = tm.RevokeToken(ctx, tokenID, 30*time.Minute)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Try to verify again (should fail now)
 		_, err = tm.VerifyWithContext(ctx, tokenString)
@@ -362,24 +361,24 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 		claims2 := &tokens.Claims{UserID: userID, OrgID: "org-789"}
 
 		token1JWT, err := tm.CreateAccessToken(claims1)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		token1String, err := tm.Sign(token1JWT)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		token2JWT, err := tm.CreateAccessToken(claims2)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		token2String, err := tm.Sign(token2JWT)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Verify both tokens work initially
 		_, err = tm.VerifyWithContext(ctx, token1String)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		_, err = tm.VerifyWithContext(ctx, token2String)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Suspend the user
 		err = tm.SuspendUser(ctx, userID, 1*time.Hour)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Both tokens should now be invalid
 		_, err = tm.VerifyWithContext(ctx, token1String)
@@ -401,32 +400,32 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 		claims.Subject = "user-456"
 
 		accessTokenJWT, err := tm.CreateAccessToken(claims)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Create refresh token from access token
 		refreshTokenJWT, err := tm.CreateRefreshToken(accessTokenJWT)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		refreshTokenString, err := tm.Sign(refreshTokenJWT)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Parse refresh token
 		verifiedClaims, err := tm.Parse(refreshTokenString)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assert.Equal(t, "user-456", verifiedClaims.Subject)
 		assert.NotEmpty(t, verifiedClaims.ID)
 
 		// Revoke the refresh token
 		err = tm.RevokeToken(ctx, verifiedClaims.ID, 1*time.Hour)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Try to parse and check blacklist manually since refresh token may not be valid yet
 		parsedClaims, err := tm.Parse(refreshTokenString)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Check if the token ID is blacklisted directly
 		revoked, err := blacklist.IsRevoked(ctx, parsedClaims.ID)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assert.True(t, revoked, "refresh token should be revoked")
 	})
 
@@ -437,17 +436,17 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 		}
 
 		accessTokenJWT, err := tm.CreateAccessToken(claims)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		tokenString, err := tm.Sign(accessTokenJWT)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		verifiedClaims, err := tm.VerifyWithContext(ctx, tokenString)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Revoke with short TTL
 		err = tm.RevokeToken(ctx, verifiedClaims.ID, 1*time.Second)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Verify it's initially revoked
 		_, err = tm.VerifyWithContext(ctx, tokenString)
@@ -466,13 +465,13 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 		claims := &tokens.Claims{UserID: userID, OrgID: "org-456"}
 
 		tokenJWT, err := tm.CreateAccessToken(claims)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		tokenString, err := tm.Sign(tokenJWT)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Suspend user with short TTL
 		err = tm.SuspendUser(ctx, userID, 1*time.Second)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Verify token is initially invalid due to suspension
 		_, err = tm.VerifyWithContext(ctx, tokenString)
@@ -489,17 +488,17 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 	t.Run("no blacklist configured", func(t *testing.T) {
 		// Create TokenManager without blacklist
 		tmNoBlacklist, err := tokens.NewWithKey(key, conf)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		claims := &tokens.Claims{UserID: "user-no-blacklist", OrgID: "org-456"}
 
 		tokenJWT, err := tmNoBlacklist.CreateAccessToken(claims)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		tokenString, err := tmNoBlacklist.Sign(tokenJWT)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		verifiedClaims, err := tmNoBlacklist.VerifyWithContext(ctx, tokenString)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// Try to revoke (should be no-op)
 		err = tmNoBlacklist.RevokeToken(ctx, verifiedClaims.ID, 30*time.Minute)
@@ -522,7 +521,7 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 func TestTokenBlacklistUserSuspension(t *testing.T) {
 	// Setup Redis
 	mr, err := miniredis.Run()
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{

@@ -8,7 +8,6 @@ import (
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/theopenlane/utils/ulids"
 
@@ -357,14 +356,14 @@ func TestBatchCheckTuples(t *testing.T) {
 			res, err := mc.batchCheckTuples(context.Background(), tc.checks)
 
 			if tc.wantErr {
-				require.Error(t, err)
+				assert.Error(t, err)
 				assert.Empty(t, res)
 
 				return
 			}
 
-			require.NoError(t, err)
-			require.Len(t, res, len(tc.expectedRes))
+			assert.NoError(t, err)
+			assert.Len(t, res, len(tc.expectedRes))
 
 			// ensure that the result contains all expected relations
 			for _, relation := range tc.expectedRes {

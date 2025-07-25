@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	echo "github.com/theopenlane/echox"
 	"github.com/theopenlane/echox/middleware/echocontext"
 
@@ -134,7 +133,7 @@ func TestGetAccessToken(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tc.wantTks, gotTks)
 		})
 	}
@@ -207,7 +206,7 @@ func TestGetRefreshToken(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tc.wantTks, gotTks)
 		})
 	}
@@ -395,7 +394,7 @@ func TestGetAPIKey(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tc.wantKey, gotKey)
 		})
 	}

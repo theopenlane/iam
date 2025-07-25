@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/theopenlane/iam/sessions"
 )
@@ -108,7 +107,7 @@ func TestNewCookie(t *testing.T) {
 				return
 			}
 
-			require.NotNil(t, cookie)
+			assert.NotNil(t, cookie)
 			assert.Equal(t, tc.expectedName, cookie.Name)
 			assert.Equal(t, tc.value, cookie.Value)
 			assert.Equal(t, tc.config.Path, cookie.Path)
@@ -160,7 +159,7 @@ func TestExpiresTime(t *testing.T) {
 			}
 
 			cookie := sessions.NewCookie("test", "value", config)
-			require.NotNil(t, cookie)
+			assert.NotNil(t, cookie)
 
 			if tc.expectTime {
 				assert.False(t, cookie.Expires.IsZero())
@@ -218,7 +217,7 @@ func TestGetCookie(t *testing.T) {
 				assert.Nil(t, cookie)
 			} else {
 				assert.NoError(t, err)
-				require.NotNil(t, cookie)
+				assert.NotNil(t, cookie)
 				assert.Equal(t, tc.cookieName, cookie.Name)
 			}
 		})
@@ -301,7 +300,7 @@ func TestSetCookieB64(t *testing.T) {
 
 	// Check that a cookie was set
 	cookies := recorder.Result().Cookies()
-	require.Len(t, cookies, 1)
+	assert.Len(t, cookies, 1)
 
 	cookie := cookies[0]
 	assert.Equal(t, cookieName, cookie.Name)
@@ -327,7 +326,7 @@ func TestSetCookie(t *testing.T) {
 
 	// Check that a cookie was set
 	cookies := recorder.Result().Cookies()
-	require.Len(t, cookies, 1)
+	assert.Len(t, cookies, 1)
 
 	cookie := cookies[0]
 	assert.Equal(t, cookieName, cookie.Name)
@@ -354,7 +353,7 @@ func TestRemoveCookie(t *testing.T) {
 
 	// Check that a cookie was set with MaxAge -1 for deletion
 	cookies := recorder.Result().Cookies()
-	require.Len(t, cookies, 1)
+	assert.Len(t, cookies, 1)
 
 	cookie := cookies[0]
 	assert.Equal(t, cookieName, cookie.Name)

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/theopenlane/iam/tokens"
 )
@@ -19,55 +19,55 @@ const (
 
 func TestParse(t *testing.T) {
 	accessClaims, err := tokens.ParseUnverified(accessToken)
-	require.NoError(t, err, "could not parse access token")
+	assert.NoError(t, err, "could not parse access token")
 
 	refreshClaims, err := tokens.ParseUnverified(refreshToken)
-	require.NoError(t, err, "could not parse refresh token")
+	assert.NoError(t, err, "could not parse refresh token")
 
 	// We expect the claims and refresh tokens to have the same ID
-	require.Equal(t, accessClaims.ID, refreshClaims.ID, "access and refresh token had different IDs or the parse was unsuccessful")
+	assert.Equal(t, accessClaims.ID, refreshClaims.ID, "access and refresh token had different IDs or the parse was unsuccessful")
 
 	// Check that an error is returned when parsing a bad token
 	_, err = tokens.ParseUnverified("notarealtoken")
-	require.Error(t, err, "should not be able to parse a bad token")
+	assert.Error(t, err, "should not be able to parse a bad token")
 }
 
 func TestExpiresAt(t *testing.T) {
 	expiration, err := tokens.ExpiresAt(accessToken)
-	require.NoError(t, err, "could not parse access token")
+	assert.NoError(t, err, "could not parse access token")
 
 	// Expect the time to be fetched correctly from the token
 	expected := time.Date(2023, 4, 4, 13, 35, 30, 0, time.UTC)
-	require.True(t, expected.Equal(expiration))
+	assert.True(t, expected.Equal(expiration))
 
 	// Check that an error is returned when parsing a bad token
 	_, err = tokens.ExpiresAt("notarealtoken")
-	require.Error(t, err, "should not be able to parse a bad token")
+	assert.Error(t, err, "should not be able to parse a bad token")
 }
 
 func TestNotBefore(t *testing.T) {
 	expiration, err := tokens.NotBefore(refreshToken)
-	require.NoError(t, err, "could not parse access token")
+	assert.NoError(t, err, "could not parse access token")
 
 	// Expect the time to be fetched correctly from the token
 	expected := time.Date(2023, 4, 4, 13, 20, 30, 0, time.UTC)
-	require.True(t, expected.Equal(expiration))
+	assert.True(t, expected.Equal(expiration))
 
 	// Check that an error is returned when parsing a bad token
 	_, err = tokens.NotBefore("notarealtoken")
-	require.Error(t, err, "should not be able to parse a bad token")
+	assert.Error(t, err, "should not be able to parse a bad token")
 }
 
 func TestIsExpired(t *testing.T) {
 	t.Run("Expired Token", func(t *testing.T) {
 		expired, err := tokens.IsExpired(accessToken)
-		require.NoError(t, err)
-		require.True(t, expired)
+		assert.NoError(t, err)
+		assert.True(t, expired)
 	})
 
 	t.Run("Valid Token", func(t *testing.T) {
 		key, err := rsa.GenerateKey(rand.Reader, 2048)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		conf := tokens.Config{
 			Audience:        "http://localhost:3000",
@@ -77,21 +77,21 @@ func TestIsExpired(t *testing.T) {
 			RefreshOverlap:  -15 * time.Minute,
 		}
 		tm, err := tokens.NewWithKey(key, conf)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		token, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		signed, err := tm.Sign(token)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		isExpired, err := tokens.IsExpired(signed)
-		require.NoError(t, err)
-		require.False(t, isExpired)
+		assert.NoError(t, err)
+		assert.False(t, isExpired)
 	})
 
 	t.Run("Invalid Token", func(t *testing.T) {
 		isExpired, err := tokens.IsExpired("notatoken")
-		require.Error(t, err)
-		require.True(t, isExpired)
+		assert.Error(t, err)
+		assert.True(t, isExpired)
 	})
 }
