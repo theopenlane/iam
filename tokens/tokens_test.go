@@ -205,7 +205,7 @@ func (s *TokenTestSuite) TestInvalidTokens() {
 	// Test validation signed with wrong kid
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	token.Header["kid"] = "01GE63H600NKHE7B8Y7MHW1VGV"
-	badkey, err := rsa.GenerateKey(rand.Reader, 1024) //nolint:gosec
+	badkey, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(err, "could not generate bad rsa keys")
 	tks, err := token.SignedString(badkey)
 	require.NoError(err, "could not sign token with bad kid")
@@ -304,7 +304,7 @@ func (s *TokenTestSuite) TestSigningKeyManagement() {
 	require := s.Require()
 
 	// start token manager that has a single key
-	key1, err := rsa.GenerateKey(rand.Reader, 1024) // nolint:gosec
+	key1, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(err, "could not generate rsa key")
 
 	conf := tokens.Config{
@@ -327,7 +327,7 @@ func (s *TokenTestSuite) TestSigningKeyManagement() {
 	require.NoError(err, "could not sign token with key1")
 
 	// Generate a second key with a ULID that is newer so AddSigningKey rotates to it
-	key2, err := rsa.GenerateKey(rand.Reader, 1024) //nolint:gosec
+	key2, err := rsa.GenerateKey(rand.Reader, 2048) //nolint:gosec
 	require.NoError(err, "could not generate rsa key")
 
 	kid2 := ulids.FromTime(time.Now().Add(time.Second))
@@ -475,7 +475,7 @@ func TestParseUnverifiedTokenClaims(t *testing.T) {
 }
 
 func TestRefreshAudience(t *testing.T) {
-	key, err := rsa.GenerateKey(rand.Reader, 1024) //nolint:gosec
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
 
 	conf := tokens.Config{
@@ -490,7 +490,7 @@ func TestRefreshAudience(t *testing.T) {
 	require.Equal(t, "https://example.com/v1/refresh", tm.RefreshAudience())
 
 	// If issuer is invalid, fallback to DefaultRefreshAudience
-	badKey, err := rsa.GenerateKey(rand.Reader, 1024) //nolint:gosec
+	badKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
 
 	badConf := tokens.Config{
@@ -509,7 +509,7 @@ func TestRefreshAudience(t *testing.T) {
 		RefreshAudience: "https://override.example.com/refresh",
 	}
 
-	key2, err := rsa.GenerateKey(rand.Reader, 1024) //nolint:gosec
+	key2, err := rsa.GenerateKey(rand.Reader, 2048) //nolint:gosec
 	require.NoError(t, err)
 	tmOverride, err := tokens.NewWithKey(key2, confOverride)
 	require.NoError(t, err)

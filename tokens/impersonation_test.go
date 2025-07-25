@@ -152,14 +152,6 @@ func TestCreateImpersonationTokenOptions(t *testing.T) {
 	assert.Equal(t, "original-token", opts.OriginalToken)
 }
 
-// Note: Testing the actual token creation and validation would require setting up
-// a real TokenManager with RSA keys, which is complex for unit tests.
-// In a real test suite, you'd want integration tests that:
-// 1. Create a TokenManager with test keys
-// 2. Create an ImpersonationTokenManager
-// 3. Test the full create/validate cycle
-// 4. Test various error conditions
-
 func TestImpersonationTokenManager_DefaultDurations(t *testing.T) {
 	// This test verifies the default duration logic that would be used
 	// in CreateImpersonationToken when Duration is 0
@@ -171,22 +163,22 @@ func TestImpersonationTokenManager_DefaultDurations(t *testing.T) {
 		{
 			name:              "support impersonation",
 			impersonationType: "support",
-			expectedDuration:  4 * time.Hour,
+			expectedDuration:  30 * time.Minute,
 		},
 		{
 			name:              "job impersonation",
 			impersonationType: "job",
-			expectedDuration:  24 * time.Hour,
+			expectedDuration:  2 * time.Hour,
 		},
 		{
 			name:              "admin impersonation",
 			impersonationType: "admin",
-			expectedDuration:  1 * time.Hour,
+			expectedDuration:  15 * time.Minute,
 		},
 		{
-			name:              "unknown type defaults to 1 hour",
+			name:              "unknown type defaults to 15 minutes",
 			impersonationType: "unknown",
-			expectedDuration:  1 * time.Hour,
+			expectedDuration:  15 * time.Minute,
 		},
 	}
 
@@ -197,13 +189,13 @@ func TestImpersonationTokenManager_DefaultDurations(t *testing.T) {
 
 			switch tt.impersonationType {
 			case "support":
-				duration = 4 * time.Hour
+				duration = 30 * time.Minute
 			case "job":
-				duration = 24 * time.Hour
+				duration = 2 * time.Hour
 			case "admin":
-				duration = 1 * time.Hour
+				duration = 15 * time.Minute
 			default:
-				duration = 1 * time.Hour
+				duration = 15 * time.Minute
 			}
 
 			assert.Equal(t, tt.expectedDuration, duration)

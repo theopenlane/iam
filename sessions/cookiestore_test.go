@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/theopenlane/utils/ulids"
 
@@ -147,7 +146,7 @@ func TestSaveGet(t *testing.T) {
 			session.Set(tc.session, setSessionMap)
 
 			err := cs.Save(recorder, session)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			// Copy the Cookie over to a new Request
 			res := recorder.Result()
@@ -157,7 +156,7 @@ func TestSaveGet(t *testing.T) {
 			request := &http.Request{Header: http.Header{"Cookie": cooky}}
 
 			sess, err := cs.Get(request, tc.sessionName)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tc.session, sess.GetKey())
 			assert.Equal(t, tc.sessionName, sess.Get(sess.GetKey())[sessions.SessionNameKey])
 		})
@@ -195,7 +194,7 @@ func TestGetSessionIDFromCookie(t *testing.T) {
 			session.Set(sessionID, setSessionMap)
 
 			err := cs.Save(recorder, session)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			// Copy the Cookie over to a new Request
 			res := recorder.Result()
@@ -205,11 +204,11 @@ func TestGetSessionIDFromCookie(t *testing.T) {
 			request := &http.Request{Header: http.Header{"Cookie": cooky}}
 
 			session, err = cs.Get(request, tc.sessionName)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			id := cs.GetSessionIDFromCookie(session)
 
-			require.Equal(t, sessionID, id)
+			assert.Equal(t, sessionID, id)
 		})
 	}
 }
@@ -245,7 +244,7 @@ func TestGetSessionDataFromCookie(t *testing.T) {
 			session.Set(sessionID, setSessionMap)
 
 			err := cs.Save(recorder, session)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			// Copy the Cookie over to a new Request
 			res := recorder.Result()
@@ -255,11 +254,11 @@ func TestGetSessionDataFromCookie(t *testing.T) {
 			request := &http.Request{Header: http.Header{"Cookie": cooky}}
 
 			session, err = cs.Get(request, tc.sessionName)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			sd := cs.GetSessionDataFromCookie(session)
 
-			require.Equal(t, setSessionMap, sd)
+			assert.Equal(t, setSessionMap, sd)
 		})
 	}
 }

@@ -1,9 +1,11 @@
 package tokens
 
 import (
+	"context"
 	"crypto/subtle"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/rs/zerolog/log"
 )
 
 // Validator are able to verify that access and refresh tokens were issued by
@@ -11,7 +13,8 @@ import (
 type Validator interface {
 	// Verify an access or a refresh token after parsing and return its claims
 	Verify(tks string) (claims *Claims, err error)
-
+	// VerifyWithContext verifies a token with blacklist checking
+	VerifyWithContext(ctx context.Context, tks string) (claims *Claims, err error)
 	// Parse an access or refresh token without verifying claims (e.g. to check an expired token)
 	Parse(tks string) (claims *Claims, err error)
 }
@@ -19,13 +22,19 @@ type Validator interface {
 // validator implements the Validator interface, allowing structs in this package to
 // embed the validation code base and supply their own keyFunc; unifying functionality
 type validator struct {
-	audience string
-	issuer   string
-	keyFunc  jwt.Keyfunc
+	audience  string
+	issuer    string
+	keyFunc   jwt.Keyfunc
+	blacklist TokenBlacklist
 }
 
 // Verify an access or a refresh token after parsing and return its claims.
 func (v *validator) Verify(tks string) (claims *Claims, err error) {
+	return v.VerifyWithContext(context.Background(), tks)
+}
+
+// VerifyWithContext verifies a token with blacklist checking
+func (v *validator) VerifyWithContext(ctx context.Context, tks string) (claims *Claims, err error) {
 	var token *jwt.Token
 
 	if token, err = jwt.ParseWithClaims(tks, &Claims{}, v.keyFunc, jwt.WithValidMethods([]string{signingMethod.Alg()})); err != nil {
@@ -33,20 +42,69 @@ func (v *validator) Verify(tks string) (claims *Claims, err error) {
 	}
 
 	var ok bool
-
-	if claims, ok = token.Claims.(*Claims); ok && token.Valid {
-		if !claims.VerifyAudience(v.audience, true) {
-			return nil, ErrTokenInvalidAudience
-		}
-
-		if !claims.VerifyIssuer(v.issuer, true) {
-			return nil, ErrTokenInvalidIssuer
-		}
-
-		return claims, nil
+	if claims, ok = token.Claims.(*Claims); !ok || !token.Valid {
+		return nil, ErrTokenInvalidClaims
 	}
 
-	return nil, ErrTokenInvalidClaims
+	if !claims.VerifyAudience(v.audience, true) {
+		return nil, ErrTokenInvalidAudience
+	}
+
+	if !claims.VerifyIssuer(v.issuer, true) {
+		return nil, ErrTokenInvalidIssuer
+	}
+
+	// Check blacklist if configured
+	if err := v.checkBlacklist(ctx, claims); err != nil {
+		return nil, err
+	}
+
+	return claims, nil
+}
+
+// checkBlacklist performs blacklist validation for tokens
+func (v *validator) checkBlacklist(ctx context.Context, claims *Claims) error {
+	if v.blacklist == nil {
+		return nil
+	}
+
+	// Check if specific token is revoked
+	if claims.ID != "" {
+		revoked, err := v.blacklist.IsRevoked(ctx, claims.ID)
+		if revoked {
+			return ErrTokenInvalid
+		}
+
+		if err != nil {
+			// Log the error but continue with fail-open behavior for availability
+			// This matches the design decision in the blacklist implementation
+			log.Debug().Err(err).Str("token_id", claims.ID).Msg("failed to check token blacklist status")
+		}
+	}
+
+	// Check if user is suspended - prefer UserID, fallback to Subject
+	if userID := v.getUserID(claims); userID != "" {
+		suspended, err := v.blacklist.IsUserRevoked(ctx, userID)
+		if suspended {
+			return ErrTokenInvalid
+		}
+
+		if err != nil {
+			// Log the error but continue with fail-open behavior for availability
+			log.Debug().Err(err).Str("user_id", userID).Msg("failed to check user suspension status")
+		}
+	}
+
+	return nil
+}
+
+// getUserID extracts the user identifier from claims
+func (v *validator) getUserID(claims *Claims) string {
+	if claims.UserID != "" {
+		return claims.UserID
+	}
+
+	return claims.Subject
 }
 
 // Parse an access or refresh token verifying its signature but without verifying its

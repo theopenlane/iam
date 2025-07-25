@@ -3,6 +3,7 @@ package sessions
 import (
 	"context"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -203,10 +204,8 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 // present. It takes in the response writer (`http.ResponseWriter`), the header key, and the header
 // value as parameters
 func addHeaderIfMissing(w http.ResponseWriter, key, value string) {
-	for _, h := range w.Header()[key] {
-		if h == value {
-			return
-		}
+	if slices.Contains(w.Header()[key], value) {
+		return
 	}
 
 	w.Header().Add(key, value)

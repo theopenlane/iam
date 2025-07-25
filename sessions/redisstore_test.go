@@ -9,7 +9,6 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/theopenlane/utils/ulids"
 
@@ -46,11 +45,11 @@ func TestExists(t *testing.T) {
 			sessionID := sessions.GenerateSessionID()
 			if tc.exists == int64(1) {
 				err := ps.StoreSession(context.Background(), sessionID, tc.userID)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			}
 
 			exists, err := ps.Exists(context.Background(), sessionID)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tc.exists, exists)
 		})
 	}
@@ -84,14 +83,14 @@ func TestGetSession(t *testing.T) {
 			if tc.exists {
 				// store session in redis if the test expects it
 				err := ps.StoreSession(context.Background(), tc.session, tc.userID)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			}
 
 			// get stored value from redis
 			value, err := ps.GetSession(context.Background(), tc.session)
 
 			if tc.exists {
-				require.NoError(t, err)
+				assert.NoError(t, err)
 				assert.Equal(t, tc.userID, value)
 			} else {
 				assert.Error(t, err)
@@ -121,7 +120,7 @@ func TestStoreSessionWithExpiration(t *testing.T) {
 			ps := sessions.NewStore(rc)
 
 			err := ps.StoreSessionWithExpiration(context.Background(), tc.session, tc.userID, tc.ttl)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			sessionID, err := ps.GetSession(context.Background(), tc.session)
 			assert.NoError(t, err)
@@ -163,11 +162,11 @@ func TestDeleteSession(t *testing.T) {
 
 			if tc.exists {
 				err := ps.StoreSession(context.Background(), tc.session, tc.userID)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			}
 
 			err := ps.DeleteSession(context.Background(), tc.userID)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 		})
 	}
 }

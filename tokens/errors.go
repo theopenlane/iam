@@ -103,6 +103,9 @@ var (
 
 	// ErrInvalidSigningMethod is returned when the signing method is invalid
 	ErrInvalidSigningMethod = errors.New("invalid signing method")
+
+	// ErrInvalidTokenID is returned when an empty or invalid token ID is provided
+	ErrInvalidTokenID = errors.New("invalid token ID")
 )
 
 // The errors that might occur when parsing and validating a token

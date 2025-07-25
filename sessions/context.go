@@ -24,27 +24,38 @@ func OhAuthTokenFromContext(ctx context.Context) (*oauth2.Token, error) {
 	return token, nil
 }
 
-// UserIDFromContext returns the user ID from the ctx
-// this function assumes the session data is stored in a string map
-func UserIDFromContext(ctx context.Context) (string, error) {
+// getSessionValue is a generic helper for extracting values from session context
+func getSessionValue[T any](ctx context.Context) (T, error) {
+	var zero T
+
 	sessionDetails, ok := contextx.From[*Session[any]](ctx)
 	if !ok {
-		return "", ErrInvalidSession
+		return zero, ErrInvalidSession
 	}
 
 	sessionID := sessionDetails.GetKey()
 
 	sessionData, ok := sessionDetails.GetOk(sessionID)
 	if !ok {
-		return "", ErrInvalidSession
+		return zero, ErrInvalidSession
 	}
 
-	sd, ok := sessionData.(map[string]string)
-	if !ok {
-		return "", ErrInvalidSession
+	if value, ok := sessionData.(T); ok {
+		return value, nil
 	}
 
-	userID, ok := sd["userID"]
+	return zero, ErrInvalidSession
+}
+
+// UserIDFromContext returns the user ID from the ctx
+// this function assumes the session data is stored in a string map
+func UserIDFromContext(ctx context.Context) (string, error) {
+	sessionMap, err := getSessionValue[map[string]string](ctx)
+	if err != nil {
+		return "", err
+	}
+
+	userID, ok := sessionMap["userID"]
 	if !ok {
 		return "", ErrInvalidSession
 	}

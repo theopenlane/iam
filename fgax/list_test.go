@@ -9,7 +9,6 @@ import (
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	mock_fga "github.com/theopenlane/iam/fgax/internal/mockery"
 )
@@ -270,7 +269,7 @@ func TestGetEntityIDs(t *testing.T) {
 			return
 		}
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assert.Equal(t, tc.expectedIDs, ids)
 	}
 }

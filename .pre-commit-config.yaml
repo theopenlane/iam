@@ -8,10 +8,10 @@ repos:
       - id: detect-private-key
         exclude: tokens/testdata/
   - repo: https://github.com/google/yamlfmt
-    rev: v0.17.1
+    rev: v0.17.2
     hooks:
       - id: yamlfmt
   - repo: https://github.com/crate-ci/typos
-    rev: v1.33.1
+    rev: v1.34.0
     hooks:
       - id: typos
