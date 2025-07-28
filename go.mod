@@ -4,7 +4,7 @@ go 1.24.5
 
 require (
 	entgo.io/ent v0.14.4
-	github.com/99designs/gqlgen v0.17.77
+	github.com/99designs/gqlgen v0.17.78
 	github.com/Yamashou/gqlgenc v0.33.0
 	github.com/alicebob/miniredis/v2 v2.35.0
 	github.com/brianvoe/gofakeit/v7 v7.3.0
