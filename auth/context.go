@@ -191,9 +191,9 @@ func RefreshTokenFromContext(ctx context.Context) (string, bool) {
 	return v.token, ok
 }
 
-// MustRefreshTokenFromContext retrieves the access token from the context or panics if not found
+// MustRefreshTokenFromContext retrieves the refresh token from the context or panics if not found
 func MustRefreshTokenFromContext(ctx context.Context) string {
-	return contextx.MustFrom[*ContextAccessToken](ctx).token
+	return contextx.MustFrom[*ContextRefreshToken](ctx).token
 }
 
 // WithRequestID sets the request ID in the context

@@ -21,6 +21,19 @@ const (
 	inviteExpirationDays        = 14
 )
 
+// URLToken represents a token that can be signed and verified
+type URLToken interface {
+	Validate() error
+	SetNonce([]byte)
+}
+
+// Ensure our token types implement URLToken
+var (
+	_ URLToken = (*VerificationToken)(nil)
+	_ URLToken = (*ResetToken)(nil)
+	_ URLToken = (*OrgInviteToken)(nil)
+)
+
 // NewVerificationToken creates a token struct from an email address that expires
 // in 7 days
 func NewVerificationToken(email string) (token *VerificationToken, err error) {
@@ -50,38 +63,30 @@ type VerificationToken struct {
 // users as part of a URL. The returned secret should be stored in the database so that
 // the string can be recomputed when verifying a user provided token.
 func (t *VerificationToken) Sign() (string, []byte, error) {
-	data, err := msgpack.Marshal(t)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return t.signData(data)
+	return t.SignToken(t)
 }
 
-// Verify checks that a token was signed with the secret and is not expired
-func (t *VerificationToken) Verify(signature string, secret []byte) (err error) {
+// Validate checks that the token has required fields
+func (t *VerificationToken) Validate() error {
 	if t.Email == "" {
 		return ErrTokenMissingEmail
 	}
 
-	if t.IsExpired() {
-		return ErrTokenExpired
-	}
+	return nil
+}
 
-	if len(secret) != nonceLength+keyLength {
-		return ErrInvalidSecret
-	}
+// SetNonce sets the nonce for verification
+func (t *VerificationToken) SetNonce(nonce []byte) {
+	t.Nonce = nonce
+}
 
-	// Serialize the struct with the nonce from the secret
-	t.Nonce = secret[0:nonceLength]
-
-	var data []byte
-
-	if data, err = msgpack.Marshal(t); err != nil {
+// Verify checks that a token was signed with the secret and is not expired
+func (t *VerificationToken) Verify(signature string, secret []byte) error {
+	if err := t.Validate(); err != nil {
 		return err
 	}
 
-	return t.verifyData(data, signature, secret)
+	return t.VerifyToken(t, signature, secret)
 }
 
 // NewResetToken creates a token struct from a user ID that expires in 15 minutes
@@ -112,38 +117,30 @@ type ResetToken struct {
 // users as part of a URL. The returned secret should be stored in the database so that
 // the string can be recomputed when verifying a user provided token
 func (t *ResetToken) Sign() (string, []byte, error) {
-	data, err := msgpack.Marshal(t)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return t.signData(data)
+	return t.SignToken(t)
 }
 
-// Verify checks that a token was signed with the secret and is not expired
-func (t *ResetToken) Verify(signature string, secret []byte) (err error) {
+// Validate checks that the token has required fields
+func (t *ResetToken) Validate() error {
 	if ulids.IsZero(t.UserID) {
 		return ErrTokenMissingUserID
 	}
 
-	if t.IsExpired() {
-		return ErrTokenExpired
-	}
+	return nil
+}
 
-	if len(secret) != nonceLength+keyLength {
-		return ErrInvalidSecret
-	}
+// SetNonce sets the nonce for verification
+func (t *ResetToken) SetNonce(nonce []byte) {
+	t.Nonce = nonce
+}
 
-	// Serialize the struct with the nonce from the secret
-	t.Nonce = secret[0:nonceLength]
-
-	var data []byte
-
-	if data, err = msgpack.Marshal(t); err != nil {
+// Verify checks that a token was signed with the secret and is not expired
+func (t *ResetToken) Verify(signature string, secret []byte) error {
+	if err := t.Validate(); err != nil {
 		return err
 	}
 
-	return t.verifyData(data, signature, secret)
+	return t.VerifyToken(t, signature, secret)
 }
 
 // NewSigningInfo creates new signing info with a time expiration
@@ -172,6 +169,37 @@ type SigningInfo struct {
 
 func (d SigningInfo) IsExpired() bool {
 	return d.ExpiresAt.Before(time.Now())
+}
+
+// SignToken marshals and signs any token that embeds SigningInfo
+func (d SigningInfo) SignToken(token interface{}) (string, []byte, error) {
+	data, err := msgpack.Marshal(token)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return d.signData(data)
+}
+
+// VerifyToken provides common verification logic for all token types
+func (d SigningInfo) VerifyToken(token URLToken, signature string, secret []byte) error {
+	if d.IsExpired() {
+		return ErrTokenExpired
+	}
+
+	if len(secret) != nonceLength+keyLength {
+		return ErrInvalidSecret
+	}
+
+	// Update the token's nonce from the secret
+	token.SetNonce(secret[0:nonceLength])
+
+	data, err := msgpack.Marshal(token)
+	if err != nil {
+		return err
+	}
+
+	return d.verifyData(data, signature, secret)
 }
 
 // Create a signature from raw data and a nonce. The resulting signature is safe to be used in a URL
@@ -253,16 +281,11 @@ type OrgInviteToken struct {
 // users as part of a URL. The returned secret should be stored in the database so that
 // the string can be recomputed when verifying a user provided token.
 func (t *OrgInviteToken) Sign() (string, []byte, error) {
-	data, err := msgpack.Marshal(t)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return t.signData(data)
+	return t.SignToken(t)
 }
 
-// Verify checks that a token was signed with the secret and is not expired
-func (t *OrgInviteToken) Verify(signature string, secret []byte) (err error) {
+// Validate checks that the token has required fields
+func (t *OrgInviteToken) Validate() error {
 	if t.Email == "" {
 		return ErrInviteTokenMissingEmail
 	}
@@ -271,22 +294,19 @@ func (t *OrgInviteToken) Verify(signature string, secret []byte) (err error) {
 		return ErrInviteTokenMissingOrgID
 	}
 
-	if t.IsExpired() {
-		return ErrTokenExpired
-	}
+	return nil
+}
 
-	if len(secret) != nonceLength+keyLength {
-		return ErrInvalidSecret
-	}
+// SetNonce sets the nonce for verification
+func (t *OrgInviteToken) SetNonce(nonce []byte) {
+	t.Nonce = nonce
+}
 
-	// Serialize the struct with the nonce from the secret
-	t.Nonce = secret[0:nonceLength]
-
-	var data []byte
-
-	if data, err = msgpack.Marshal(t); err != nil {
+// Verify checks that a token was signed with the secret and is not expired
+func (t *OrgInviteToken) Verify(signature string, secret []byte) error {
+	if err := t.Validate(); err != nil {
 		return err
 	}
 
-	return t.verifyData(data, signature, secret)
+	return t.VerifyToken(t, signature, secret)
 }

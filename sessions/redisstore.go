@@ -54,7 +54,7 @@ func (s *persistentStore) StoreSession(ctx context.Context, key, value string) e
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.client.Set(ctx, key, value, defaultMaxAgeSeconds).Err()
+	return s.client.Set(ctx, key, value, time.Duration(defaultMaxAgeSeconds)*time.Second).Err()
 }
 
 // StoreSessionWithExpiration is used to store a session in the store with a key and value and a time to live

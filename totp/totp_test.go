@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestOTPManager(t *testing.T) {
@@ -16,12 +15,12 @@ func TestOTPManager(t *testing.T) {
 	)
 
 	code, hash, err := svc.OTPCode("mitb@theopenlane.io", Email)
-	require.NoErrorf(t, err, "failed to create code: %v", err)
+	assert.NoErrorf(t, err, "failed to create code: %v", err)
 
 	assert.Len(t, code, codeLength, "incorrect code length")
 
 	err = svc.ValidateOTP(code, hash)
-	require.NoErrorf(t, err, "failed to validate code: %v", err)
+	assert.NoErrorf(t, err, "failed to validate code: %v", err)
 }
 
 func TestTOTPSecret(t *testing.T) {
@@ -42,7 +41,7 @@ func TestTOTPSecret(t *testing.T) {
 	}
 
 	secret, err := svc.TOTPSecret(user)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, secret, "no secret generated")
 }
 
@@ -55,7 +54,7 @@ func TestTOTPQRString(t *testing.T) {
 		}),
 	).(*OTP)
 	encrypted, err := svc.encrypt("5UEP2YNN7GWAMUFHS65SH7ONWZVZ3LKF")
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	user := &User{
 		IsTOTPAllowed:     true,
@@ -68,7 +67,7 @@ func TestTOTPQRString(t *testing.T) {
 	}
 
 	qrString, err := svc.TOTPQRString(user)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	expectedString := "otpauth://totp/authenticator.local:+17853931234?algorithm=" +
 		"SHA1&digits=6&issuer=authenticator.local&period=30&secret=" +
@@ -86,10 +85,10 @@ func TestTOTPDecryptedSecret(t *testing.T) {
 	).(*OTP)
 
 	encrypted, err := svc.encrypt("5UEP2YNN7GWAMUFHS65SH7ONWZVZ3LKF")
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	decryptedSecret, err := svc.TOTPDecryptedSecret(encrypted)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	expectedString := "5UEP2YNN7GWAMUFHS65SH7ONWZVZ3LKF"
 	assert.Equal(t, expectedString, decryptedSecret)
@@ -105,13 +104,13 @@ func TestEncryptsWithLatestSecret(t *testing.T) {
 	}
 	secret := "some-secret-value"
 	s, err := svc.encrypt(secret)
-	require.NoError(t, err, "failed to encrypt secret")
+	assert.NoError(t, err, "failed to encrypt secret")
 
 	assert.NotEqual(t, secret, s, "value not encrypted")
 	assert.True(t, strings.HasPrefix(s, "2:"), "value not encrypted with latest secret")
 
 	s, err = svc.decrypt(s)
-	require.NoError(t, err, "failed to decrypt secret")
+	assert.NoError(t, err, "failed to decrypt secret")
 
 	assert.Equal(t, secret, s, "value not decrypted")
 }
@@ -132,6 +131,6 @@ func TestGenerateRecoveryCodes(t *testing.T) {
 
 func TestGenerateOTP(t *testing.T) {
 	otp, err := GenerateOTP("ABCDEFGHIJKL", "issuer", "user@example.com")
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.Len(t, otp, 6, "incorrect otp length")
 }

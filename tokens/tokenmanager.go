@@ -15,6 +15,7 @@ import (
 	"github.com/lestrrat-go/jwx/v3/jwa"
 	"github.com/lestrrat-go/jwx/v3/jwk"
 	"github.com/oklog/ulid/v2"
+	"github.com/rs/zerolog/log"
 	"github.com/theopenlane/utils/ulids"
 )
 
@@ -44,6 +45,7 @@ type TokenManager struct {
 	keys            map[ulid.ULID]*rsa.PublicKey
 	signingKeys     map[ulid.ULID]*rsa.PrivateKey
 	kidEntropy      io.Reader
+	blacklist       TokenBlacklist
 }
 
 // New creates a TokenManager with the specified keys which should be a mapping of ULID
@@ -95,7 +97,18 @@ func New(conf Config) (tm *TokenManager, err error) {
 		}
 	}
 
+	// Initialize with no-op blacklist by default
+	tm.blacklist = NewNoOpTokenBlacklist()
+
 	return tm, nil
+}
+
+// WithBlacklist sets the token blacklist for the TokenManager
+func (tm *TokenManager) WithBlacklist(blacklist TokenBlacklist) *TokenManager {
+	tm.blacklist = blacklist
+	tm.validator.blacklist = blacklist
+
+	return tm
 }
 
 // NewWithKey is a constructor function that creates a new instance of the TokenManager struct
@@ -129,6 +142,10 @@ func NewWithKey(key *rsa.PrivateKey, conf Config) (tm *TokenManager, err error) 
 	tm.currentKey = key
 	tm.currentKeyID = kid
 
+	// Initialize with no-op blacklist by default
+	tm.blacklist = NewNoOpTokenBlacklist()
+	tm.validator.blacklist = tm.blacklist
+
 	return tm, nil
 }
 
@@ -146,11 +163,11 @@ func (tm *TokenManager) Sign(token *jwt.Token) (string, error) {
 }
 
 const (
-	// Default durations for different impersonation types
-	supportImpersonationDuration = 4 * time.Hour  // Support sessions should be short-lived
-	jobImpersonationDuration     = 24 * time.Hour // Jobs might run longer
-	adminImpersonationDuration   = 1 * time.Hour  // Admin impersonation should be very short
-	defaultImpersonationDuration = 1 * time.Hour  // Default for unknown types
+	// Default durations for different impersonation types - kept short for security
+	supportImpersonationDuration = 30 * time.Minute // Support sessions should be very short-lived
+	jobImpersonationDuration     = 2 * time.Hour    // Jobs get slightly longer but still limited
+	adminImpersonationDuration   = 15 * time.Minute // Admin impersonation should be extremely short
+	defaultImpersonationDuration = 15 * time.Minute // Conservative default for unknown types
 )
 
 // CreateImpersonationToken creates a JWT token for user impersonation
@@ -205,7 +222,7 @@ func (tm *TokenManager) CreateImpersonationToken(_ context.Context, opts CreateI
 }
 
 // ValidateImpersonationToken validates and parses an impersonation token
-func (tm *TokenManager) ValidateImpersonationToken(_ context.Context, tokenString string) (*ImpersonationClaims, error) {
+func (tm *TokenManager) ValidateImpersonationToken(ctx context.Context, tokenString string) (*ImpersonationClaims, error) {
 	var token *jwt.Token
 
 	claims := &ImpersonationClaims{}
@@ -226,6 +243,20 @@ func (tm *TokenManager) ValidateImpersonationToken(_ context.Context, tokenStrin
 		return nil, ErrInvalidToken
 	}
 
+	// Check if the token has been blacklisted
+	if tm.blacklist != nil && claims.SessionID != "" {
+		revoked, err := tm.blacklist.IsRevoked(ctx, claims.SessionID)
+
+		if revoked {
+			log.Warn().Str("session_id", claims.SessionID).Msg("impersonation token is revoked")
+			return nil, ErrTokenInvalid
+		}
+		// swallow this error intentionally, we don't want to block validation if blacklist check fails - auth should still succeed
+		if err != nil {
+			log.Warn().Msgf("failed to check blacklist for session %s: %v", claims.SessionID, err)
+		}
+	}
+
 	// Additional validation specific to impersonation
 	if claims.Type == "" {
 		return nil, ErrMissingImpersonationType
@@ -240,6 +271,89 @@ func (tm *TokenManager) ValidateImpersonationToken(_ context.Context, tokenStrin
 	}
 
 	return claims, nil
+}
+
+// RevokeImpersonationToken revokes an impersonation token by adding it to the blacklist
+func (tm *TokenManager) RevokeImpersonationToken(ctx context.Context, sessionID string, ttl time.Duration) error {
+	if tm.blacklist == nil {
+		// No blacklist configured, tokens cannot be revoked
+		return nil
+	}
+
+	return tm.blacklist.Revoke(ctx, sessionID, ttl)
+}
+
+// RevokeToken revokes a JWT token by its ID
+func (tm *TokenManager) RevokeToken(ctx context.Context, tokenID string, ttl time.Duration) error {
+	if tm.blacklist == nil {
+		// No blacklist configured, tokens cannot be revoked
+		return nil
+	}
+
+	return tm.blacklist.Revoke(ctx, tokenID, ttl)
+}
+
+// SuspendUser suspends all tokens for a user
+func (tm *TokenManager) SuspendUser(ctx context.Context, userID string, ttl time.Duration) error {
+	if tm.blacklist == nil {
+		// No blacklist configured, users cannot be suspended
+		return nil
+	}
+
+	return tm.blacklist.RevokeAllForUser(ctx, userID, ttl)
+}
+
+// GetBlacklist returns the configured blacklist (for internal use)
+func (tm *TokenManager) GetBlacklist() TokenBlacklist {
+	return tm.blacklist
+}
+
+// IsUserSuspended checks if a user is currently suspended
+func (tm *TokenManager) IsUserSuspended(ctx context.Context, userID string) (bool, error) {
+	if tm.blacklist == nil {
+		return false, nil
+	}
+
+	return tm.blacklist.IsUserRevoked(ctx, userID)
+}
+
+// GetUserSuspensionStatus returns detailed suspension information
+type SuspensionStatus struct {
+	UserID    string
+	Suspended bool
+	// Future: could add SuspendedAt, ExpiresAt, Reason if we store metadata
+}
+
+// GetUserSuspensionStatus gets detailed suspension information for a user
+func (tm *TokenManager) GetUserSuspensionStatus(ctx context.Context, userID string) (*SuspensionStatus, error) {
+	suspended, err := tm.IsUserSuspended(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &SuspensionStatus{
+		UserID:    userID,
+		Suspended: suspended,
+	}, nil
+}
+
+// IsTokenRevoked checks if a specific token (by JWT ID) has been revoked
+func (tm *TokenManager) IsTokenRevoked(ctx context.Context, tokenID string) (bool, error) {
+	if tm.blacklist == nil {
+		return false, nil
+	}
+
+	return tm.blacklist.IsRevoked(ctx, tokenID)
+}
+
+// RevokeTokenWithTTL revokes a token with a specific TTL (alias for RevokeToken for clarity)
+func (tm *TokenManager) RevokeTokenWithTTL(ctx context.Context, tokenID string, ttl time.Duration) error {
+	return tm.RevokeToken(ctx, tokenID, ttl)
+}
+
+// SuspendUserWithDuration suspends a user for a specific duration (alias for SuspendUser for clarity)
+func (tm *TokenManager) SuspendUserWithDuration(ctx context.Context, userID string, duration time.Duration) error {
+	return tm.SuspendUser(ctx, userID, duration)
 }
 
 // CreateTokenPair returns signed access and refresh tokens for the specified claims in one step since usually you want both access and refresh tokens at the same time

@@ -9,7 +9,6 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/theopenlane/utils/ulids"
 
 	"github.com/theopenlane/iam/tokens"
@@ -36,7 +35,7 @@ func setupTestTokenManager(t *testing.T) *tokens.TokenManager {
 	}
 
 	tm, err := tokens.NewWithKey(testKey, conf)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	return tm
 }
@@ -70,7 +69,7 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				claims := &tokens.ImpersonationClaims{}
 				parser := jwt.NewParser()
 				_, _, err := parser.ParseUnverified(token, claims)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 
 				assert.Equal(t, opts.ImpersonatorID, claims.ImpersonatorID)
 				assert.Equal(t, opts.ImpersonatorEmail, claims.ImpersonatorEmail)
@@ -105,7 +104,7 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				claims := &tokens.ImpersonationClaims{}
 				parser := jwt.NewParser()
 				_, _, err := parser.ParseUnverified(token, claims)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 
 				// Check duration was applied correctly
 				expectedExpiry := time.Now().Add(48 * time.Hour)
@@ -129,10 +128,10 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				claims := &tokens.ImpersonationClaims{}
 				parser := jwt.NewParser()
 				_, _, err := parser.ParseUnverified(token, claims)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 
-				// Check default duration was applied (1 hour for admin)
-				expectedExpiry := time.Now().Add(1 * time.Hour)
+				// Check default duration was applied (15 minutes for admin)
+				expectedExpiry := time.Now().Add(15 * time.Minute)
 				assert.WithinDuration(t, expectedExpiry, claims.ExpiresAt.Time, 5*time.Second)
 			},
 		},
@@ -151,10 +150,10 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				claims := &tokens.ImpersonationClaims{}
 				parser := jwt.NewParser()
 				_, _, err := parser.ParseUnverified(token, claims)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 
-				// Check default duration was applied (1 hour for unknown)
-				expectedExpiry := time.Now().Add(1 * time.Hour)
+				// Check default duration was applied (15 minutes for unknown)
+				expectedExpiry := time.Now().Add(15 * time.Minute)
 				assert.WithinDuration(t, expectedExpiry, claims.ExpiresAt.Time, 5*time.Second)
 			},
 		},
@@ -174,10 +173,10 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				claims := &tokens.ImpersonationClaims{}
 				parser := jwt.NewParser()
 				_, _, err := parser.ParseUnverified(token, claims)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 
-				// Check default duration was applied (4 hours for support)
-				expectedExpiry := time.Now().Add(4 * time.Hour)
+				// Check default duration was applied (30 minutes for support)
+				expectedExpiry := time.Now().Add(30 * time.Minute)
 				assert.WithinDuration(t, expectedExpiry, claims.ExpiresAt.Time, 5*time.Second)
 			},
 		},
@@ -197,10 +196,10 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				claims := &tokens.ImpersonationClaims{}
 				parser := jwt.NewParser()
 				_, _, err := parser.ParseUnverified(token, claims)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 
-				// Check default duration was applied (24 hours for job)
-				expectedExpiry := time.Now().Add(24 * time.Hour)
+				// Check default duration was applied (2 hours for job)
+				expectedExpiry := time.Now().Add(2 * time.Hour)
 				assert.WithinDuration(t, expectedExpiry, claims.ExpiresAt.Time, 5*time.Second)
 			},
 		},
@@ -242,7 +241,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 	}
 
 	validToken, err := tm.CreateImpersonationToken(ctx, validOpts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	tests := []struct {
 		name      string
@@ -284,7 +283,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 			setupFunc: func() string {
 				// Create a different key to sign with
 				differentKey, err := rsa.GenerateKey(rand.Reader, 2048)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 
 				wrongConf := tokens.Config{
 					Audience:        "https://api.example.com",
@@ -294,10 +293,10 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 				}
 
 				wrongTM, err := tokens.NewWithKey(differentKey, wrongConf)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 
 				token, err := wrongTM.CreateImpersonationToken(ctx, validOpts)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 				return token
 			},
 			wantErr: true,
@@ -312,7 +311,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 				expiredOpts.Duration = -1 * time.Hour // Already expired
 
 				token, err := tm.CreateImpersonationToken(ctx, expiredOpts)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 				return token
 			},
 			wantErr: true,
@@ -338,7 +337,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 
 				token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 				tokenString, err := tm.Sign(token)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 				return tokenString
 			},
 			wantErr: true,
@@ -363,7 +362,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 
 				token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 				tokenString, err := tm.Sign(token)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 				return tokenString
 			},
 			wantErr: true,
@@ -388,7 +387,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 
 				token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 				tokenString, err := tm.Sign(token)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 				return tokenString
 			},
 			wantErr: true,
@@ -413,7 +412,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 
 				token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 				tokenString, err := tm.Sign(token)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 				return tokenString
 			},
 			wantErr: true,
@@ -438,7 +437,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 
 				token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 				tokenString, err := tm.Sign(token)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 				return tokenString
 			},
 			wantErr: true,
@@ -496,12 +495,12 @@ func TestTokenManager_ImpersonationTokenLifecycle(t *testing.T) {
 
 	// Create token
 	token, err := tm.CreateImpersonationToken(ctx, opts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
 
 	// Validate token
 	claims, err := tm.ValidateImpersonationToken(ctx, token)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, claims)
 
 	// Verify all claims match
@@ -535,10 +534,10 @@ func TestTokenManager_ImpersonationTokenLifecycle(t *testing.T) {
 func TestTokenManager_ImpersonationTokenWithDifferentKeyIDs(t *testing.T) {
 	// Test token validation with multiple keys (key rotation scenario)
 	key1, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	key2, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	conf := tokens.Config{
 		Audience:        "https://api.example.com",
@@ -548,7 +547,7 @@ func TestTokenManager_ImpersonationTokenWithDifferentKeyIDs(t *testing.T) {
 	}
 
 	tm, err := tokens.NewWithKey(key1, conf)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Add second key
 	keyID := ulids.New()
@@ -566,22 +565,22 @@ func TestTokenManager_ImpersonationTokenWithDifferentKeyIDs(t *testing.T) {
 
 	// Create token with first key
 	token1, err := tm.CreateImpersonationToken(ctx, opts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Switch to second key
 	err = tm.UseSigningKey(keyID)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Create token with second key
 	token2, err := tm.CreateImpersonationToken(ctx, opts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Both tokens should validate successfully
 	claims1, err := tm.ValidateImpersonationToken(ctx, token1)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, claims1)
 
 	claims2, err := tm.ValidateImpersonationToken(ctx, token2)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, claims2)
 }

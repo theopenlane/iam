@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/theopenlane/utils/ulids"
 
@@ -111,7 +110,7 @@ func TestGetOrganizationIDsFromContext(t *testing.T) {
 	multiOrgValidCtx := auth.NewTestContextWithOrgID(ulids.New().String(), orgID1)
 
 	err := auth.AddOrganizationIDToContext(multiOrgValidCtx, orgID2)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	invalidUserCtx := auth.NewTestContextWithOrgID(ulids.Null.String(), ulids.Null.String())
 
@@ -147,14 +146,14 @@ func TestGetOrganizationIDsFromContext(t *testing.T) {
 		t.Run("Get "+tc.name, func(t *testing.T) {
 			got, err := auth.GetOrganizationIDsFromContext(tc.ctx)
 			if tc.err != nil {
-				require.Error(t, err)
+				assert.Error(t, err)
 				assert.Empty(t, got)
 				assert.ErrorContains(t, err, tc.err.Error())
 
 				return
 			}
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Len(t, got, tc.numExpected)
 
 			if tc.numExpected > 0 {
