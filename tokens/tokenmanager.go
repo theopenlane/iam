@@ -253,7 +253,7 @@ func (tm *TokenManager) ValidateImpersonationToken(ctx context.Context, tokenStr
 		}
 		// swallow this error intentionally, we don't want to block validation if blacklist check fails - auth should still succeed
 		if err != nil {
-			log.Debug().Msgf("failed to check blacklist for session %s: %v", claims.SessionID, err)
+			log.Warn().Msgf("failed to check blacklist for session %s: %v", claims.SessionID, err)
 		}
 	}
 
