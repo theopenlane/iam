@@ -151,3 +151,19 @@ func HasUserContextHeaders(c echo.Context) bool {
 
 	return userID != "" && orgID != ""
 }
+
+// GetOrganizationContextHeader retrieves the org context header
+// to specify which organization context to operate under. This can be useful
+// in scenarios when using a PAT that has access to multiple organizations and
+// some preliminary check is needed for the operation. e.g checking if they have access
+// to some modules.
+//
+// If this is present, it will be the default OrganizationID when using a PAT
+func GetOrganizationContextHeader(c echo.Context) string {
+	return c.Request().Header.Get(OrganizationIDHeader)
+}
+
+// HasOrganizationContextHeader checks if the required organization context header is present
+func HasOrganizationContextHeader(c echo.Context) bool {
+	return GetOrganizationContextHeader(c) != ""
+}
