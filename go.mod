@@ -3,7 +3,7 @@ module github.com/theopenlane/iam
 go 1.24.5
 
 require (
-	entgo.io/ent v0.14.4
+	entgo.io/ent v0.14.5
 	github.com/99designs/gqlgen v0.17.78
 	github.com/Yamashou/gqlgenc v0.33.0
 	github.com/alicebob/miniredis/v2 v2.35.0
@@ -14,7 +14,7 @@ require (
 	github.com/google/go-github/v74 v74.0.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/lestrrat-go/httprc/v3 v3.0.0
-	github.com/lestrrat-go/jwx/v3 v3.0.8
+	github.com/lestrrat-go/jwx/v3 v3.0.10
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/openfga/go-sdk v0.7.1
 	github.com/openfga/language/pkg/go v0.2.0-beta.2.0.20250428093642-7aeebe78bbfe
@@ -39,7 +39,7 @@ require (
 )
 
 require (
-	ariga.io/atlas v0.31.1-0.20250212144724-069be8033e83 // indirect
+	ariga.io/atlas v0.32.1-0.20250325101103-175b25e1c1b9 // indirect
 	cel.dev/expr v0.24.0 // indirect
 	cloud.google.com/go/auth v0.16.3 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
