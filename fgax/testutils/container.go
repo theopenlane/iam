@@ -33,6 +33,8 @@ type OpenFGATestFixture struct {
 	memory int64
 	// cpu is the CPU for the container
 	cpu int64
+	// envVars is a map of environment variables to set in the container
+	envVars map[string]string
 }
 
 // WithModelFile sets the model file path for the openFGA client
@@ -84,6 +86,13 @@ func WithCPU(cpu int64) Option {
 	}
 }
 
+// WithEnvVars sets the environment variables for the openFGA container
+func WithEnvVars(envVars map[string]string) Option {
+	return func(c *OpenFGATestFixture) {
+		c.envVars = envVars
+	}
+}
+
 // NewFGATestcontainer creates a new test container with the provided context and options
 func NewFGATestcontainer(ctx context.Context, opts ...Option) *OpenFGATestFixture {
 	// setup the default config
@@ -108,6 +117,7 @@ func NewFGATestcontainer(ctx context.Context, opts ...Option) *OpenFGATestFixtur
 		ctx,
 		container,
 		WithCustomizer(c.reuse, c.containerName, c.memory, c.cpu),
+		testcontainers.WithEnv(c.envVars),
 	)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to run openfga container")
