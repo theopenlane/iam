@@ -10,7 +10,7 @@ require (
 	github.com/brianvoe/gofakeit/v7 v7.3.0
 	github.com/docker/docker v28.3.3+incompatible
 	github.com/go-webauthn/webauthn v0.13.4
-	github.com/golang-jwt/jwt/v5 v5.2.3
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-github/v74 v74.0.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/lestrrat-go/httprc/v3 v3.0.0
