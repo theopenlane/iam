@@ -29,8 +29,8 @@ require (
 	github.com/testcontainers/testcontainers-go v0.38.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.38.0
 	github.com/theopenlane/echox v0.2.4
-	github.com/theopenlane/entx v0.11.2
-	github.com/theopenlane/utils v0.4.7
+	github.com/theopenlane/entx v0.12.1
+	github.com/theopenlane/utils v0.4.8
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/tools v0.35.0
@@ -45,7 +45,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.7.0 // indirect
 	dario.cat/mergo v1.0.1 // indirect
-	entgo.io/contrib v0.6.0 // indirect
+	entgo.io/contrib v0.7.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
