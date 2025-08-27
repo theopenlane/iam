@@ -10,9 +10,9 @@ import (
 // Config contains the configuration for the session store
 type Config struct {
 	// SigningKey must be a 16, 32, or 64 character string used to encode the cookie
-	SigningKey string `json:"signingKey" koanf:"signingKey" default:"my-signing-secret"`
+	SigningKey string `json:"signingKey" koanf:"signingKey" sensitive:"true" default:"my-signing-secret"`
 	// EncryptionKey must be a 16, 32, or 64 character string used to encode the cookie
-	EncryptionKey string `json:"encryptionKey" koanf:"encryptionKey" default:"encryptionsecret"`
+	EncryptionKey string `json:"encryptionKey" koanf:"encryptionKey" sensitive:"true" default:"encryptionsecret"`
 	// Domain is the domain for the cookie, leave empty to use the default value of the server
 	Domain string `json:"domain" koanf:"domain" domain:"inherit"`
 	// MaxAge is the maximum age of the session cookie in seconds. After this time, the cookie will be invalidated
