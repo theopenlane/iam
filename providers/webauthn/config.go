@@ -16,13 +16,13 @@ type ProviderConfig struct {
 	// Enabled is the provider enabled
 	Enabled bool `json:"enabled" koanf:"enabled" default:"true"`
 	// DisplayName is the site display name
-	DisplayName string `json:"displayName" koanf:"displayName" jsonschema:"required" default:""`
+	DisplayName string `json:"displayName" koanf:"displayName" jsonschema:"required"`
 	// RelyingPartyID is the relying party identifier
 	// set to localhost for development, no port
-	RelyingPartyID string `json:"relyingPartyId" koanf:"relyingPartyId" jsonschema:"required" default:"localhost" domain:"inherit"`
+	RelyingPartyID string `json:"relyingPartyId" koanf:"relyingPartyId" jsonschema:"required" domain:"inherit"`
 	// RequestOrigins the origin domain(s) for authentication requests
 	// include the scheme and port
-	RequestOrigins []string `json:"requestOrigins" koanf:"requestOrigins" jsonschema:"required"  default:"[http://localhost:3001]" domain:"inherit" domainPrefix:"https://console"`
+	RequestOrigins []string `json:"requestOrigins" koanf:"requestOrigins" jsonschema:"required" domain:"inherit" domainPrefix:"https://console"`
 	// MaxDevices is the maximum number of devices that can be associated with a user
 	MaxDevices int `json:"maxDevices" koanf:"maxDevices" default:"10"`
 	// EnforceTimeout at the Relying Party / Server. This means if enabled and the user takes too long that even if the browser does not

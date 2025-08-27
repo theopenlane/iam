@@ -13,7 +13,7 @@ type Config struct {
 	// CodeLength is the length of the OTP code
 	CodeLength int `json:"codeLength" koanf:"codeLength" default:"6"`
 	// Issuer is the issuer for TOTP codes
-	Issuer string `json:"issuer" koanf:"issuer" default:"" domain:"inherit"`
+	Issuer string `json:"issuer" koanf:"issuer" domain:"inherit"`
 	// WithRedis configures the service with a redis client
 	WithRedis bool `json:"redis" koanf:"redis" default:"true"`
 	// Secret stores a versioned secret key for cryptography functions
