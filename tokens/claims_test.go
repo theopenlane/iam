@@ -52,3 +52,23 @@ func TestClaimsHasScope(t *testing.T) {
 	assert.True(t, claims.HasScope("admin", "controls"))
 	assert.False(t, claims.HasScope("admin", "programs"))
 }
+
+func TestClaimsHasModule(t *testing.T) {
+	claims := &tokens.Claims{}
+	assert.False(t, claims.HasModule("trust_center_module"))
+
+	claims.Modules = []string{"base", "compliance_module", "trust_center_module"}
+
+	assert.True(t, claims.HasModule("base"))
+	assert.True(t, claims.HasModule("compliance_module"))
+	assert.True(t, claims.HasModule("trust_center_module"))
+	assert.False(t, claims.HasModule("risk_management_module"))
+}
+
+func TestClaimsGetModules(t *testing.T) {
+	claims := &tokens.Claims{}
+	assert.Empty(t, claims.GetModules())
+
+	claims.Modules = []string{"trust_center_module", "compliance_module", "base"}
+	assert.Equal(t, []string{"base", "compliance_module", "trust_center_module"}, claims.GetModules())
+}

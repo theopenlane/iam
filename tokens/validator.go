@@ -9,7 +9,7 @@ import (
 )
 
 // Validator are able to verify that access and refresh tokens were issued by
-// OpenLane and that their claims are valid (e.g. not expired).
+// Openlane and that their claims are valid (e.g. not expired).
 type Validator interface {
 	// Verify an access or a refresh token after parsing and return its claims
 	Verify(tks string) (claims *Claims, err error)
