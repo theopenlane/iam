@@ -28,6 +28,9 @@ type Claims struct {
 
 	// TrustCenterID is the internal generated mapping ID for the trust center the JWT token is valid for
 	TrustCenterID string `json:"trust_center_id,omitempty"`
+
+	// Modules is a list of modules that are enabled for the user in their current organization
+	Modules []string `json:"modules,omitempty"`
 }
 
 // ParseUserID returns the ID of the user from the Subject of the claims
@@ -50,7 +53,6 @@ func (c Claims) ParseOrgID() ulid.ULID {
 	return orgID
 }
 
-// HasScope returns true if the scope exists in the Scopes slice of the claims
 // HasScope returns true if the token grants the given permission level on the provided object name
 func (c Claims) HasScope(level, object string) bool {
 	var list []string
@@ -67,4 +69,16 @@ func (c Claims) HasScope(level, object string) bool {
 	}
 
 	return slices.Contains(list, object)
+}
+
+// HasModule returns true if the token grants access to the provided module
+func (c Claims) HasModule(module string) bool {
+	return slices.Contains(c.Modules, module)
+}
+
+// GetModules returns the list of modules assigned to the user in their current organization
+func (c Claims) GetModules() []string {
+	slices.Sort(c.Modules)
+
+	return c.Modules
 }

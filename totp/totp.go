@@ -110,7 +110,7 @@ func (o *OTP) TOTPSecret(u *User) (string, error) {
 
 // TOTPQRString returns a string containing account details for TOTP code generation
 func (o *OTP) TOTPQRString(u *User) (string, error) {
-	// otpauth://totp/TheOpenLane:matt@google.com?secret=JBSWY3DPEHPK3PXP&issuer=TheOpenLane
+	// otpauth://totp/TheOpenlane:matt@google.com?secret=JBSWY3DPEHPK3PXP&issuer=TheOpenlane
 	secret, err := o.TOTPDecryptedSecret(u.TFASecret)
 	if err != nil {
 		return "", err
