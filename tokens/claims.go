@@ -78,10 +78,7 @@ func (c Claims) HasModule(module string) bool {
 
 // GetModules returns the list of modules assigned to the user in their current organization
 func (c Claims) GetModules() []string {
-	modules := make([]string, len(c.Modules))
-	modules = c.Modules
+	slices.Sort(c.Modules)
 
-	slices.Sort(modules)
-
-	return modules
+	return c.Modules
 }

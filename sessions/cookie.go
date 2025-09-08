@@ -105,6 +105,7 @@ func expiresTime(maxAge int) (time.Time, bool) {
 		d := time.Duration(maxAge) * time.Second
 		return time.Now().Add(d), true
 	}
+
 	if maxAge < 0 {
 		return time.Unix(1, 0), true
 	}
