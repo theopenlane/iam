@@ -58,7 +58,7 @@ func TestGithubHandler(t *testing.T) {
 	// - github User is added to the ctx of the success handler
 	githubHandler := githubHandler(config, &ClientConfig{IsEnterprise: false, IsMock: false}, http.HandlerFunc(success), failure)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil) // nolint: noctx
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil) // nolint: noctx
 	githubHandler.ServeHTTP(w, req.WithContext(ctx))
 	assert.Equal(t, SuccessHandlerCalled, w.Body.String())
 }
@@ -82,7 +82,7 @@ func TestMissingCtxToken(t *testing.T) {
 	// - error about ctx missing token is added to the failure handler ctx
 	githubHandler := githubHandler(config, &ClientConfig{IsEnterprise: false, IsMock: false}, success, http.HandlerFunc(failure))
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil) // nolint: noctx
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil) // nolint: noctx
 	githubHandler.ServeHTTP(w, req)
 	assert.Equal(t, FailureHandlerCalled, w.Body.String())
 }
@@ -113,7 +113,7 @@ func TestErrorGettingUser(t *testing.T) {
 	// - error cannot get GitHub User added to the failure handler ctx
 	githubHandler := githubHandler(config, &ClientConfig{IsEnterprise: false, IsMock: false}, success, http.HandlerFunc(failure))
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil) // nolint: noctx
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil) // nolint: noctx
 	githubHandler.ServeHTTP(w, req.WithContext(ctx))
 	assert.Equal(t, FailureHandlerCalled, w.Body.String())
 }
@@ -154,7 +154,7 @@ func TestGithubEnterprise(t *testing.T) {
 	// - github User is added to the ctx of the success handler
 	githubHandler := githubHandler(config, &ClientConfig{IsEnterprise: true, IsMock: false}, http.HandlerFunc(success), failure)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil) // nolint: noctx
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil) // nolint: noctx
 	githubHandler.ServeHTTP(w, req.WithContext(ctx))
 	assert.Equal(t, SuccessHandlerCalled, w.Body.String())
 }
