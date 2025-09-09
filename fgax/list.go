@@ -28,6 +28,11 @@ type ListRequest struct {
 
 // ListObjectsRequest creates the ClientListObjectsRequest and queries the FGA store for all objects with the user+relation
 func (c *Client) ListObjectsRequest(ctx context.Context, req ListRequest) (*ofgaclient.ClientListObjectsResponse, error) {
+	return c.ListObjectsRequestWithConsistency(ctx, req, defaultConsistency)
+}
+
+// ListObjectsRequest creates the ClientListObjectsRequest and queries the FGA store for all objects with the user+relation
+func (c *Client) ListObjectsRequestWithConsistency(ctx context.Context, req ListRequest, consistency fgasdk.ConsistencyPreference) (*ofgaclient.ClientListObjectsResponse, error) {
 	// valid and set defaults
 	if err := req.validateListObjectsInput(); err != nil {
 		return nil, err
@@ -50,7 +55,7 @@ func (c *Client) ListObjectsRequest(ctx context.Context, req ListRequest) (*ofga
 
 	log.Debug().Interface("request", listReq).Msg("listing objects")
 
-	return c.listObjects(ctx, listReq)
+	return c.listObjects(ctx, listReq, consistency)
 }
 
 // ListUserRequest creates the ClientListUserRequest and queries the FGA store for all users with the object+relation
@@ -82,10 +87,10 @@ func (c *Client) ListUserRequest(ctx context.Context, req ListRequest) (*ofgacli
 }
 
 // listObjects checks the openFGA store for all objects associated with a user+relation
-func (c *Client) listObjects(ctx context.Context, req ofgaclient.ClientListObjectsRequest) (*ofgaclient.ClientListObjectsResponse, error) {
+func (c *Client) listObjects(ctx context.Context, req ofgaclient.ClientListObjectsRequest, consistency fgasdk.ConsistencyPreference) (*ofgaclient.ClientListObjectsResponse, error) {
 	list, err := c.Ofga.ListObjects(ctx).Body(req).
 		Options(ofgaclient.ClientListObjectsOptions{
-			Consistency: &defaultConsistency,
+			Consistency: &consistency,
 		}).
 		Execute()
 	if err != nil {
