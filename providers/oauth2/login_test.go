@@ -36,7 +36,7 @@ func TestLoginHandler(t *testing.T) {
 
 	loginHandler := LoginHandler(config, failure)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil) // nolint: noctx
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil) // nolint: noctx
 
 	ctx := WithState(context.Background(), expectedState)
 	loginHandler.ServeHTTP(w, req.WithContext(ctx))
@@ -60,7 +60,7 @@ func TestLoginState(t *testing.T) {
 
 	loginHandler := LoginHandler(config, http.HandlerFunc(failure))
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil) // nolint: noctx
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil) // nolint: noctx
 	loginHandler.ServeHTTP(w, req.WithContext(req.Context()))
 	assert.Equal(t, FailureHandlerCalled, w.Body.String())
 }
@@ -101,7 +101,7 @@ func TestCallbackHandler(t *testing.T) {
 	failure := testutils.AssertFailureNotCalled(t)
 	callbackHandler := CallbackHandler(config, http.HandlerFunc(success), failure)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", CodePath, nil) // nolint: noctx
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, CodePath, nil) // nolint: noctx
 	ctx := WithState(context.Background(), "d4e5f6")
 	callbackHandler.ServeHTTP(w, req.WithContext(ctx))
 	assert.Equal(t, SuccessHandlerCalled, w.Body.String())
@@ -123,12 +123,12 @@ func TestParseCallback(t *testing.T) {
 
 	callbackHandler := CallbackHandler(config, success, http.HandlerFunc(failure))
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?code=any_code", nil)
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "/?code=any_code", nil)
 	callbackHandler.ServeHTTP(w, req.WithContext(req.Context()))
 	assert.Equal(t, FailureHandlerCalled, w.Body.String())
 
 	w = httptest.NewRecorder()
-	req, _ = http.NewRequestWithContext(req.Context(), "GET", "/?state=any_state", nil)
+	req, _ = http.NewRequestWithContext(req.Context(), http.MethodGet, "/?state=any_state", nil)
 	callbackHandler.ServeHTTP(w, req.WithContext(req.Context()))
 	assert.Equal(t, FailureHandlerCalled, w.Body.String())
 }
@@ -149,7 +149,7 @@ func TestStateHandler(t *testing.T) {
 
 	callbackHandler := CallbackHandler(config, success, http.HandlerFunc(failure))
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", CodePath, nil) // nolint: noctx
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, CodePath, nil) // nolint: noctx
 	callbackHandler.ServeHTTP(w, req.WithContext(req.Context()))
 	assert.Equal(t, FailureHandlerCalled, w.Body.String())
 }
@@ -170,7 +170,7 @@ func TestStateFromContext(t *testing.T) {
 
 	callbackHandler := CallbackHandler(config, success, http.HandlerFunc(failure))
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", CodePath, nil) // nolint: noctx
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, CodePath, nil) // nolint: noctx
 	ctx := WithState(context.Background(), "differentState")
 	callbackHandler.ServeHTTP(w, req.WithContext(ctx))
 	assert.Equal(t, FailureHandlerCalled, w.Body.String())
@@ -200,7 +200,7 @@ func TestTokenExchange(t *testing.T) {
 
 	callbackHandler := CallbackHandler(config, success, http.HandlerFunc(failure))
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", CodePath, nil) // nolint: noctx
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, CodePath, nil) // nolint: noctx
 	ctx := WithState(context.Background(), "d4e5f6")
 	callbackHandler.ServeHTTP(w, req.WithContext(ctx))
 	assert.Equal(t, FailureHandlerCalled, w.Body.String())

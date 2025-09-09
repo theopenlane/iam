@@ -50,7 +50,7 @@ func TestGoogleHandler(t *testing.T) {
 	// - google Userinfo is added to the ctx of the success handler
 	googleHandler := googleHandler(config, http.HandlerFunc(success), failure)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil) // nolint: noctx
+	req, _ := http.NewRequest(http.MethodGet, "/", nil) // nolint: noctx
 	googleHandler.ServeHTTP(w, req.WithContext(ctx))
 	assert.Equal(t, "success handler called", w.Body.String())
 }
@@ -74,7 +74,7 @@ func TestMissingCtxToken(t *testing.T) {
 	// - error about ctx missing token is added to the failure handler ctx
 	googleHandler := googleHandler(config, success, http.HandlerFunc(failure))
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil) // nolint: noctx
+	req, _ := http.NewRequest(http.MethodGet, "/", nil) // nolint: noctx
 	googleHandler.ServeHTTP(w, req)
 	assert.Equal(t, ErrFailureHandlerCalled, w.Body.String())
 }
@@ -105,7 +105,7 @@ func TestErrorGettingUser(t *testing.T) {
 	// - error cannot get Google User added to the failure handler ctx
 	googleHandler := googleHandler(config, success, http.HandlerFunc(failure))
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil) // nolint: noctx
+	req, _ := http.NewRequest(http.MethodGet, "/", nil) // nolint: noctx
 	googleHandler.ServeHTTP(w, req.WithContext(ctx))
 	assert.Equal(t, ErrFailureHandlerCalled, w.Body.String())
 }
