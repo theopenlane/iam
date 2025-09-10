@@ -53,8 +53,8 @@ github.com/bmatcuk/doublestar v1.3.4/go.mod h1:wiQtGV+rzVYxB7WIlirSN++5HPtPlXEo9
 github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc/go.mod h1:paBWMcWSl3LHKBqUq+rly7CNSldXjb2rDl3JlRe0mD8=
 github.com/boombuler/barcode v1.0.2 h1:79yrbttoZrLGkL/oOI8hBrUKucwOL0oOjUgEguGMcJ4=
 github.com/boombuler/barcode v1.0.2/go.mod h1:paBWMcWSl3LHKBqUq+rly7CNSldXjb2rDl3JlRe0mD8=
-github.com/brianvoe/gofakeit/v7 v7.5.1 h1:HJvuVtQFe3TKh+pw8eD+2l7r5eyssfL/wGql5hA9r6U=
-github.com/brianvoe/gofakeit/v7 v7.5.1/go.mod h1:QXuPeBw164PJCzCUZVmgpgHJ3Llj49jSLVkKPMtxtxA=
+github.com/brianvoe/gofakeit/v7 v7.6.0 h1:M3RUb5CuS2IZmF/cP+O+NdLxJEuDAZxNQBwPbbqR6h4=
+github.com/brianvoe/gofakeit/v7 v7.6.0/go.mod h1:QXuPeBw164PJCzCUZVmgpgHJ3Llj49jSLVkKPMtxtxA=
 github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=
 github.com/bsm/ginkgo/v2 v2.12.0/go.mod h1:SwYbGRRDovPVboqFv0tPTcG1sN61LM1Z4ARdbAV9g4c=
 github.com/bsm/gomega v1.27.10 h1:yeMWxP2pV2fG3FgAODIY8EiRE3dy0aeFYt4l7wh6yKA=
@@ -342,8 +342,8 @@ github.com/testcontainers/testcontainers-go/modules/openfga v0.38.0 h1:jgHrmpFrR
 github.com/testcontainers/testcontainers-go/modules/openfga v0.38.0/go.mod h1:BF82M6jAZSAID0zkJxb0xbDIzYAVWzXwtqbj8n8qhb0=
 github.com/theopenlane/echox v0.2.4 h1:bocz1Dfs7d2fkNa8foQqdmeTtkMTQNwe1v20bIGIDps=
 github.com/theopenlane/echox v0.2.4/go.mod h1:0cPOHe4SSQHmqP0/n2LsIEzRSogkxSX653bE+PIOVZ8=
-github.com/theopenlane/entx v0.14.2 h1:pMeCFdsgKuuR7E6rs3VYks/b6b1ppGB0JAUWZhtbxqc=
-github.com/theopenlane/entx v0.14.2/go.mod h1:Sz0CgsTUvThdCRYE9a6BhHLBhKdNKoQsAMFTdfE8gXg=
+github.com/theopenlane/entx v0.15.0 h1:g7C0PaLKv3RUN24usjpWyK3HScO8vOXVn8BSlNQQ41o=
+github.com/theopenlane/entx v0.15.0/go.mod h1:YsSrNyon63exbXoNIwEUCx4iTQMfDFYiNlaj9RfxZaU=
 github.com/theopenlane/utils v0.4.8 h1:f0bqpTGSQZnO7G95m+6Ct0iAKLhoz8AzqODMogEsRU0=
 github.com/theopenlane/utils v0.4.8/go.mod h1:SfXJyOVF/GDD5Rvtq+n+csTw0i0RnqRIvvBTPd8rRdo=
 github.com/tklauser/go-sysconf v0.3.12 h1:0QaGUFOdQaIVdPgfITYzaTegZvdCjmYO52cSFAEVmqU=
