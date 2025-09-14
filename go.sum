@@ -348,8 +348,8 @@ github.com/theopenlane/echox v0.2.4 h1:bocz1Dfs7d2fkNa8foQqdmeTtkMTQNwe1v20bIGID
 github.com/theopenlane/echox v0.2.4/go.mod h1:0cPOHe4SSQHmqP0/n2LsIEzRSogkxSX653bE+PIOVZ8=
 github.com/theopenlane/entx v0.15.0 h1:g7C0PaLKv3RUN24usjpWyK3HScO8vOXVn8BSlNQQ41o=
 github.com/theopenlane/entx v0.15.0/go.mod h1:YsSrNyon63exbXoNIwEUCx4iTQMfDFYiNlaj9RfxZaU=
-github.com/theopenlane/utils v0.4.8 h1:f0bqpTGSQZnO7G95m+6Ct0iAKLhoz8AzqODMogEsRU0=
-github.com/theopenlane/utils v0.4.8/go.mod h1:SfXJyOVF/GDD5Rvtq+n+csTw0i0RnqRIvvBTPd8rRdo=
+github.com/theopenlane/utils v0.5.0 h1:sQEEZzE64A8ik4arZM27Wszwqzpu+Oz2IaI4b51ZAZQ=
+github.com/theopenlane/utils v0.5.0/go.mod h1:101p4fZ4EuS7S4NkBLQ9ICXqQybjmkHrMVaAGpQPeC8=
 github.com/tklauser/go-sysconf v0.3.12 h1:0QaGUFOdQaIVdPgfITYzaTegZvdCjmYO52cSFAEVmqU=
 github.com/tklauser/go-sysconf v0.3.12/go.mod h1:Ho14jnntGE1fpdOqQEEaiKRpvIavV0hSfmBq8nJbHYI=
 github.com/tklauser/numcpus v0.6.1 h1:ng9scYS7az0Bk4OZLvrNXNSAO2Pxr1XXRAPyjhIx+Fk=
