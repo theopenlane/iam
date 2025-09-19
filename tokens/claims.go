@@ -31,6 +31,9 @@ type Claims struct {
 
 	// Modules is a list of modules that are enabled for the user in their current organization
 	Modules []string `json:"modules,omitempty"`
+
+	// Email is the email address of the user
+	Email string `json:"email,omitempty"`
 }
 
 // ParseUserID returns the ID of the user from the Subject of the claims
