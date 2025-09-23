@@ -50,6 +50,11 @@ type AcmeSolverContextKey struct{}
 // TrustCenterContextKey is the context key name for the trust center context
 type TrustCenterContextKey struct{}
 
+// TrustCenterNDAContextKey is the context key name for the trust center NDA context
+type TrustCenterNDAContextKey struct {
+	OrgID string
+}
+
 // SystemAdminContextKey holds the original system admin user when user context switching occurs
 type SystemAdminContextKey struct {
 	AdminUser *AuthenticatedUser
