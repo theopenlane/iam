@@ -122,8 +122,6 @@ type AnonymousTrustCenterUser struct {
 	AuthenticationType AuthenticationType
 	// TrustCenterID is the ID of the trust center the user has access to
 	TrustCenterID string
-	// Email is the email of the user
-	Email string
 }
 
 // WithAnonymousTrustCenterUser sets the anonymous trust center user in the context
