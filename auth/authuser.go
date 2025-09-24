@@ -61,12 +61,18 @@ func GetSubjectIDFromContext(ctx context.Context) (string, error) {
 
 // GetOrganizationIDFromContext returns the organization ID from context
 func GetOrganizationIDFromContext(ctx context.Context) (string, error) {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
-		return "", ErrNoAuthUser
+	var orgID string
+	if anon, ok := AnonymousTrustCenterUserFromContext(ctx); ok {
+		orgID = anon.OrganizationID
+	} else {
+		au, ok := AuthenticatedUserFromContext(ctx)
+		if !ok || au == nil {
+			return "", ErrNoAuthUser
+		}
+		orgID = au.OrganizationID
 	}
 
-	oID, err := ulids.Parse(au.OrganizationID)
+	oID, err := ulids.Parse(orgID)
 	if err != nil {
 		return "", err
 	}
@@ -75,31 +81,37 @@ func GetOrganizationIDFromContext(ctx context.Context) (string, error) {
 		return "", ErrNoAuthUser
 	}
 
-	return au.OrganizationID, nil
+	return orgID, nil
 }
 
 // GetOrganizationIDFromContext returns the organization ID from context
 func GetOrganizationIDsFromContext(ctx context.Context) ([]string, error) {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
-		return []string{}, ErrNoAuthUser
+	var orgIDs []string
+	if anon, ok := AnonymousTrustCenterUserFromContext(ctx); ok {
+		orgIDs = []string{anon.OrganizationID}
+	} else {
+		au, ok := AuthenticatedUserFromContext(ctx)
+		if !ok || au == nil {
+			return []string{}, ErrNoAuthUser
+		}
+		orgIDs = au.OrganizationIDs
 	}
 
 	// validate the organization IDs
-	for _, orgID := range au.OrganizationIDs {
+	for _, orgID := range orgIDs {
 		oID, err := ulids.Parse(orgID)
 		if err != nil {
 			return []string{}, err
 		}
 
 		if ulids.IsZero(oID) {
-			au.OrganizationIDs = slices.DeleteFunc(au.OrganizationIDs, func(s string) bool {
+			orgIDs = slices.DeleteFunc(orgIDs, func(s string) bool {
 				return s == orgID
 			})
 		}
 	}
 
-	return au.OrganizationIDs, nil
+	return orgIDs, nil
 }
 
 // GetAuthTypeFromEchoContext retrieves the authentication type from the context if it was set
