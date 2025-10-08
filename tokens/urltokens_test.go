@@ -259,3 +259,71 @@ func TestInviteToken(t *testing.T) {
 		require.ErrorIs(t, token.Verify(signature, otherSecret), tokens.ErrTokenInvalid, "expected error when wrong secret is used")
 	})
 }
+
+func TestDownloadToken(t *testing.T) {
+	t.Run("Sign And Verify", func(t *testing.T) {
+		userID := ulids.New()
+		orgID := ulids.New()
+		opts := tokens.DownloadTokenOptions{
+			ObjectKey:   "bucket/key.pdf",
+			UserID:      userID,
+			OrgID:       orgID,
+			ContentType: "application/pdf",
+			FileName:    "key.pdf",
+		}
+
+		token, err := tokens.NewDownloadToken(opts)
+		require.NoError(t, err, "could not create download token")
+
+		require.Equal(t, opts.ObjectKey, token.ObjectKey)
+		require.Equal(t, userID, token.UserID)
+		require.Equal(t, orgID, token.OrgID)
+		require.Equal(t, opts.ContentType, token.ContentType)
+		require.Equal(t, opts.FileName, token.FileName)
+		require.False(t, ulids.IsZero(token.TokenID))
+		require.True(t, token.ExpiresAt.After(time.Now()))
+
+		signature, secret, err := token.Sign()
+		require.NoError(t, err, "failed to sign download token")
+		require.NotEmpty(t, signature)
+		require.Len(t, secret, 128)
+
+		rehydrated := &tokens.DownloadToken{
+			TokenID:     token.TokenID,
+			ObjectKey:   token.ObjectKey,
+			UserID:      token.UserID,
+			OrgID:       token.OrgID,
+			ContentType: token.ContentType,
+			FileName:    token.FileName,
+			SigningInfo: token.SigningInfo,
+		}
+
+		require.NoError(t, rehydrated.Verify(signature, secret), "expected successful verification")
+
+		rehydrated.ObjectKey = "bucket/different.pdf"
+		require.ErrorIs(t, rehydrated.Verify(signature, secret), tokens.ErrTokenInvalid, "expected error when object key differs")
+	})
+
+	t.Run("Custom Expiration", func(t *testing.T) {
+		expiresIn := 30 * time.Minute
+		token, err := tokens.NewDownloadToken(tokens.DownloadTokenOptions{
+			ObjectKey: "bucket/key",
+			ExpiresAt: expiresIn,
+		})
+		require.NoError(t, err, "could not create download token")
+		require.WithinDuration(t, time.Now().Add(expiresIn), token.ExpiresAt, time.Second)
+	})
+
+	t.Run("Missing Object Key", func(t *testing.T) {
+		_, err := tokens.NewDownloadToken(tokens.DownloadTokenOptions{})
+		require.ErrorIs(t, err, tokens.ErrDownloadTokenMissingObjectKey)
+	})
+
+	t.Run("Missing Token ID", func(t *testing.T) {
+		token := &tokens.DownloadToken{
+			ObjectKey: "bucket/key",
+		}
+
+		require.ErrorIs(t, token.Verify("", nil), tokens.ErrDownloadTokenMissingTokenID)
+	})
+}

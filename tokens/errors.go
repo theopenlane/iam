@@ -80,6 +80,12 @@ var (
 	// ErrInviteTokenMissingEmail
 	ErrInviteTokenMissingEmail = errors.New("invite token is missing email")
 
+	// ErrDownloadTokenMissingObjectKey is returned when the download token is missing the object key
+	ErrDownloadTokenMissingObjectKey = errors.New("download token is missing object key")
+
+	// ErrDownloadTokenMissingTokenID is returned when the download token is missing the token id
+	ErrDownloadTokenMissingTokenID = errors.New("download token is missing token id")
+
 	// ErrExpirationIsRequired is returned when signing info is provided a zero-value expiration
 	ErrExpirationIsRequired = errors.New("signing info requires a non-zero expiration")
 

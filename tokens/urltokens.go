@@ -14,11 +14,12 @@ import (
 )
 
 const (
-	nonceLength                 = 64
-	keyLength                   = 64
-	expirationDays              = 7
-	resetTokenExpirationMinutes = 15
-	inviteExpirationDays        = 14
+	nonceLength                           = 64
+	keyLength                             = 64
+	expirationDays                        = 7
+	resetTokenExpirationMinutes           = 15
+	inviteExpirationDays                  = 14
+	downloadTokenDefaultExpirationMinutes = 10
 )
 
 // URLToken represents a token that can be signed and verified
@@ -32,6 +33,7 @@ var (
 	_ URLToken = (*VerificationToken)(nil)
 	_ URLToken = (*ResetToken)(nil)
 	_ URLToken = (*OrgInviteToken)(nil)
+	_ URLToken = (*DownloadToken)(nil)
 )
 
 // NewVerificationToken creates a token struct from an email address that expires
@@ -304,6 +306,92 @@ func (t *OrgInviteToken) SetNonce(nonce []byte) {
 
 // Verify checks that a token was signed with the secret and is not expired
 func (t *OrgInviteToken) Verify(signature string, secret []byte) error {
+	if err := t.Validate(); err != nil {
+		return err
+	}
+
+	return t.VerifyToken(t, signature, secret)
+}
+
+// DownloadTokenOptions encapsulates the payload needed to mint a download token.
+type DownloadTokenOptions struct {
+	TokenID     ulid.ULID
+	ObjectKey   string
+	UserID      ulid.ULID
+	OrgID       ulid.ULID
+	ContentType string
+	FileName    string
+	ExpiresAt   time.Duration
+}
+
+// DownloadToken encodes the metadata required to authorize a proxied download.
+type DownloadToken struct {
+	TokenID     ulid.ULID `msgpack:"token_id"`
+	ObjectKey   string    `msgpack:"object_key"`
+	UserID      ulid.ULID `msgpack:"user_id,omitempty"`
+	OrgID       ulid.ULID `msgpack:"org_id,omitempty"`
+	ContentType string    `msgpack:"content_type,omitempty"`
+	FileName    string    `msgpack:"file_name,omitempty"`
+	SigningInfo
+}
+
+// NewDownloadToken creates a download token with the provided options.
+func NewDownloadToken(opts DownloadTokenOptions) (*DownloadToken, error) {
+	if opts.ObjectKey == "" {
+		return nil, ErrDownloadTokenMissingObjectKey
+	}
+
+	expires := opts.ExpiresAt
+	if expires == 0 {
+		expires = time.Minute * downloadTokenDefaultExpirationMinutes
+	}
+
+	signing, err := NewSigningInfo(expires)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenID := opts.TokenID
+	if ulids.IsZero(tokenID) {
+		tokenID = ulids.New()
+	}
+
+	return &DownloadToken{
+		TokenID:     tokenID,
+		ObjectKey:   opts.ObjectKey,
+		UserID:      opts.UserID,
+		OrgID:       opts.OrgID,
+		ContentType: opts.ContentType,
+		FileName:    opts.FileName,
+		SigningInfo: signing,
+	}, nil
+}
+
+// Sign returns a URL-safe signature and secret for the token.
+func (t *DownloadToken) Sign() (string, []byte, error) {
+	return t.SignToken(t)
+}
+
+// Validate ensures the token contains the expected metadata.
+func (t *DownloadToken) Validate() error {
+	if ulids.IsZero(t.TokenID) {
+		return ErrDownloadTokenMissingTokenID
+	}
+
+	if t.ObjectKey == "" {
+		return ErrDownloadTokenMissingObjectKey
+	}
+
+	return nil
+}
+
+// SetNonce updates the signing nonce prior to verification.
+func (t *DownloadToken) SetNonce(nonce []byte) {
+	t.Nonce = nonce
+}
+
+// Verify checks that the signature and secret are valid for the token.
+func (t *DownloadToken) Verify(signature string, secret []byte) error {
 	if err := t.Validate(); err != nil {
 		return err
 	}
