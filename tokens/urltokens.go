@@ -313,21 +313,10 @@ func (t *OrgInviteToken) Verify(signature string, secret []byte) error {
 	return t.VerifyToken(t, signature, secret)
 }
 
-// DownloadTokenOptions encapsulates the payload needed to mint a download token.
-type DownloadTokenOptions struct {
-	TokenID     ulid.ULID
-	ObjectKey   string
-	UserID      ulid.ULID
-	OrgID       ulid.ULID
-	ContentType string
-	FileName    string
-	ExpiresAt   time.Duration
-}
-
 // DownloadToken encodes the metadata required to authorize a proxied download.
 type DownloadToken struct {
 	TokenID     ulid.ULID `msgpack:"token_id"`
-	ObjectKey   string    `msgpack:"object_key"`
+	ObjectURI   string    `msgpack:"object_key"`
 	UserID      ulid.ULID `msgpack:"user_id,omitempty"`
 	OrgID       ulid.ULID `msgpack:"org_id,omitempty"`
 	ContentType string    `msgpack:"content_type,omitempty"`
@@ -335,36 +324,101 @@ type DownloadToken struct {
 	SigningInfo
 }
 
+type downloadTokenConfig struct {
+	tokenID     ulid.ULID
+	userID      ulid.ULID
+	orgID       ulid.ULID
+	contentType string
+	fileName    string
+	expiresIn   time.Duration
+}
+
+// DownloadTokenOption mutates the configuration for a new download token.
+type DownloadTokenOption func(*downloadTokenConfig)
+
 // NewDownloadToken creates a download token with the provided options.
-func NewDownloadToken(opts DownloadTokenOptions) (*DownloadToken, error) {
-	if opts.ObjectKey == "" {
-		return nil, ErrDownloadTokenMissingObjectKey
+func NewDownloadToken(ObjectURI string, opts ...DownloadTokenOption) (*DownloadToken, error) {
+	if ObjectURI == "" {
+		return nil, ErrDownloadTokenMissingObjectURI
 	}
 
-	expires := opts.ExpiresAt
-	if expires == 0 {
-		expires = time.Minute * downloadTokenDefaultExpirationMinutes
+	cfg := downloadTokenConfig{
+		tokenID:   ulids.New(),
+		expiresIn: time.Minute * downloadTokenDefaultExpirationMinutes,
 	}
 
-	signing, err := NewSigningInfo(expires)
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+
+	if cfg.expiresIn <= 0 {
+		cfg.expiresIn = time.Minute * downloadTokenDefaultExpirationMinutes
+	}
+
+	if ulids.IsZero(cfg.tokenID) {
+		cfg.tokenID = ulids.New()
+	}
+
+	signing, err := NewSigningInfo(cfg.expiresIn)
 	if err != nil {
 		return nil, err
 	}
 
-	tokenID := opts.TokenID
-	if ulids.IsZero(tokenID) {
-		tokenID = ulids.New()
-	}
-
 	return &DownloadToken{
-		TokenID:     tokenID,
-		ObjectKey:   opts.ObjectKey,
-		UserID:      opts.UserID,
-		OrgID:       opts.OrgID,
-		ContentType: opts.ContentType,
-		FileName:    opts.FileName,
+		TokenID:     cfg.tokenID,
+		ObjectURI:   ObjectURI,
+		UserID:      cfg.userID,
+		OrgID:       cfg.orgID,
+		ContentType: cfg.contentType,
+		FileName:    cfg.fileName,
 		SigningInfo: signing,
 	}, nil
+}
+
+// WithDownloadTokenID overrides the default random token identifier.
+func WithDownloadTokenID(id ulid.ULID) DownloadTokenOption {
+	return func(cfg *downloadTokenConfig) {
+		if !ulids.IsZero(id) {
+			cfg.tokenID = id
+		}
+	}
+}
+
+// WithDownloadTokenUserID associates the token with a user identifier.
+func WithDownloadTokenUserID(id ulid.ULID) DownloadTokenOption {
+	return func(cfg *downloadTokenConfig) {
+		cfg.userID = id
+	}
+}
+
+// WithDownloadTokenOrgID associates the token with an organization identifier.
+func WithDownloadTokenOrgID(id ulid.ULID) DownloadTokenOption {
+	return func(cfg *downloadTokenConfig) {
+		cfg.orgID = id
+	}
+}
+
+// WithDownloadTokenContentType sets the expected content type for the download.
+func WithDownloadTokenContentType(contentType string) DownloadTokenOption {
+	return func(cfg *downloadTokenConfig) {
+		cfg.contentType = contentType
+	}
+}
+
+// WithDownloadTokenFileName sets the download file name to advertise.
+func WithDownloadTokenFileName(fileName string) DownloadTokenOption {
+	return func(cfg *downloadTokenConfig) {
+		cfg.fileName = fileName
+	}
+}
+
+// WithDownloadTokenExpiresIn customizes the lifetime of the download token.
+func WithDownloadTokenExpiresIn(duration time.Duration) DownloadTokenOption {
+	return func(cfg *downloadTokenConfig) {
+		cfg.expiresIn = duration
+	}
 }
 
 // Sign returns a URL-safe signature and secret for the token.
@@ -378,8 +432,8 @@ func (t *DownloadToken) Validate() error {
 		return ErrDownloadTokenMissingTokenID
 	}
 
-	if t.ObjectKey == "" {
-		return ErrDownloadTokenMissingObjectKey
+	if t.ObjectURI == "" {
+		return ErrDownloadTokenMissingObjectURI
 	}
 
 	return nil

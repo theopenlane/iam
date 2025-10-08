@@ -80,8 +80,8 @@ var (
 	// ErrInviteTokenMissingEmail
 	ErrInviteTokenMissingEmail = errors.New("invite token is missing email")
 
-	// ErrDownloadTokenMissingObjectKey is returned when the download token is missing the object key
-	ErrDownloadTokenMissingObjectKey = errors.New("download token is missing object key")
+	// ErrDownloadTokenMissingObjectURI is returned when the download token is missing the object key
+	ErrDownloadTokenMissingObjectURI = errors.New("download token is missing object key")
 
 	// ErrDownloadTokenMissingTokenID is returned when the download token is missing the token id
 	ErrDownloadTokenMissingTokenID = errors.New("download token is missing token id")
