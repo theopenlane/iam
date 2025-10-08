@@ -316,7 +316,7 @@ func (t *OrgInviteToken) Verify(signature string, secret []byte) error {
 // DownloadToken encodes the metadata required to authorize a proxied download.
 type DownloadToken struct {
 	TokenID     ulid.ULID `msgpack:"token_id"`
-	ObjectURI   string    `msgpack:"object_key"`
+	ObjectURI   string    `msgpack:"object_uri"`
 	UserID      ulid.ULID `msgpack:"user_id,omitempty"`
 	OrgID       ulid.ULID `msgpack:"org_id,omitempty"`
 	ContentType string    `msgpack:"content_type,omitempty"`
