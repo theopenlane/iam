@@ -337,8 +337,8 @@ type downloadTokenConfig struct {
 type DownloadTokenOption func(*downloadTokenConfig)
 
 // NewDownloadToken creates a download token with the provided options.
-func NewDownloadToken(ObjectURI string, opts ...DownloadTokenOption) (*DownloadToken, error) {
-	if ObjectURI == "" {
+func NewDownloadToken(objectURI string, opts ...DownloadTokenOption) (*DownloadToken, error) {
+	if objectURI == "" {
 		return nil, ErrDownloadTokenMissingObjectURI
 	}
 
@@ -368,7 +368,7 @@ func NewDownloadToken(ObjectURI string, opts ...DownloadTokenOption) (*DownloadT
 
 	return &DownloadToken{
 		TokenID:     cfg.tokenID,
-		ObjectURI:   ObjectURI,
+		ObjectURI:   objectURI,
 		UserID:      cfg.userID,
 		OrgID:       cfg.orgID,
 		ContentType: cfg.contentType,
