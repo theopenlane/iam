@@ -14,11 +14,12 @@ import (
 )
 
 const (
-	nonceLength                 = 64
-	keyLength                   = 64
-	expirationDays              = 7
-	resetTokenExpirationMinutes = 15
-	inviteExpirationDays        = 14
+	nonceLength                           = 64
+	keyLength                             = 64
+	expirationDays                        = 7
+	resetTokenExpirationMinutes           = 15
+	inviteExpirationDays                  = 14
+	downloadTokenDefaultExpirationMinutes = 10
 )
 
 // URLToken represents a token that can be signed and verified
@@ -32,6 +33,7 @@ var (
 	_ URLToken = (*VerificationToken)(nil)
 	_ URLToken = (*ResetToken)(nil)
 	_ URLToken = (*OrgInviteToken)(nil)
+	_ URLToken = (*DownloadToken)(nil)
 )
 
 // NewVerificationToken creates a token struct from an email address that expires
@@ -304,6 +306,146 @@ func (t *OrgInviteToken) SetNonce(nonce []byte) {
 
 // Verify checks that a token was signed with the secret and is not expired
 func (t *OrgInviteToken) Verify(signature string, secret []byte) error {
+	if err := t.Validate(); err != nil {
+		return err
+	}
+
+	return t.VerifyToken(t, signature, secret)
+}
+
+// DownloadToken encodes the metadata required to authorize a proxied download.
+type DownloadToken struct {
+	TokenID     ulid.ULID `msgpack:"token_id"`
+	ObjectURI   string    `msgpack:"object_uri"`
+	UserID      ulid.ULID `msgpack:"user_id,omitempty"`
+	OrgID       ulid.ULID `msgpack:"org_id,omitempty"`
+	ContentType string    `msgpack:"content_type,omitempty"`
+	FileName    string    `msgpack:"file_name,omitempty"`
+	SigningInfo
+}
+
+type downloadTokenConfig struct {
+	tokenID     ulid.ULID
+	userID      ulid.ULID
+	orgID       ulid.ULID
+	contentType string
+	fileName    string
+	expiresIn   time.Duration
+}
+
+// DownloadTokenOption mutates the configuration for a new download token.
+type DownloadTokenOption func(*downloadTokenConfig)
+
+// NewDownloadToken creates a download token with the provided options.
+func NewDownloadToken(objectURI string, opts ...DownloadTokenOption) (*DownloadToken, error) {
+	if objectURI == "" {
+		return nil, ErrDownloadTokenMissingObjectURI
+	}
+
+	cfg := downloadTokenConfig{
+		tokenID:   ulids.New(),
+		expiresIn: time.Minute * downloadTokenDefaultExpirationMinutes,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+
+	if cfg.expiresIn <= 0 {
+		cfg.expiresIn = time.Minute * downloadTokenDefaultExpirationMinutes
+	}
+
+	if ulids.IsZero(cfg.tokenID) {
+		cfg.tokenID = ulids.New()
+	}
+
+	signing, err := NewSigningInfo(cfg.expiresIn)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DownloadToken{
+		TokenID:     cfg.tokenID,
+		ObjectURI:   objectURI,
+		UserID:      cfg.userID,
+		OrgID:       cfg.orgID,
+		ContentType: cfg.contentType,
+		FileName:    cfg.fileName,
+		SigningInfo: signing,
+	}, nil
+}
+
+// WithDownloadTokenID overrides the default random token identifier.
+func WithDownloadTokenID(id ulid.ULID) DownloadTokenOption {
+	return func(cfg *downloadTokenConfig) {
+		if !ulids.IsZero(id) {
+			cfg.tokenID = id
+		}
+	}
+}
+
+// WithDownloadTokenUserID associates the token with a user identifier.
+func WithDownloadTokenUserID(id ulid.ULID) DownloadTokenOption {
+	return func(cfg *downloadTokenConfig) {
+		cfg.userID = id
+	}
+}
+
+// WithDownloadTokenOrgID associates the token with an organization identifier.
+func WithDownloadTokenOrgID(id ulid.ULID) DownloadTokenOption {
+	return func(cfg *downloadTokenConfig) {
+		cfg.orgID = id
+	}
+}
+
+// WithDownloadTokenContentType sets the expected content type for the download.
+func WithDownloadTokenContentType(contentType string) DownloadTokenOption {
+	return func(cfg *downloadTokenConfig) {
+		cfg.contentType = contentType
+	}
+}
+
+// WithDownloadTokenFileName sets the download file name to advertise.
+func WithDownloadTokenFileName(fileName string) DownloadTokenOption {
+	return func(cfg *downloadTokenConfig) {
+		cfg.fileName = fileName
+	}
+}
+
+// WithDownloadTokenExpiresIn customizes the lifetime of the download token.
+func WithDownloadTokenExpiresIn(duration time.Duration) DownloadTokenOption {
+	return func(cfg *downloadTokenConfig) {
+		cfg.expiresIn = duration
+	}
+}
+
+// Sign returns a URL-safe signature and secret for the token.
+func (t *DownloadToken) Sign() (string, []byte, error) {
+	return t.SignToken(t)
+}
+
+// Validate ensures the token contains the expected metadata.
+func (t *DownloadToken) Validate() error {
+	if ulids.IsZero(t.TokenID) {
+		return ErrDownloadTokenMissingTokenID
+	}
+
+	if t.ObjectURI == "" {
+		return ErrDownloadTokenMissingObjectURI
+	}
+
+	return nil
+}
+
+// SetNonce updates the signing nonce prior to verification.
+func (t *DownloadToken) SetNonce(nonce []byte) {
+	t.Nonce = nonce
+}
+
+// Verify checks that the signature and secret are valid for the token.
+func (t *DownloadToken) Verify(signature string, secret []byte) error {
 	if err := t.Validate(); err != nil {
 		return err
 	}
