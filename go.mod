@@ -17,8 +17,8 @@ require (
 	github.com/lestrrat-go/jwx/v3 v3.0.11
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/openfga/go-sdk v0.7.3
-	github.com/openfga/language/pkg/go v0.2.0-beta.2.0.20250919191407-efa08b02a76a
-	github.com/openfga/openfga v1.10.2
+	github.com/openfga/language/pkg/go v0.2.0-beta.2.0.20251003203216-7c0d09a1cc5a
+	github.com/openfga/openfga v1.10.3
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.5.0
 	github.com/redis/go-redis/v9 v9.14.0
