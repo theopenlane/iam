@@ -63,7 +63,7 @@ type ListAccess struct {
 
 // BatchCheckObjectAccess checks if the user has access to the list of objects with the given relation
 // It returns a list of objects id (e.g. 01JPWNAGM9S61G57DS364MFKGX) that the user has access to
-func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessCheck) ([]string, error) {
+func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessCheck, opts ...RequestOption) ([]string, error) {
 	if len(checks) == 0 {
 		return []string{}, nil
 	}
@@ -83,11 +83,7 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 		ofgaclient.ClientBatchCheckRequest{
 			Checks: checkRequests,
 		}).
-		Options(ofgaclient.BatchCheckOptions{
-			Consistency:         &defaultConsistency,
-			MaxBatchSize:        &batchSizeLimit,
-			MaxParallelRequests: &batchParallelLimit,
-		}).
+		Options(getBatchCheckOptions(opts...)).
 		Execute()
 	if err != nil || results == nil {
 		return nil, err
@@ -127,23 +123,26 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 }
 
 // CheckAccess checks if the user has access to the object type with the given relation
-func (c *Client) CheckAccess(ctx context.Context, ac AccessCheck) (bool, error) {
+func (c *Client) CheckAccess(ctx context.Context, ac AccessCheck, opts ...RequestOption) (bool, error) {
 	checkReq, err := toCheckRequest(ac)
 	if err != nil {
 		return false, err
 	}
 
-	return c.checkTupleMinimizeLatency(ctx, *checkReq)
+	return c.checkTuple(ctx, *checkReq, opts...)
 }
 
-// CheckAccess checks if the user has access to the object type with the given relation
-func (c *Client) CheckAccessHighConsistency(ctx context.Context, ac AccessCheck) (bool, error) {
+// CheckAccessHighConsistency checks if the user has access to the object type with the given relation using high consistency
+func (c *Client) CheckAccessHighConsistency(ctx context.Context, ac AccessCheck, opts ...RequestOption) (bool, error) {
 	checkReq, err := toCheckRequest(ac)
 	if err != nil {
 		return false, err
 	}
 
-	return c.checkTupleHighConsistency(ctx, *checkReq)
+	// ensure high consistency unless overridden by opts
+	opts = append(opts, WithHighConsistency())
+
+	return c.checkTuple(ctx, *checkReq, opts...)
 }
 
 func toBatchCheckItem(ac AccessCheck) (*ofgaclient.ClientBatchCheckItem, error) {
@@ -205,7 +204,7 @@ func toCheckRequest(ac AccessCheck) (*ofgaclient.ClientCheckRequest, error) {
 }
 
 // ListRelations returns the list of relations the user has with the object
-func (c *Client) ListRelations(ctx context.Context, ac ListAccess) ([]string, error) {
+func (c *Client) ListRelations(ctx context.Context, ac ListAccess, opts ...RequestOption) ([]string, error) {
 	if err := validateListAccess(ac); err != nil {
 		return nil, err
 	}
@@ -251,55 +250,46 @@ func (c *Client) ListRelations(ctx context.Context, ac ListAccess) ([]string, er
 		checks = append(checks, check)
 	}
 
-	return c.batchCheckTuples(ctx, checks)
+	return c.batchCheckTuples(ctx, checks, opts...)
 }
 
 // CheckOrgReadAccess checks if the user has read access to the organization
-func (c *Client) CheckOrgReadAccess(ctx context.Context, ac AccessCheck) (bool, error) {
+func (c *Client) CheckOrgReadAccess(ctx context.Context, ac AccessCheck, opts ...RequestOption) (bool, error) {
 	ac.ObjectType = organizationObject
 	ac.Relation = CanView // read access
 
-	return c.CheckAccess(ctx, ac)
+	return c.CheckAccess(ctx, ac, opts...)
 }
 
 // CheckOrgWriteAccess checks if the user has write access to the organization
-func (c *Client) CheckOrgWriteAccess(ctx context.Context, ac AccessCheck) (bool, error) {
+func (c *Client) CheckOrgWriteAccess(ctx context.Context, ac AccessCheck, opts ...RequestOption) (bool, error) {
 	ac.ObjectType = organizationObject
 	ac.Relation = CanEdit // write access
 
-	return c.CheckAccess(ctx, ac)
+	return c.CheckAccess(ctx, ac, opts...)
 }
 
 // CheckOrgAccess checks if the user has access to the organization with the given relation
-func (c *Client) CheckOrgAccess(ctx context.Context, ac AccessCheck) (bool, error) {
+func (c *Client) CheckOrgAccess(ctx context.Context, ac AccessCheck, opts ...RequestOption) (bool, error) {
 	ac.ObjectType = organizationObject
 
-	return c.CheckAccess(ctx, ac)
+	return c.CheckAccess(ctx, ac, opts...)
 }
 
 // CheckGroupAccess checks if the user has access to the group with the given relation
-func (c *Client) CheckGroupAccess(ctx context.Context, ac AccessCheck) (bool, error) {
+func (c *Client) CheckGroupAccess(ctx context.Context, ac AccessCheck, opts ...RequestOption) (bool, error) {
 	ac.ObjectType = groupObject
 
-	return c.CheckAccess(ctx, ac)
+	return c.CheckAccess(ctx, ac, opts...)
 }
 
 // checkTupleMinimizeLatency checks the openFGA store for provided relationship tuple using minimize latency consistency
-func (c *Client) checkTupleMinimizeLatency(ctx context.Context, check ofgaclient.ClientCheckRequest) (bool, error) {
-	return c.checkTuple(ctx, check, &defaultConsistency)
-}
-
-// checkTupleHighConsistency checks the openFGA store for provided relationship tuple using high consistency
-func (c *Client) checkTupleHighConsistency(ctx context.Context, check ofgaclient.ClientCheckRequest) (bool, error) {
-	return c.checkTuple(ctx, check, &highConsistency)
-}
-
 // checkTuple checks the openFGA store for provided relationship tuple
-func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckRequest, consistency *openfga.ConsistencyPreference) (bool, error) {
+func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckRequest, opts ...RequestOption) (bool, error) {
+	options := getCheckOptions(opts...)
+
 	data, err := c.Ofga.Check(ctx).Body(check).
-		Options(ofgaclient.ClientCheckOptions{
-			Consistency: consistency,
-		}).Execute()
+		Options(options).Execute()
 	if err != nil {
 		log.Error().Err(err).Interface("tuple", check).Msg("error checking tuple")
 
@@ -309,17 +299,22 @@ func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckReq
 	return *data.Allowed, nil
 }
 
+// compatibility wrappers for older callers/tests
+func (c *Client) checkTupleMinimizeLatency(ctx context.Context, check ofgaclient.ClientCheckRequest) (bool, error) {
+	return c.checkTuple(ctx, check)
+}
+
+func (c *Client) checkTupleHighConsistency(ctx context.Context, check ofgaclient.ClientCheckRequest) (bool, error) {
+	return c.checkTuple(ctx, check, WithHighConsistency())
+}
+
 // batchCheckTuples checks the openFGA store for provided relationship tuples and returns the allowed relations
-func (c *Client) batchCheckTuples(ctx context.Context, checks []ofgaclient.ClientBatchCheckItem) ([]string, error) {
+func (c *Client) batchCheckTuples(ctx context.Context, checks []ofgaclient.ClientBatchCheckItem, opts ...RequestOption) ([]string, error) {
 	res, err := c.Ofga.BatchCheck(ctx).Body(
 		ofgaclient.ClientBatchCheckRequest{
 			Checks: checks,
 		}).
-		Options(ofgaclient.BatchCheckOptions{
-			Consistency:         &defaultConsistency,
-			MaxBatchSize:        &batchSizeLimit,
-			MaxParallelRequests: &batchParallelLimit,
-		}).
+		Options(getBatchCheckOptions(opts...)).
 		Execute()
 	if err != nil || res == nil {
 		return nil, err
@@ -356,7 +351,7 @@ func getCheckItemByCorrelationID(correlationID string, checks []ofgaclient.Clien
 }
 
 // CheckSystemAdminRole checks if the user has system admin access
-func (c *Client) CheckSystemAdminRole(ctx context.Context, userID string) (bool, error) {
+func (c *Client) CheckSystemAdminRole(ctx context.Context, userID string, opts ...RequestOption) (bool, error) {
 	ac := AccessCheck{
 		ObjectType:  roleObject,
 		ObjectID:    SystemAdminRelation,
@@ -365,7 +360,7 @@ func (c *Client) CheckSystemAdminRole(ctx context.Context, userID string) (bool,
 		SubjectType: userSubject, // admin roles are always user roles, never an API token
 	}
 
-	return c.CheckAccess(ctx, ac)
+	return c.CheckAccess(ctx, ac, opts...)
 }
 
 // validateAccessCheck checks if the AccessCheck struct is valid
