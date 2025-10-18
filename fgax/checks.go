@@ -24,7 +24,6 @@ const (
 
 var (
 	defaultConsistency       = openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY
-	highConsistency          = openfga.CONSISTENCYPREFERENCE_HIGHER_CONSISTENCY
 	batchSizeLimit     int32 = 100
 	batchParallelLimit int32 = 10
 )
@@ -302,10 +301,6 @@ func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckReq
 // compatibility wrappers for older callers/tests
 func (c *Client) checkTupleMinimizeLatency(ctx context.Context, check ofgaclient.ClientCheckRequest) (bool, error) {
 	return c.checkTuple(ctx, check)
-}
-
-func (c *Client) checkTupleHighConsistency(ctx context.Context, check ofgaclient.ClientCheckRequest) (bool, error) {
-	return c.checkTuple(ctx, check, WithHighConsistency())
 }
 
 // batchCheckTuples checks the openFGA store for provided relationship tuples and returns the allowed relations
