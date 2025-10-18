@@ -219,15 +219,19 @@ func tupleKeyToDeleteRequest(deletes []TupleKey) (d []openfga.TupleKeyWithoutCon
 
 // WriteTupleKeys takes a tuples keys, converts them to a client write request, which can contain up to 10 writes and deletes,
 // and executes in a single transaction
-func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes []TupleKey) (*ofgaclient.ClientWriteResponse, error) {
-	opts := ofgaclient.ClientWriteOptions{AuthorizationModelId: openfga.PtrString(c.Config.AuthorizationModelId)}
+func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes []TupleKey, opts ...RequestOption) (*ofgaclient.ClientWriteResponse, error) {
+	wopts := getWriteOptions(opts...)
+	// ensure authorization model id is set from client config when available
+	if c.Config.AuthorizationModelId != "" {
+		wopts.AuthorizationModelId = openfga.PtrString(c.Config.AuthorizationModelId)
+	}
 
 	body := ofgaclient.ClientWriteRequest{
 		Writes:  tupleKeyToWriteRequest(writes),
 		Deletes: tupleKeyToDeleteRequest(deletes),
 	}
 
-	resp, err := c.Ofga.Write(ctx).Body(body).Options(opts).Execute()
+	resp, err := c.Ofga.Write(ctx).Body(body).Options(wopts).Execute()
 	if err := c.checkWriteResponse(resp, err); err != nil {
 		return nil, err
 	}
@@ -239,14 +243,17 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 // this is useful for updating a tuple with a condition because fga does not support conditional updates
 // Because the delete doesn't take into account conditions, you can use the same key to delete the existing tuple
 // It will return the response from the write request
-func (c *Client) UpdateConditionalTupleKey(ctx context.Context, tuple TupleKey) (*ofgaclient.ClientWriteResponse, error) {
-	opts := ofgaclient.ClientWriteOptions{AuthorizationModelId: openfga.PtrString(c.Config.AuthorizationModelId)}
+func (c *Client) UpdateConditionalTupleKey(ctx context.Context, tuple TupleKey, opts ...RequestOption) (*ofgaclient.ClientWriteResponse, error) {
+	wopts := getWriteOptions(opts...)
+	if c.Config.AuthorizationModelId != "" {
+		wopts.AuthorizationModelId = openfga.PtrString(c.Config.AuthorizationModelId)
+	}
 
 	body := ofgaclient.ClientWriteRequest{
 		Deletes: tupleKeyToDeleteRequest([]TupleKey{tuple}),
 	}
 
-	resp, err := c.Ofga.Write(ctx).Body(body).Options(opts).Execute()
+	resp, err := c.Ofga.Write(ctx).Body(body).Options(wopts).Execute()
 	if err := c.checkWriteResponse(resp, err); err != nil {
 		return nil, err
 	}
@@ -255,7 +262,7 @@ func (c *Client) UpdateConditionalTupleKey(ctx context.Context, tuple TupleKey) 
 		Writes: tupleKeyToWriteRequest([]TupleKey{tuple}),
 	}
 
-	resp, err = c.Ofga.Write(ctx).Body(body).Options(opts).Execute()
+	resp, err = c.Ofga.Write(ctx).Body(body).Options(wopts).Execute()
 	if err := c.checkWriteResponse(resp, err); err != nil {
 		return nil, err
 	}
@@ -318,14 +325,17 @@ func (c *Client) checkWriteResponse(resp *ofgaclient.ClientWriteResponse, err er
 }
 
 // deleteRelationshipTuple deletes a relationship tuple in the openFGA store
-func (c *Client) deleteRelationshipTuple(ctx context.Context, tuples []openfga.TupleKeyWithoutCondition) (*ofgaclient.ClientWriteResponse, error) {
+func (c *Client) deleteRelationshipTuple(ctx context.Context, tuples []openfga.TupleKeyWithoutCondition, opts ...RequestOption) (*ofgaclient.ClientWriteResponse, error) {
 	if len(tuples) == 0 {
 		return nil, nil
 	}
 
-	opts := ofgaclient.ClientWriteOptions{AuthorizationModelId: openfga.PtrString(c.Config.AuthorizationModelId)}
+	wopts := getWriteOptions(opts...)
+	if c.Config.AuthorizationModelId != "" {
+		wopts.AuthorizationModelId = openfga.PtrString(c.Config.AuthorizationModelId)
+	}
 
-	resp, err := c.Ofga.DeleteTuples(ctx).Body(tuples).Options(opts).Execute()
+	resp, err := c.Ofga.DeleteTuples(ctx).Body(tuples).Options(wopts).Execute()
 	if err != nil {
 		log.Error().Err(err).Msg("error deleting relationship tuples")
 
@@ -348,19 +358,15 @@ func (c *Client) deleteRelationshipTuple(ctx context.Context, tuples []openfga.T
 }
 
 // getAllTuples gets all the relationship tuples in the openFGA store
-func (c *Client) getAllTuples(ctx context.Context) ([]openfga.Tuple, error) {
+func (c *Client) getAllTuples(ctx context.Context, opts ...RequestOption) ([]openfga.Tuple, error) {
 	var tuples []openfga.Tuple
 
-	opts := ofgaclient.ClientReadOptions{
-		PageSize:    openfga.PtrInt32(defaultPageSize),
-		Consistency: &defaultConsistency,
-	}
-
+	ropts := getReadOptions(opts...)
 	notComplete := true
 
 	// paginate through all the tuples
 	for notComplete {
-		resp, err := c.Ofga.Read(ctx).Options(opts).Execute()
+		resp, err := c.Ofga.Read(ctx).Options(ropts).Execute()
 		if err != nil {
 			log.Error().Err(err).Msg("error getting relationship tuples")
 
@@ -372,7 +378,7 @@ func (c *Client) getAllTuples(ctx context.Context) ([]openfga.Tuple, error) {
 		if resp.ContinuationToken == "" {
 			notComplete = false
 		} else {
-			opts.ContinuationToken = &resp.ContinuationToken
+			ropts.ContinuationToken = &resp.ContinuationToken
 		}
 	}
 
@@ -380,7 +386,7 @@ func (c *Client) getAllTuples(ctx context.Context) ([]openfga.Tuple, error) {
 }
 
 // DeleteAllObjectRelations deletes all the relationship tuples for a given object
-func (c *Client) DeleteAllObjectRelations(ctx context.Context, object string, excludeRelations []string) error {
+func (c *Client) DeleteAllObjectRelations(ctx context.Context, object string, excludeRelations []string, opts ...RequestOption) error {
 	// validate object is not empty
 	if object == "" {
 		return ErrMissingObjectOnDeletion
@@ -391,7 +397,7 @@ func (c *Client) DeleteAllObjectRelations(ctx context.Context, object string, ex
 		return newInvalidEntityError(object)
 	}
 
-	tuples, err := c.getAllTuples(ctx)
+	tuples, err := c.getAllTuples(ctx, opts...)
 	if err != nil {
 		return err
 	}
@@ -424,7 +430,7 @@ func (c *Client) DeleteAllObjectRelations(ctx context.Context, object string, ex
 
 		allTuples := tuplesToDelete[i:end]
 
-		if _, err := c.deleteRelationshipTuple(ctx, allTuples); err != nil {
+		if _, err := c.deleteRelationshipTuple(ctx, allTuples, opts...); err != nil {
 			return err
 		}
 	}
