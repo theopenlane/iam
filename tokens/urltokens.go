@@ -315,22 +315,16 @@ func (t *OrgInviteToken) Verify(signature string, secret []byte) error {
 
 // DownloadToken encodes the metadata required to authorize a proxied download.
 type DownloadToken struct {
-	TokenID     ulid.ULID `msgpack:"token_id"`
-	ObjectURI   string    `msgpack:"object_uri"`
-	UserID      ulid.ULID `msgpack:"user_id,omitempty"`
-	OrgID       ulid.ULID `msgpack:"org_id,omitempty"`
-	ContentType string    `msgpack:"content_type,omitempty"`
-	FileName    string    `msgpack:"file_name,omitempty"`
+	ObjectURI string    `msgpack:"object_uri"`
+	UserID    ulid.ULID `msgpack:"user_id,omitempty"`
+	OrgID     ulid.ULID `msgpack:"org_id,omitempty"`
 	SigningInfo
 }
 
 type downloadTokenConfig struct {
-	tokenID     ulid.ULID
-	userID      ulid.ULID
-	orgID       ulid.ULID
-	contentType string
-	fileName    string
-	expiresIn   time.Duration
+	userID    ulid.ULID
+	orgID     ulid.ULID
+	expiresIn time.Duration
 }
 
 // DownloadTokenOption mutates the configuration for a new download token.
@@ -343,7 +337,6 @@ func NewDownloadToken(objectURI string, opts ...DownloadTokenOption) (*DownloadT
 	}
 
 	cfg := downloadTokenConfig{
-		tokenID:   ulids.New(),
 		expiresIn: time.Minute * downloadTokenDefaultExpirationMinutes,
 	}
 
@@ -353,37 +346,17 @@ func NewDownloadToken(objectURI string, opts ...DownloadTokenOption) (*DownloadT
 		}
 	}
 
-	if cfg.expiresIn <= 0 {
-		cfg.expiresIn = time.Minute * downloadTokenDefaultExpirationMinutes
-	}
-
-	if ulids.IsZero(cfg.tokenID) {
-		cfg.tokenID = ulids.New()
-	}
-
 	signing, err := NewSigningInfo(cfg.expiresIn)
 	if err != nil {
 		return nil, err
 	}
 
 	return &DownloadToken{
-		TokenID:     cfg.tokenID,
 		ObjectURI:   objectURI,
 		UserID:      cfg.userID,
 		OrgID:       cfg.orgID,
-		ContentType: cfg.contentType,
-		FileName:    cfg.fileName,
 		SigningInfo: signing,
 	}, nil
-}
-
-// WithDownloadTokenID overrides the default random token identifier.
-func WithDownloadTokenID(id ulid.ULID) DownloadTokenOption {
-	return func(cfg *downloadTokenConfig) {
-		if !ulids.IsZero(id) {
-			cfg.tokenID = id
-		}
-	}
 }
 
 // WithDownloadTokenUserID associates the token with a user identifier.
@@ -397,20 +370,6 @@ func WithDownloadTokenUserID(id ulid.ULID) DownloadTokenOption {
 func WithDownloadTokenOrgID(id ulid.ULID) DownloadTokenOption {
 	return func(cfg *downloadTokenConfig) {
 		cfg.orgID = id
-	}
-}
-
-// WithDownloadTokenContentType sets the expected content type for the download.
-func WithDownloadTokenContentType(contentType string) DownloadTokenOption {
-	return func(cfg *downloadTokenConfig) {
-		cfg.contentType = contentType
-	}
-}
-
-// WithDownloadTokenFileName sets the download file name to advertise.
-func WithDownloadTokenFileName(fileName string) DownloadTokenOption {
-	return func(cfg *downloadTokenConfig) {
-		cfg.fileName = fileName
 	}
 }
 
@@ -428,10 +387,6 @@ func (t *DownloadToken) Sign() (string, []byte, error) {
 
 // Validate ensures the token contains the expected metadata.
 func (t *DownloadToken) Validate() error {
-	if ulids.IsZero(t.TokenID) {
-		return ErrDownloadTokenMissingTokenID
-	}
-
 	if t.ObjectURI == "" {
 		return ErrDownloadTokenMissingObjectURI
 	}
