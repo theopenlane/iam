@@ -69,11 +69,6 @@ const (
 	maxWrites = 10
 )
 
-// errors returned from FGA for duplicate writes or non-existent deletes
-const (
-	writeAlreadyExistsError = "write a tuple which already exists"
-	deleteDoesNotExistError = "delete a tuple which does not exist"
-)
 
 // TupleKey represents a relationship tuple in OpenFGA
 type TupleKey struct {
