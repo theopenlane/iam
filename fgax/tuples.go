@@ -220,7 +220,7 @@ func tupleKeyToDeleteRequest(deletes []TupleKey) (d []openfga.TupleKeyWithoutCon
 // WriteTupleKeys takes a tuples keys, converts them to a client write request, which can contain up to 10 writes and deletes,
 // and executes in a single transaction
 func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes []TupleKey, opts ...RequestOption) (*ofgaclient.ClientWriteResponse, error) {
-	wopts := c.getWriteOptions()
+	wopts := getWriteOptions(opts...)
 	// ensure authorization model id is set from client config when available
 	if c.Config.AuthorizationModelId != "" {
 		wopts.AuthorizationModelId = openfga.PtrString(c.Config.AuthorizationModelId)
@@ -244,7 +244,7 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 // Because the delete doesn't take into account conditions, you can use the same key to delete the existing tuple
 // It will return the response from the write request
 func (c *Client) UpdateConditionalTupleKey(ctx context.Context, tuple TupleKey, opts ...RequestOption) (*ofgaclient.ClientWriteResponse, error) {
-	wopts := c.getWriteOptions()
+	wopts := getWriteOptions(opts...)
 	if c.Config.AuthorizationModelId != "" {
 		wopts.AuthorizationModelId = openfga.PtrString(c.Config.AuthorizationModelId)
 	}
@@ -287,7 +287,7 @@ func (c *Client) deleteRelationshipTuple(ctx context.Context, tuples []openfga.T
 		return nil, nil
 	}
 
-	wopts := c.getWriteOptions()
+	wopts := getWriteOptions(opts...)
 	if c.Config.AuthorizationModelId != "" {
 		wopts.AuthorizationModelId = openfga.PtrString(c.Config.AuthorizationModelId)
 	}

@@ -138,10 +138,9 @@ func (o *OpenFGATestFixture) NewFgaClient(ctx context.Context) (*fgax.Client, er
 	}
 
 	fgaConfig := fgax.Config{
-		StoreName:               o.storeName,
-		HostURL:                 host,
-		ModelFile:               o.modelFile,
-		IgnoreDuplicateKeyError: true,
+		StoreName: o.storeName,
+		HostURL:   host,
+		ModelFile: o.modelFile,
 	}
 
 	c, err := fgax.CreateFGAClientWithStore(ctx, fgaConfig)

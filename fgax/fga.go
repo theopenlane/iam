@@ -15,8 +15,6 @@ type Client struct {
 	Ofga ofgaclient.SdkClient
 	// Config is the client configuration
 	Config ofgaclient.ClientConfiguration
-	// IgnoreDuplicateKeyError ignores the error when a key already exists or a delete request is made for a non-existent key
-	IgnoreDuplicateKeyError bool
 }
 
 // Config configures the openFGA setup
@@ -146,41 +144,11 @@ func WithToken(token string) Option {
 	}
 }
 
-// getWriteOptions creates write options with conflict settings based on the client configuration
-func (c *Client) getWriteOptions(base ...ofgaclient.ClientWriteOptions) ofgaclient.ClientWriteOptions {
-	var opts ofgaclient.ClientWriteOptions
-	if len(base) > 0 {
-		opts = base[0]
-	}
-	
-	// Set conflict options based on IgnoreDuplicateKeyError setting
-	opts.Conflict = ofgaclient.ClientWriteConflictOptions{
-		OnDuplicateWrites: ofgaclient.CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_ERROR,
-		OnMissingDeletes:   ofgaclient.CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_ERROR,
-	}
 
-	if c.IgnoreDuplicateKeyError {
-		opts.Conflict = ofgaclient.ClientWriteConflictOptions{
-			OnDuplicateWrites: ofgaclient.CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
-			OnMissingDeletes:   ofgaclient.CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
-		}
-	}
-
-	return opts
-}
-
-// WithIgnoreDuplicateKeyError sets whether the client should ignore duplicate key errors and configures write conflict options accordingly
-func WithIgnoreDuplicateKeyError(ignore bool) Option {
-	return func(c *Client) {
-		c.IgnoreDuplicateKeyError = ignore
-	}
-}
 
 // CreateFGAClientWithStore returns a Client with a store and model configured
 func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
-	opts := []Option{
-		WithIgnoreDuplicateKeyError(c.IgnoreDuplicateKeyError),
-	}
+	opts := []Option{}
 
 	// set credentials if provided
 	if c.Credentials.APIToken != "" {
