@@ -220,7 +220,7 @@ func tupleKeyToDeleteRequest(deletes []TupleKey) (d []openfga.TupleKeyWithoutCon
 // WriteTupleKeys takes a tuples keys, converts them to a client write request, which can contain up to 10 writes and deletes,
 // and executes in a single transaction
 func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes []TupleKey, opts ...RequestOption) (*ofgaclient.ClientWriteResponse, error) {
-	wopts := getWriteOptions(opts...)
+	wopts := c.getWriteOptions()
 	// ensure authorization model id is set from client config when available
 	if c.Config.AuthorizationModelId != "" {
 		wopts.AuthorizationModelId = openfga.PtrString(c.Config.AuthorizationModelId)
@@ -244,7 +244,7 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 // Because the delete doesn't take into account conditions, you can use the same key to delete the existing tuple
 // It will return the response from the write request
 func (c *Client) UpdateConditionalTupleKey(ctx context.Context, tuple TupleKey, opts ...RequestOption) (*ofgaclient.ClientWriteResponse, error) {
-	wopts := getWriteOptions(opts...)
+	wopts := c.getWriteOptions()
 	if c.Config.AuthorizationModelId != "" {
 		wopts.AuthorizationModelId = openfga.PtrString(c.Config.AuthorizationModelId)
 	}
@@ -276,53 +276,10 @@ func (c *Client) checkWriteResponse(resp *ofgaclient.ClientWriteResponse, err er
 		return nil
 	}
 
-	// if we don't ignore duplicate key errors, return the errors now
-	if !c.IgnoreDuplicateKeyError {
-		log.Debug().Err(err).Interface("writes", resp.Writes).Interface("deletes", resp.Deletes).Msg("error writing relationship tuples")
-
-		return err
-	}
-
-	for _, writes := range resp.Writes {
-		if writes.Error != nil {
-			if strings.Contains(writes.Error.Error(), writeAlreadyExistsError) {
-				log.Debug().Err(writes.Error).Msg("relationship tuple already exists, skipping")
-
-				continue
-			}
-
-			log.Error().Err(writes.Error).
-				Str("user", writes.TupleKey.User).
-				Str("relation", writes.TupleKey.Relation).
-				Str("object", writes.TupleKey.Object).
-				Msg("error creating relationship tuples")
-
-			// returns the first error encountered
-			return newWritingTuplesError(writes.TupleKey.User, writes.TupleKey.Relation, writes.TupleKey.Object, "writing", err)
-		}
-	}
-
-	for _, deletes := range resp.Deletes {
-		if deletes.Error != nil {
-			if strings.Contains(deletes.Error.Error(), deleteDoesNotExistError) {
-				log.Debug().Err(deletes.Error).Msg("relationship does not exist, skipping")
-
-				continue
-			}
-
-			log.Error().Err(deletes.Error).
-				Str("user", deletes.TupleKey.User).
-				Str("relation", deletes.TupleKey.Relation).
-				Str("object", deletes.TupleKey.Object).
-				Msg("error deleting relationship tuples")
-
-			// returns the first delete error encountered
-			return newWritingTuplesError(deletes.TupleKey.User, deletes.TupleKey.Relation, deletes.TupleKey.Object, "writing", err)
-		}
-	}
-
-	return nil
+	log.Debug().Err(err).Interface("writes", resp.Writes).Interface("deletes", resp.Deletes).Msg("error in relationship tuples operation")
+	return err
 }
+
 
 // deleteRelationshipTuple deletes a relationship tuple in the openFGA store
 func (c *Client) deleteRelationshipTuple(ctx context.Context, tuples []openfga.TupleKeyWithoutCondition, opts ...RequestOption) (*ofgaclient.ClientWriteResponse, error) {
@@ -330,7 +287,7 @@ func (c *Client) deleteRelationshipTuple(ctx context.Context, tuples []openfga.T
 		return nil, nil
 	}
 
-	wopts := getWriteOptions(opts...)
+	wopts := c.getWriteOptions()
 	if c.Config.AuthorizationModelId != "" {
 		wopts.AuthorizationModelId = openfga.PtrString(c.Config.AuthorizationModelId)
 	}
