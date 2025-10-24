@@ -12,8 +12,11 @@ const (
 
 // RequestOptions holds per-request options that can be applied to OpenFGA requests
 type RequestOptions struct {
-	Headers               map[string]string
-	Consistency           *openfga.ConsistencyPreference
+	// Headers holds custom headers to be sent with the request
+	Headers map[string]string
+	// Consistency holds the consistency preference for the request, defaults to MINIMUM_LATENCY
+	Consistency *openfga.ConsistencyPreference
+	// IgnoreDuplicateKeyError indicates whether to ignore duplicate key errors and missing deletes, defaults to true
 	IgnoreDuplicateKeyError bool
 }
 
@@ -60,7 +63,8 @@ func WithIgnoreDuplicateKeyError(ignore bool) RequestOption {
 // getRequestOptions aggregates functional RequestOptions into a RequestOptions struct
 func getRequestOptions(opts ...RequestOption) RequestOptions {
 	ro := RequestOptions{
-		Consistency: &defaultConsistency,
+		Consistency:             &defaultConsistency,
+		IgnoreDuplicateKeyError: true,
 	}
 
 	for _, o := range opts {
@@ -130,13 +134,13 @@ func getWriteOptions(opts ...RequestOption) ofgaclient.ClientWriteOptions {
 	// Set conflict options based on IgnoreDuplicateKeyError setting
 	o.Conflict = ofgaclient.ClientWriteConflictOptions{
 		OnDuplicateWrites: ofgaclient.CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_ERROR,
-		OnMissingDeletes:   ofgaclient.CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_ERROR,
+		OnMissingDeletes:  ofgaclient.CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_ERROR,
 	}
 
 	if ro.IgnoreDuplicateKeyError {
 		o.Conflict = ofgaclient.ClientWriteConflictOptions{
 			OnDuplicateWrites: ofgaclient.CLIENT_WRITE_REQUEST_ON_DUPLICATE_WRITES_IGNORE,
-			OnMissingDeletes:   ofgaclient.CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
+			OnMissingDeletes:  ofgaclient.CLIENT_WRITE_REQUEST_ON_MISSING_DELETES_IGNORE,
 		}
 	}
 
