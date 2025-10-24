@@ -35,8 +35,6 @@ type Config struct {
 	ModelFile string `json:"modelFile" koanf:"modelFile" jsonschema:"description=path to the fga model file" default:"fga/model/model.fga"`
 	// Credentials for the client
 	Credentials Credentials `json:"credentials" koanf:"credentials" jsonschema:"description=credentials for the openFGA client"`
-	// IgnoreDuplicateKeyError ignores the error when a key already exists or a delete request is made for a non-existent key
-	IgnoreDuplicateKeyError bool `json:"ignoreDuplicateKeyError" koanf:"ignoreDuplicateKeyError" jsonschema:"description=ignore duplicate key error" default:"true"`
 }
 
 // Credentials for the openFGA client
@@ -143,8 +141,6 @@ func WithToken(token string) Option {
 		}
 	}
 }
-
-
 
 // CreateFGAClientWithStore returns a Client with a store and model configured
 func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
