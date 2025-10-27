@@ -16,6 +16,15 @@ This repository contains the `iam` libraries, which is a collection of packages 
 - tokens: tokenmanager which can create and validate tokens of various types, e.g. refresh tokens, access tokens, url tokens, etc.
 - totp: second factor authentication library for generating unique, temporary passcodes
 
+### Token Signing (EdDSA)
+
+The `tokens` package now issues and validates JWTs using Ed25519 (`EdDSA`). A few highlights:
+
+- PEM files referenced in `tokens.Config.Keys` must contain Ed25519 key material encoded as PKCS#8 (`PRIVATE KEY`) with an accompanying `PUBLIC KEY` block.
+- JWKS responses advertise `alg=EdDSA`/`kty=OKP` entries and will interoperate with lestrrat-go/jwx compatible consumers.
+- The `TokenManager` exposes `AddSigningKey`/`NewWithKey` that accept generic `crypto.Signer` implementations; callers need to pass Ed25519 signers and handle returned errors. `CurrentKeyID()` surfaces the active key identifier even when it is not a ULID.
+- The README within `tokens` documents usage in more detail, including signer helper functions.
+
 ## Install
 
 You can install `iam` by running the following command:

@@ -10,6 +10,9 @@ var (
 	// ErrTokenManagerFailedInit returns when the token manager was not correctly provided signing keys
 	ErrTokenManagerFailedInit = errors.New("token manager not initialized with signing keys")
 
+	// ErrInvalidSigningKey returns when a provided signing key cannot be used with EdDSA
+	ErrInvalidSigningKey = errors.New("signing key must provide an ed25519 public key")
+
 	// ErrFailedRetrieveClaimsFromToken returns when claims can not be retrieved from an access token
 	ErrFailedRetrieveClaimsFromToken = errors.New("could not retrieve claims from access token")
 

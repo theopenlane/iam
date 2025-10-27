@@ -69,6 +69,7 @@ func GetOrganizationIDFromContext(ctx context.Context) (string, error) {
 		if !ok || au == nil {
 			return "", ErrNoAuthUser
 		}
+
 		orgID = au.OrganizationID
 	}
 
@@ -94,6 +95,7 @@ func GetOrganizationIDsFromContext(ctx context.Context) ([]string, error) {
 		if !ok || au == nil {
 			return []string{}, ErrNoAuthUser
 		}
+
 		orgIDs = au.OrganizationIDs
 	}
 

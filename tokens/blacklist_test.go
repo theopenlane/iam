@@ -2,8 +2,8 @@ package tokens_test
 
 import (
 	"context"
+	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/rsa"
 	"fmt"
 	"testing"
 	"time"
@@ -303,7 +303,7 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 	defer client.Close()
 
 	// Setup TokenManager
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	_, key, err := ed25519.GenerateKey(rand.Reader)
 	assert.NoError(t, err)
 
 	conf := tokens.Config{
