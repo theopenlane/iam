@@ -2,8 +2,8 @@ package tokens_test
 
 import (
 	"context"
+	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/rsa"
 	"fmt"
 	"testing"
 	"time"
@@ -27,12 +27,15 @@ func TestTokenManagerWithBlacklist(t *testing.T) {
 	defer client.Close()
 
 	// Setup TokenManager
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	_, key, err := ed25519.GenerateKey(rand.Reader)
 	assert.NoError(t, err)
 
 	conf := tokens.Config{
-		Audience: "test-audience",
-		Issuer:   "test-issuer",
+		Audience:        "test-audience",
+		Issuer:          "test-issuer",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tm, err := tokens.NewWithKey(key, conf)
@@ -222,12 +225,15 @@ func TestTokenManagerBlacklistEdgeCases(t *testing.T) {
 	defer client.Close()
 
 	// Setup TokenManager
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	_, key, err := ed25519.GenerateKey(rand.Reader)
 	assert.NoError(t, err)
 
 	conf := tokens.Config{
-		Audience: "test-audience",
-		Issuer:   "test-issuer",
+		Audience:        "test-audience",
+		Issuer:          "test-issuer",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tm, err := tokens.NewWithKey(key, conf)
@@ -285,12 +291,15 @@ func BenchmarkTokenManagerBlacklist(b *testing.B) {
 	defer client.Close()
 
 	// Setup TokenManager
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	_, key, err := ed25519.GenerateKey(rand.Reader)
 	assert.NoError(b, err)
 
 	conf := tokens.Config{
-		Audience: "bench-audience",
-		Issuer:   "bench-issuer",
+		Audience:        "bench-audience",
+		Issuer:          "bench-issuer",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tm, err := tokens.NewWithKey(key, conf)

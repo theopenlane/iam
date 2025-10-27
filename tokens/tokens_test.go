@@ -1,8 +1,8 @@
 package tokens_test
 
 import (
+	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/rsa"
 	"testing"
 	"time"
 
@@ -203,11 +203,11 @@ func (s *TokenTestSuite) TestInvalidTokens() {
 	}
 
 	// Test validation signed with wrong kid
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 	token.Header["kid"] = "01GE63H600NKHE7B8Y7MHW1VGV"
-	badkey, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(err, "could not generate bad rsa keys")
-	tks, err := token.SignedString(badkey)
+	_, badKey, err := ed25519.GenerateKey(rand.Reader)
+	require.NoError(err, "could not generate bad ed25519 keys")
+	tks, err := token.SignedString(badKey)
 	require.NoError(err, "could not sign token with bad kid")
 
 	_, err = tm.Verify(tks)
@@ -215,11 +215,11 @@ func (s *TokenTestSuite) TestInvalidTokens() {
 
 	// Test validation signed with good kid but wrong key
 	token.Header["kid"] = "01GE62EXXR0X0561XD53RDFBQJ"
-	tks, err = token.SignedString(badkey)
+	tks, err = token.SignedString(badKey)
 	require.NoError(err, "could not sign token with bad keys and good kid")
 
 	_, err = tm.Verify(tks)
-	require.EqualError(err, "token signature is invalid: crypto/rsa: verification error")
+	require.EqualError(err, "token signature is invalid: ed25519: verification error")
 
 	// Test time-based validation: nbf
 	tks, err = tm.Sign(token)
@@ -230,12 +230,12 @@ func (s *TokenTestSuite) TestInvalidTokens() {
 
 	// Test time-based validation: exp
 	claims.NotBefore = jwt.NewNumericDate(now.Add(-1 * time.Hour))
-	tks, err = tm.Sign(jwt.NewWithClaims(jwt.SigningMethodRS256, claims)) // nolint
+	tks, err = tm.Sign(jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)) // nolint
 	require.NoError(err, "could not sign token with good keys")
 
 	// Test audience verification
 	claims.ExpiresAt = jwt.NewNumericDate(now.Add(1 * time.Hour))
-	tks, err = tm.Sign(jwt.NewWithClaims(jwt.SigningMethodRS256, claims))
+	tks, err = tm.Sign(jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims))
 	require.NoError(err, "could not sign token with good keys")
 
 	_, err = tm.Verify(tks)
@@ -244,7 +244,7 @@ func (s *TokenTestSuite) TestInvalidTokens() {
 	// Token is finally valid
 	claims.Audience = jwt.ClaimStrings{"http://localhost:3000"}
 	claims.Issuer = "http://localhost:3001"
-	tks, err = tm.Sign(jwt.NewWithClaims(jwt.SigningMethodRS256, claims))
+	tks, err = tm.Sign(jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims))
 	require.NoError(err, "could not sign token with good keys")
 	_, err = tm.Verify(tks)
 	require.NoError(err, "claims are still not valid")
@@ -304,8 +304,8 @@ func (s *TokenTestSuite) TestSigningKeyManagement() {
 	require := s.Require()
 
 	// start token manager that has a single key
-	key1, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(err, "could not generate rsa key")
+	_, key1, err := ed25519.GenerateKey(rand.Reader)
+	require.NoError(err, "could not generate ed25519 key")
 
 	conf := tokens.Config{
 		Audience:        audience,
@@ -327,13 +327,14 @@ func (s *TokenTestSuite) TestSigningKeyManagement() {
 	require.NoError(err, "could not sign token with key1")
 
 	// Generate a second key with a ULID that is newer so AddSigningKey rotates to it
-	key2, err := rsa.GenerateKey(rand.Reader, 2048) //nolint:gosec
-	require.NoError(err, "could not generate rsa key")
+	_, key2, err := ed25519.GenerateKey(rand.Reader) //nolint:gosec
+	require.NoError(err, "could not generate ed25519 key")
 
 	kid2 := ulids.FromTime(time.Now().Add(time.Second))
-	tm.AddSigningKey(kid2, key2)
+	require.NoError(tm.AddSigningKey(kid2, key2))
 
 	require.Equal(kid2, tm.CurrentKey(), "latest key should be active")
+	require.Equal(kid2.String(), tm.CurrentKeyID())
 
 	// JWKS should include both keys.
 	jwks, err := tm.Keys()
@@ -357,6 +358,7 @@ func (s *TokenTestSuite) TestSigningKeyManagement() {
 	err = tm.UseSigningKey(kid1)
 	require.NoError(err)
 	require.Equal(kid1, tm.CurrentKey())
+	require.Equal(kid1.String(), tm.CurrentKeyID())
 
 	tok3, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
 	require.NoError(err)
@@ -475,12 +477,15 @@ func TestParseUnverifiedTokenClaims(t *testing.T) {
 }
 
 func TestRefreshAudience(t *testing.T) {
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	_, key, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 
 	conf := tokens.Config{
-		Audience: "http://localhost:3000",
-		Issuer:   "https://example.com",
+		Audience:        "http://localhost:3000",
+		Issuer:          "https://example.com",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tm, err := tokens.NewWithKey(key, conf)
@@ -490,28 +495,58 @@ func TestRefreshAudience(t *testing.T) {
 	require.Equal(t, "https://example.com/v1/refresh", tm.RefreshAudience())
 
 	// If issuer is invalid, fallback to DefaultRefreshAudience
-	badKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	_, badKey, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 
 	badConf := tokens.Config{
-		Audience: "http://localhost:3000",
-		Issuer:   "%gh$?",
+		Audience:        "http://localhost:3000",
+		Issuer:          "%gh$?",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tmBad, err := tokens.NewWithKey(badKey, badConf)
 	require.NoError(t, err)
 	require.Equal(t, tokens.DefaultRefreshAudience, tmBad.RefreshAudience())
 
-	// RefreshAudience from config should be ignored
+	// RefreshAudience from config should be respected
 	confOverride := tokens.Config{
 		Audience:        "http://localhost:3000",
 		Issuer:          "https://example.com",
 		RefreshAudience: "https://override.example.com/refresh",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
-	key2, err := rsa.GenerateKey(rand.Reader, 2048) //nolint:gosec
+	_, key2, err := ed25519.GenerateKey(rand.Reader) //nolint:gosec
 	require.NoError(t, err)
 	tmOverride, err := tokens.NewWithKey(key2, confOverride)
 	require.NoError(t, err)
-	require.Equal(t, "https://example.com/v1/refresh", tmOverride.RefreshAudience())
+	require.Equal(t, "https://override.example.com/refresh", tmOverride.RefreshAudience())
+}
+
+func TestTokenManagerAllowsNonULIDKeyID(t *testing.T) {
+	conf := tokens.Config{
+		Keys: map[string]string{
+			"primary": "testdata/01GE62EXXR0X0561XD53RDFBQJ.pem",
+		},
+		Audience:        audience,
+		Issuer:          issuer,
+		AccessDuration:  time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
+	}
+
+	tm, err := tokens.New(conf)
+	require.NoError(t, err)
+	require.Equal(t, "primary", tm.CurrentKeyID())
+	require.Equal(t, ulids.Null, tm.CurrentKey())
+
+	claims := &tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}}
+	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
+	signed, err := tm.Sign(token)
+	require.NoError(t, err)
+	require.NotEmpty(t, signed)
 }

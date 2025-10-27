@@ -2,8 +2,8 @@ package tokens_test
 
 import (
 	"context"
+	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/rsa"
 	"testing"
 	"time"
 
@@ -14,12 +14,12 @@ import (
 	"github.com/theopenlane/iam/tokens"
 )
 
-var testKey *rsa.PrivateKey
+var testKey ed25519.PrivateKey
 
 func init() {
 	var err error
 
-	testKey, err = rsa.GenerateKey(rand.Reader, 2048)
+	_, testKey, err = ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		panic(err)
 	}
@@ -282,7 +282,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 			name: "token with wrong signature",
 			setupFunc: func() string {
 				// Create a different key to sign with
-				differentKey, err := rsa.GenerateKey(rand.Reader, 2048)
+				_, differentKey, err := ed25519.GenerateKey(rand.Reader)
 				assert.NoError(t, err)
 
 				wrongConf := tokens.Config{
@@ -290,6 +290,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 					Issuer:          "https://auth.example.com",
 					AccessDuration:  1 * time.Hour,
 					RefreshDuration: 24 * time.Hour,
+					RefreshOverlap:  -15 * time.Minute,
 				}
 
 				wrongTM, err := tokens.NewWithKey(differentKey, wrongConf)
@@ -335,7 +336,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 					// Type is missing
 				}
 
-				token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+				token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 				tokenString, err := tm.Sign(token)
 				assert.NoError(t, err)
 				return tokenString
@@ -360,7 +361,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 					// ImpersonatorID is missing
 				}
 
-				token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+				token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 				tokenString, err := tm.Sign(token)
 				assert.NoError(t, err)
 				return tokenString
@@ -385,7 +386,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 					// UserID is missing
 				}
 
-				token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+				token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 				tokenString, err := tm.Sign(token)
 				assert.NoError(t, err)
 				return tokenString
@@ -410,7 +411,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 					UserID:         "test",
 				}
 
-				token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+				token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 				tokenString, err := tm.Sign(token)
 				assert.NoError(t, err)
 				return tokenString
@@ -435,7 +436,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 					UserID:         "test",
 				}
 
-				token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+				token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 				tokenString, err := tm.Sign(token)
 				assert.NoError(t, err)
 				return tokenString
@@ -533,10 +534,10 @@ func TestTokenManager_ImpersonationTokenLifecycle(t *testing.T) {
 
 func TestTokenManager_ImpersonationTokenWithDifferentKeyIDs(t *testing.T) {
 	// Test token validation with multiple keys (key rotation scenario)
-	key1, err := rsa.GenerateKey(rand.Reader, 2048)
+	_, key1, err := ed25519.GenerateKey(rand.Reader)
 	assert.NoError(t, err)
 
-	key2, err := rsa.GenerateKey(rand.Reader, 2048)
+	_, key2, err := ed25519.GenerateKey(rand.Reader)
 	assert.NoError(t, err)
 
 	conf := tokens.Config{
@@ -544,6 +545,7 @@ func TestTokenManager_ImpersonationTokenWithDifferentKeyIDs(t *testing.T) {
 		Issuer:          "https://auth.example.com",
 		AccessDuration:  1 * time.Hour,
 		RefreshDuration: 24 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tm, err := tokens.NewWithKey(key1, conf)
@@ -551,7 +553,7 @@ func TestTokenManager_ImpersonationTokenWithDifferentKeyIDs(t *testing.T) {
 
 	// Add second key
 	keyID := ulids.New()
-	tm.AddSigningKey(keyID, key2)
+	assert.NoError(t, tm.AddSigningKey(keyID, key2))
 
 	ctx := context.Background()
 	opts := tokens.CreateImpersonationTokenOptions{

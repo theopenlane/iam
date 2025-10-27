@@ -69,7 +69,6 @@ const (
 	maxWrites = 10
 )
 
-
 // TupleKey represents a relationship tuple in OpenFGA
 type TupleKey struct {
 	// Subject is the entity that is the subject of the relationship, usually a user
@@ -274,7 +273,6 @@ func (c *Client) checkWriteResponse(resp *ofgaclient.ClientWriteResponse, err er
 	log.Debug().Err(err).Interface("writes", resp.Writes).Interface("deletes", resp.Deletes).Msg("error in relationship tuples operation")
 	return err
 }
-
 
 // deleteRelationshipTuple deletes a relationship tuple in the openFGA store
 func (c *Client) deleteRelationshipTuple(ctx context.Context, tuples []openfga.TupleKeyWithoutCondition, opts ...RequestOption) (*ofgaclient.ClientWriteResponse, error) {

@@ -48,10 +48,24 @@ func (v *JWKSValidator) keyFunc(token *jwt.Token) (publicKey any, err error) {
 	}
 
 	// Per JWT security notice: do not forget to validate alg is expected
-	alg, ok := key.Algorithm()
+	method := token.Method.Alg()
+	allowed := false
 
-	if !ok || token.Method.Alg() != alg.String() {
+	for _, allowedAlg := range allowedAlgorithms {
+		if method == allowedAlg {
+			allowed = true
+			break
+		}
+	}
+
+	if !allowed {
 		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"]) //nolint:err113
+	}
+
+	if alg, ok := key.Algorithm(); ok {
+		if method != alg.String() {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"]) //nolint:err113
+		}
 	}
 
 	if err = jwk.Export(key, &publicKey); err != nil {

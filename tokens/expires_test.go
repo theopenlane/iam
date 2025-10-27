@@ -1,8 +1,8 @@
 package tokens_test
 
 import (
+	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/rsa"
 	"testing"
 	"time"
 
@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	accessToken  = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAxR1g2NDdTOFBDVkJDUEpIWEdKUjI2UE42IiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xIiwiYXVkIjpbImh0dHA6Ly8xMjcuMC4wLjEiXSwiZXhwIjoxNjgwNjE1MzMwLCJuYmYiOjE2ODA2MTE3MzAsImlhdCI6MTY4MDYxMTczMCwianRpIjoiMDFneDY0N3M4cGN2YmNwamh4Z2pzcG04N3AiLCJuYW1lIjoiSm9obiBEb2UiLCJlbWFpbCI6Impkb2VAZXhhbXBsZS5jb20iLCJvcmciOiIxMjMiLCJwcm9qZWN0IjoiYWJjIiwicGVybWlzc2lvbnMiOlsicmVhZDpkYXRhIiwid3JpdGU6ZGF0YSJdfQ.LLb6c2RdACJmoT3IFgJEwfu2_YJMcKgM2bF3ISF41A37gKTOkBaOe-UuTmjgZ7WEcuQ-cVkht0KI_4zqYYctB_WB9481XoNwff5VgFf3xrPdOYxS00YXQnl09RRqt6Fmca8nvd4mXfdO7uvpyNVuCIqNxBPXdSnRhreSoFB1GtFm42sBPAD7vF-MQUmU0c4PTsbiCfhR1_buH0NYEE1QFp3vYcgoiXOJHh9VStmRscqvLB12AQrcs26G9opdTCCORmvR2W3JLJ_hliHyp-d9lhXmCDFyiGkDEhTAUglqwBjqz5SO1UfAThWJO18PvZl4QPhb724oNT82VPh0DMDwfw" // nolint: gosec
-	refreshToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjAxR1g2NDdTOFBDVkJDUEpIWEdKUjI2UE42IiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xIiwiYXVkIjpbImh0dHA6Ly8xMjcuMC4wLjEiLCJodHRwOi8vMTI3LjAuMC4xL3YxL3JlZnJlc2giXSwiZXhwIjoxNjgwNjE4OTMwLCJuYmYiOjE2ODA2MTQ0MzAsImlhdCI6MTY4MDYxMTczMCwianRpIjoiMDFneDY0N3M4cGN2YmNwamh4Z2pzcG04N3AifQ.CLHmtZwSPFCPoMBX06D_C3h3WuEonUbvbfWLvtmrMmIwnTwQ4hxsaRJo_a4qI-emp1HNg-yu_7c3VNwjkti-d0c7CAGApTaf5eRdGJ5HGUkI8RDHbbMFaOK86nAFnzdPJ2JLmGtLzvpF9eFXFllDhRiAB-2t0uKcOdN7cFghdwyWXIVJIJNjngF_WUFklmLKnqORtj_tA6UJ6NJnZln34eMGftAHbuH8x-xUiRePHnro4ydS43CKNOgRP8biMHiRR2broBz0apIt30TeQShaBSbmGx__LYdm7RKPJNVHAn_3h_PwwKQG567-Aqabg6TSmpwhXCk_RfUyQVGv2b997w"                                                                                                                 // nolint: gosec
+	accessToken  = "eyJhbGciOiJFZERTQSIsImtpZCI6IjAxR1g2NDdTOFBDVkJDUEpIWEdKUjI2UE42IiwidHlwIjoiSldUIn0.eyJhdWQiOlsiaHR0cDovLzEyNy4wLjAuMSJdLCJlbWFpbCI6Impkb2VAZXhhbXBsZS5jb20iLCJleHAiOjE2ODA2MTUzMzAsImlhdCI6MTY4MDYxMTczMCwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMSIsImp0aSI6IjAxZ3g2NDdzOHBjdmJjcGpoeGdqc3BtODdwIiwibmFtZSI6IkpvaG4gRG9lIiwibmJmIjoxNjgwNjExNzMwLCJvcmciOiIxMjMiLCJwZXJtaXNzaW9ucyI6WyJyZWFkOmRhdGEiLCJ3cml0ZTpkYXRhIl0sInByb2plY3QiOiJhYmMifQ.L11co-vnWfdmabTYpw8JLPKkAmho7cqbEnd9KqO6xlaoHolVSZ0PiWo_vd4909GScaWxG5wma5tlqTkIpe_PAw" // nolint: gosec
+	refreshToken = "eyJhbGciOiJFZERTQSIsImtpZCI6IjAxR1g2NDdTOFBDVkJDUEpIWEdKUjI2UE42IiwidHlwIjoiSldUIn0.eyJhdWQiOlsiaHR0cDovLzEyNy4wLjAuMSIsImh0dHA6Ly8xMjcuMC4wLjEvdjEvcmVmcmVzaCJdLCJleHAiOjE2ODA2MTg5MzAsImlhdCI6MTY4MDYxMTczMCwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMSIsImp0aSI6IjAxZ3g2NDdzOHBjdmJjcGpoeGdqc3BtODdwIiwibmJmIjoxNjgwNjE0NDMwfQ.tMM6A_xlWwULGTvXN8YUUJ8BcJ5OsPC3L-u0I0u8I-3emckidiXm9OfZ0bHwIO0xgp_r6-ICnfyttu5FgmZrCw"                                                                                                                 // nolint: gosec
 )
 
 func TestParse(t *testing.T) {
@@ -66,7 +66,7 @@ func TestIsExpired(t *testing.T) {
 	})
 
 	t.Run("Valid Token", func(t *testing.T) {
-		key, err := rsa.GenerateKey(rand.Reader, 2048)
+		_, key, err := ed25519.GenerateKey(rand.Reader)
 		assert.NoError(t, err)
 
 		conf := tokens.Config{

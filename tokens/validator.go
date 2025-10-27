@@ -37,7 +37,7 @@ func (v *validator) Verify(tks string) (claims *Claims, err error) {
 func (v *validator) VerifyWithContext(ctx context.Context, tks string) (claims *Claims, err error) {
 	var token *jwt.Token
 
-	if token, err = jwt.ParseWithClaims(tks, &Claims{}, v.keyFunc, jwt.WithValidMethods([]string{signingMethod.Alg()})); err != nil {
+	if token, err = jwt.ParseWithClaims(tks, &Claims{}, v.keyFunc, jwt.WithValidMethods(allowedAlgorithms)); err != nil {
 		return nil, err
 	}
 
@@ -112,7 +112,7 @@ func (v *validator) getUserID(claims *Claims) string {
 // handled on a case-by-case basis; for example by validating an expired access token
 // during reauthentication
 func (v *validator) Parse(tks string) (claims *Claims, err error) {
-	parser := jwt.NewParser(jwt.WithValidMethods([]string{signingMethod.Alg()}), jwt.WithoutClaimsValidation())
+	parser := jwt.NewParser(jwt.WithValidMethods(allowedAlgorithms), jwt.WithoutClaimsValidation())
 	claims = &Claims{}
 
 	if _, err = parser.ParseWithClaims(tks, claims, v.keyFunc); err != nil {
