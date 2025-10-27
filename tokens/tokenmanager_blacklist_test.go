@@ -31,8 +31,11 @@ func TestTokenManagerWithBlacklist(t *testing.T) {
 	assert.NoError(t, err)
 
 	conf := tokens.Config{
-		Audience: "test-audience",
-		Issuer:   "test-issuer",
+		Audience:        "test-audience",
+		Issuer:          "test-issuer",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tm, err := tokens.NewWithKey(key, conf)
@@ -226,8 +229,11 @@ func TestTokenManagerBlacklistEdgeCases(t *testing.T) {
 	assert.NoError(t, err)
 
 	conf := tokens.Config{
-		Audience: "test-audience",
-		Issuer:   "test-issuer",
+		Audience:        "test-audience",
+		Issuer:          "test-issuer",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tm, err := tokens.NewWithKey(key, conf)
@@ -289,8 +295,11 @@ func BenchmarkTokenManagerBlacklist(b *testing.B) {
 	assert.NoError(b, err)
 
 	conf := tokens.Config{
-		Audience: "bench-audience",
-		Issuer:   "bench-issuer",
+		Audience:        "bench-audience",
+		Issuer:          "bench-issuer",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tm, err := tokens.NewWithKey(key, conf)

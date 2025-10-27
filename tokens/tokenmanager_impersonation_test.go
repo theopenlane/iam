@@ -290,6 +290,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 					Issuer:          "https://auth.example.com",
 					AccessDuration:  1 * time.Hour,
 					RefreshDuration: 24 * time.Hour,
+					RefreshOverlap:  -15 * time.Minute,
 				}
 
 				wrongTM, err := tokens.NewWithKey(differentKey, wrongConf)
@@ -544,6 +545,7 @@ func TestTokenManager_ImpersonationTokenWithDifferentKeyIDs(t *testing.T) {
 		Issuer:          "https://auth.example.com",
 		AccessDuration:  1 * time.Hour,
 		RefreshDuration: 24 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tm, err := tokens.NewWithKey(key1, conf)

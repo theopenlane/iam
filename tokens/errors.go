@@ -9,21 +9,18 @@ import (
 var (
 	// ErrTokenManagerFailedInit returns when the token manager was not correctly provided signing keys
 	ErrTokenManagerFailedInit = errors.New("token manager not initialized with signing keys")
-
 	// ErrInvalidSigningKey returns when a provided signing key cannot be used with EdDSA
 	ErrInvalidSigningKey = errors.New("signing key must provide an ed25519 public key")
-
 	// ErrFailedRetrieveClaimsFromToken returns when claims can not be retrieved from an access token
 	ErrFailedRetrieveClaimsFromToken = errors.New("could not retrieve claims from access token")
-
 	// ErrTokenMissingKid returns when the kid cannot be found in the header of the token
 	ErrTokenMissingKid = errors.New("token does not have kid in header")
-
 	// ErrFailedParsingKid returns when the kid could not be parsed
 	ErrFailedParsingKid = errors.New("could not parse kid: %s")
-
 	// ErrUnknownSigningKey returns when the signing key fetched does not match the loaded managed keys
 	ErrUnknownSigningKey = errors.New("unknown signing key")
+	// ErrConfigIsInvalid returns when the token manager configuration is invalid
+	ErrConfigIsInvalid = errors.New("token manager configuration is invalid")
 )
 
 var (
@@ -31,90 +28,64 @@ var (
 
 	// ErrTokenMalformed returns when a token is malformed
 	ErrTokenMalformed = errors.New("token is malformed")
-
 	// ErrTokenUnverifiable is returned when the token could not be verified because of signing problems
 	ErrTokenUnverifiable = errors.New("token is unverifiable")
-
 	// ErrTokenSignatureInvalid  is returned when the signature is invalid
 	ErrTokenSignatureInvalid = errors.New("token signature is invalid")
-
 	// ErrTokenInvalidAudience is returned when AUD validation failed
 	ErrTokenInvalidAudience = errors.New("token has invalid audience")
-
 	// ErrTokenExpired  is returned when EXP validation failed
 	ErrTokenExpired = errors.New("token is expired")
-
 	// ErrTokenUsedBeforeIssued is returned when the token is used before issued
 	ErrTokenUsedBeforeIssued = errors.New("token used before issued")
-
 	// ErrTokenInvalidIssuer is returned when ISS validation failed
 	ErrTokenInvalidIssuer = errors.New("token has invalid issuer")
-
 	// ErrTokenNotValidYet is returned when NBF validation failed
 	ErrTokenNotValidYet = errors.New("token is not valid yet")
-
 	// ErrTokenNotValid is returned when the token is invalid
 	ErrTokenNotValid = errors.New("token is invalid")
-
 	// ErrTokenInvalidID is returned when the token has an invalid id
 	ErrTokenInvalidID = errors.New("token has invalid id")
-
 	// ErrTokenInvalidClaims is returned when the token has invalid claims
 	ErrTokenInvalidClaims = errors.New("token has invalid claims")
-
 	// ErrMissingEmail is returned when the token is attempted to be verified but the email is missing
 	ErrMissingEmail = errors.New("unable to create verification token, email is missing")
-
 	// ErrTokenMissingEmail is returned when the verification is missing an email address
 	ErrTokenMissingEmail = errors.New("email verification token is missing email address")
-
 	// ErrInvalidSecret is returned when the verification contains of secret of invalid length
 	ErrInvalidSecret = errors.New("email verification token contains an invalid secret")
-
 	// ErrMissingUserID is returned when a reset token is trying to be created but no user id is provided
 	ErrMissingUserID = errors.New("unable to create reset token, user id is required")
-
 	// ErrTokenMissingUserID is returned when the reset token is missing the required user id
 	ErrTokenMissingUserID = errors.New("reset token is missing user id")
-
 	// ErrInviteTokenMissingOrgID is returned when the invite token is missing the org owner ID match
 	ErrInviteTokenMissingOrgID = errors.New("invite token is missing org id")
-
-	// ErrInviteTokenMissingEmail
+	// ErrInviteTokenMissingEmail is returned when the invite token is missing the email address
 	ErrInviteTokenMissingEmail = errors.New("invite token is missing email")
-
 	// ErrDownloadTokenMissingObjectURI is returned when the download token is missing the object key
 	ErrDownloadTokenMissingObjectURI = errors.New("download token is missing object key")
-
 	// ErrDownloadTokenMissingTokenID is returned when the download token is missing the token id
 	ErrDownloadTokenMissingTokenID = errors.New("download token is missing token id")
-
 	// ErrExpirationIsRequired is returned when signing info is provided a zero-value expiration
 	ErrExpirationIsRequired = errors.New("signing info requires a non-zero expiration")
-
 	// ErrFailedSigning is returned when an error occurs when trying to generate signing info with expiration
 	ErrFailedSigning = errors.New("error occurred when attempting to signing info")
-
 	// ErrTokenInvalid is returned when unable to verify the token with the signature and secret provided
 	ErrTokenInvalid = errors.New("unable to verify token")
-
 	// ErrInvalidToken is returned when a token is invalid
 	ErrInvalidToken = errors.New("invalid token")
-
 	// ErrMissingImpersonationType is returned when the impersonation type is missing
 	ErrMissingImpersonationType = errors.New("impersonation token missing type")
-
 	// ErrMissingImpersonatorID is returned when the impersonator ID is missing
 	ErrMissingImpersonatorID = errors.New("impersonation token missing impersonator ID")
-
 	// ErrMissingTargetUserID is returned when the target user ID is missing
 	ErrMissingTargetUserID = errors.New("impersonation token missing target user ID")
-
 	// ErrInvalidSigningMethod is returned when the signing method is invalid
 	ErrInvalidSigningMethod = errors.New("invalid signing method")
-
 	// ErrInvalidTokenID is returned when an empty or invalid token ID is provided
 	ErrInvalidTokenID = errors.New("invalid token ID")
+	// ErrKeyLifecycleNotEnabled is returned when key lifecycle management is not enabled
+	ErrKeyLifecycleNotEnabled = errors.New("key lifecycle management not enabled")
 )
 
 // The errors that might occur when parsing and validating a token

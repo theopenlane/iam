@@ -1,8 +1,94 @@
 # Tokens Package
 
-The token manager now signs and validates JWTs using Ed25519 (`EdDSA`).
-This section captures the practical changes and configuration knobs that differ
-from the previous RSA (`RS256`) implementation.
+The tokens package provides JWT token creation, signing, and validation using Ed25519 (`EdDSA`).
+
+## Architecture
+
+The package provides two interfaces:
+
+- **`Issuer`** - Focused on token creation and signing (recommended for new code)
+- **`TokenManager`** - Wraps Issuer and adds validation, blacklist, and replay prevention
+
+For most use cases, use `Issuer` for token creation and a separate validator for verification. This provides cleaner separation of concerns.
+
+## Quick Start
+
+### Using Issuer (Recommended)
+
+```go
+import (
+    "github.com/theopenlane/iam/tokens"
+    "time"
+)
+
+// Create configuration
+config := tokens.Config{
+    Audience:        "https://api.example.com",
+    Issuer:          "https://api.example.com",
+    AccessDuration:  1 * time.Hour,
+    RefreshDuration: 2 * time.Hour,
+    RefreshOverlap:  -15 * time.Minute,
+    Keys:            map[string]string{"01ABC": "/path/to/key.pem"},
+}
+
+// Create issuer for token creation
+issuer, err := tokens.NewIssuer(config)
+if err != nil {
+    panic(err)
+}
+
+// Create tokens
+claims := &tokens.Claims{
+    RegisteredClaims: jwt.RegisteredClaims{
+        Subject: "user-123",
+    },
+    Email: "user@example.com",
+}
+
+accessToken, refreshToken, err := issuer.CreateTokens(claims)
+if err != nil {
+    panic(err)
+}
+
+// Parse token (without validating claims)
+parsedClaims, err := issuer.Parse(accessToken)
+
+// Get JWKS for external validation
+keys, err := issuer.Keys()
+```
+
+### Using TokenManager (Includes Validation)
+
+TokenManager wraps Issuer and adds validation with optional Redis-backed blacklist and replay prevention:
+
+```go
+// Create token manager with Redis features
+config := tokens.Config{
+    Audience:        "https://api.example.com",
+    Issuer:          "https://api.example.com",
+    AccessDuration:  1 * time.Hour,
+    RefreshDuration: 2 * time.Hour,
+    RefreshOverlap:  -15 * time.Minute,
+    Keys:            map[string]string{"01ABC": "/path/to/key.pem"},
+    Redis: tokens.RedisConfig{
+        Enabled: true,
+        Config: cache.Config{
+            Address: "localhost:6379",
+        },
+    },
+}
+
+tm, err := tokens.New(config)
+
+// Create and validate tokens
+accessToken, refreshToken, err := tm.CreateTokens(claims)
+
+// Verify with blacklist and replay prevention
+validatedClaims, err := tm.VerifyWithContext(ctx, accessToken)
+
+// Revoke token
+err = tm.RevokeToken(ctx, tokenID, ttl)
+```
 
 ## Key Material
 
@@ -42,14 +128,30 @@ from the previous RSA (`RS256`) implementation.
 
 ## API Changes
 
-Breaking changes introduced by the EdDSA migration:
+### New Architecture
 
-- `tokens.NewWithKey` now accepts a `crypto.Signer` instead of `*rsa.PrivateKey`.
-- `(*TokenManager).AddSigningKey` requires a `crypto.Signer` and returns an error
-  if the signer cannot supply an Ed25519 public key.
+The package now provides:
 
-Existing call sites must pass Ed25519 private keys (which implement
-`crypto.Signer`) and handle the potential error return.
+- **`Issuer`** - New interface for token creation and signing
+  - `NewIssuer(config)` - Create issuer from configuration
+  - `NewIssuerWithKey(key, config)` - Create issuer with single key
+  - `CreateAccessToken(claims)` - Create access token
+  - `CreateRefreshToken(accessToken)` - Create refresh token
+  - `CreateTokens(claims)` - Create both tokens in one call
+  - `Sign(token)` - Sign a token
+  - `Parse(tks)` - Parse without claim validation
+  - `Keys()` - Get JWKS
+
+- **`TokenManager`** - Wraps Issuer, adds validation
+  - Inherits all Issuer methods
+  - Adds `Verify()` and `VerifyWithContext()` for validation
+  - Adds blacklist and replay prevention features
+
+### Breaking Changes
+
+- `tokens.New()` and `tokens.NewWithKey()` now accept `crypto.Signer` instead of `*rsa.PrivateKey`
+- `(*TokenManager).AddSigningKey()` requires `crypto.Signer` and returns error
+- Multi-algorithm support: EdDSA (Ed25519) is primary, RSA (RS256/RS384/RS512) supported for migration
 
 ## Validation Notes
 
@@ -63,3 +165,60 @@ Existing call sites must pass Ed25519 private keys (which implement
 Helper constructors are available when loading keys from files:
 
 - `NewFileSigner(path)` loads an Ed25519 key pair from a PEM file and returns it as a `crypto.Signer`.
+
+## Redis-Backed Security Features
+
+The tokens package supports optional Redis-backed features for enhanced security:
+
+### Token Blacklist
+
+Allows revoking individual tokens or suspending all tokens for a user. Useful for:
+- Immediate token revocation on logout
+- User account suspension
+- Compromised token mitigation
+
+### Configuration
+
+Enable Redis features by adding the `redis` configuration to your `tokens.Config`:
+
+```go
+import (
+    "github.com/theopenlane/iam/tokens"
+    "github.com/theopenlane/utils/cache"
+)
+
+config := tokens.Config{
+    Audience:        "https://api.example.com",
+    Issuer:          "https://api.example.com",
+    AccessDuration:  1 * time.Hour,
+    RefreshDuration: 2 * time.Hour,
+    RefreshOverlap:  -15 * time.Minute,
+    Keys:            map[string]string{"01ABC": "/path/to/key.pem"},
+    Redis: tokens.RedisConfig{
+        Enabled: true,
+        Config: cache.Config{
+            Enabled:  true,
+            Address:  "localhost:6379",
+            Password: "secret",
+            DB:       0,
+        },
+        BlacklistPrefix: "token:blacklist:",  // Redis key prefix for blacklist
+    },
+}
+
+tm, err := tokens.New(config)
+```
+
+### Backward Compatibility
+
+The `WithBlacklist()` method remains available for:
+- Testing with mock implementations
+- Runtime configuration changes
+- Custom Redis client management
+
+```go
+// Override config-based initialization
+tm.WithBlacklist(customBlacklist)
+```
+
+When Redis is disabled (`Redis.Enabled = false`), the package uses a no-op blacklist implementation that gracefully degrades functionality without errors.

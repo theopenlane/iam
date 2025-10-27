@@ -311,6 +311,7 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 		Issuer:          "test-issuer",
 		AccessDuration:  1 * time.Hour,
 		RefreshDuration: 24 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tm, err := tokens.NewWithKey(key, conf)

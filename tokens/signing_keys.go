@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/ed25519"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
@@ -11,12 +12,16 @@ import (
 	"os"
 )
 
+const (
+	minRSAKeySize = 2048
+)
+
 var (
-	errInvalidEd25519Key  = errors.New("signing key is not a valid ed25519 key")
+	errUnsupportedKeyType = errors.New("unsupported key type: must be RSA or Ed25519")
 	errUnexpectedPEMBlock = errors.New("unexpected PEM block type")
-	errMissingPrivateKey  = errors.New("missing ed25519 private key")
+	errMissingPrivateKey  = errors.New("missing private key")
 	errPublicKeyMismatch  = errors.New("public key mismatch")
-	errUnsupportedHash    = errors.New("unsupported hash function for Ed25519")
+	errRSAKeyTooSmall     = errors.New("RSA key must be at least 2048 bits")
 )
 
 // signerLoader defines the interface for loading cryptographic signers from filesystem paths.
@@ -24,28 +29,32 @@ type signerLoader interface {
 	Load(source string) (crypto.Signer, error)
 }
 
-// defaultSignerLoader is a stateless implementation of signerLoader that loads Ed25519 signers
-// from filesystem paths. This zero-sized struct follows the strategy pattern, allowing the token
-// manager to remain decoupled from specific loading implementations.
+// defaultSignerLoader is a stateless implementation of signerLoader that loads cryptographic signers
+// (RSA or Ed25519) from filesystem paths; purpose of this struct is to allow  the token manager to remain
+// decoupled from specific loading implementations
 type defaultSignerLoader struct{}
 
-// Load loads an Ed25519 signer from a PEM-encoded file at the specified path.
+// Load loads a cryptographic signer (RSA or Ed25519) from a PEM-encoded file at the specified path
+// The loader automatically detects the key type and validates it meets security requirements
+// (RSA keys must be at least 2048 bits)
 func (defaultSignerLoader) Load(source string) (crypto.Signer, error) {
-	return loadEd25519SignerFromFile(source)
+	return loadSignerFromFile(source)
 }
 
-// loadEd25519SignerFromFile reads and parses a PEM-encoded Ed25519 private key from the specified file path.
-// The file may contain both PRIVATE KEY and PUBLIC KEY blocks. If a public key is present, it is validated
-// against the derived public key from the private key to ensure they match.
-func loadEd25519SignerFromFile(path string) (crypto.Signer, error) {
+// loadSignerFromFile reads and parses a PEM-encoded private key (RSA or Ed25519) from the specified file path.
+// The function automatically detects the key type and performs appropriate validation:
+// - RSA keys must be at least 2048 bits
+// - Ed25519 keys are validated for correct size
+// - Public keys, if present, are validated against the derived public key
+func loadSignerFromFile(path string) (crypto.Signer, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read key from %s: %w", path, err)
 	}
 
-	var private ed25519.PrivateKey
+	var privateKey crypto.Signer
 
-	var public ed25519.PublicKey
+	var publicKey crypto.PublicKey
 
 	for {
 		var block *pem.Block
@@ -57,47 +66,99 @@ func loadEd25519SignerFromFile(path string) (crypto.Signer, error) {
 
 		switch block.Type {
 		case "PRIVATE KEY":
+			// PKCS#8 format - can be RSA or Ed25519
 			key, parseErr := x509.ParsePKCS8PrivateKey(block.Bytes)
 			if parseErr != nil {
-				return nil, fmt.Errorf("failed to parse private key in %s: %w", path, parseErr)
+				return nil, fmt.Errorf("failed to parse PKCS#8 private key in %s: %w", path, parseErr)
 			}
 
-			edKey, ok := key.(ed25519.PrivateKey)
-			if !ok {
-				return nil, fmt.Errorf("%w (private)", errInvalidEd25519Key)
+			switch typedKey := key.(type) {
+			case ed25519.PrivateKey:
+				privateKey = typedKey
+			case *rsa.PrivateKey:
+				// Validate RSA key size
+				if typedKey.N.BitLen() < minRSAKeySize {
+					return nil, fmt.Errorf("%w: got %d bits", errRSAKeyTooSmall, typedKey.N.BitLen())
+				}
+
+				privateKey = typedKey
+			default:
+				return nil, fmt.Errorf("%w: %T", errUnsupportedKeyType, key)
 			}
 
-			private = edKey
+		case "RSA PRIVATE KEY":
+			// PKCS#1 format - RSA only
+			rsaKey, parseErr := x509.ParsePKCS1PrivateKey(block.Bytes)
+			if parseErr != nil {
+				return nil, fmt.Errorf("failed to parse PKCS#1 RSA private key in %s: %w", path, parseErr)
+			}
+
+			// Validate RSA key size
+			if rsaKey.N.BitLen() < minRSAKeySize {
+				return nil, fmt.Errorf("%w: got %d bits", errRSAKeyTooSmall, rsaKey.N.BitLen())
+			}
+
+			privateKey = rsaKey
+
 		case "PUBLIC KEY":
 			key, parseErr := x509.ParsePKIXPublicKey(block.Bytes)
 			if parseErr != nil {
 				return nil, fmt.Errorf("failed to parse public key in %s: %w", path, parseErr)
 			}
 
-			edKey, ok := key.(ed25519.PublicKey)
-			if !ok {
-				return nil, fmt.Errorf("%w (public)", errInvalidEd25519Key)
+			publicKey = key
+
+		case "RSA PUBLIC KEY":
+			rsaKey, parseErr := x509.ParsePKCS1PublicKey(block.Bytes)
+			if parseErr != nil {
+				return nil, fmt.Errorf("failed to parse PKCS#1 RSA public key in %s: %w", path, parseErr)
 			}
 
-			public = edKey
+			publicKey = rsaKey
+
 		default:
 			return nil, fmt.Errorf("%w %q in %s", errUnexpectedPEMBlock, block.Type, path)
 		}
 	}
 
-	if private == nil {
+	if privateKey == nil {
 		return nil, fmt.Errorf("%w: %s", errMissingPrivateKey, path)
 	}
 
-	derivedPublic := private.Public().(ed25519.PublicKey) //nolint:forcetypeassert
-	if public != nil && !bytes.Equal(derivedPublic, public) {
-		return nil, fmt.Errorf("%w: %s", errPublicKeyMismatch, path)
+	// Validate public key if present
+	if publicKey != nil {
+		derivedPublic := privateKey.Public()
+		if !publicKeysEqual(derivedPublic, publicKey) {
+			return nil, fmt.Errorf("%w: %s", errPublicKeyMismatch, path)
+		}
 	}
 
-	return private, nil
+	return privateKey, nil
 }
 
-// NewFileSigner loads an Ed25519 private key from a PEM file and returns it as a crypto.Signer.
+// publicKeysEqual compares two public keys for equality, supporting both RSA and Ed25519
+func publicKeysEqual(a, b crypto.PublicKey) bool {
+	switch aKey := a.(type) {
+	case ed25519.PublicKey:
+		bKey, ok := b.(ed25519.PublicKey)
+		if !ok {
+			return false
+		}
+
+		return bytes.Equal(aKey, bKey)
+	case *rsa.PublicKey:
+		bKey, ok := b.(*rsa.PublicKey)
+		if !ok {
+			return false
+		}
+
+		return aKey.N.Cmp(bKey.N) == 0 && aKey.E == bKey.E
+	default:
+		return false
+	}
+}
+
+// NewFileSigner loads a cryptographic private key (RSA or Ed25519) from a PEM file and returns it as a crypto.Signer
 func NewFileSigner(path string) (crypto.Signer, error) {
-	return loadEd25519SignerFromFile(path)
+	return loadSignerFromFile(path)
 }

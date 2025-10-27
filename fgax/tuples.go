@@ -2,6 +2,7 @@ package fgax
 
 import (
 	"context"
+	"errors"
 	"regexp"
 	"slices"
 	"strings"
@@ -214,6 +215,10 @@ func tupleKeyToDeleteRequest(deletes []TupleKey) (d []openfga.TupleKeyWithoutCon
 // WriteTupleKeys takes a tuples keys, converts them to a client write request, which can contain up to 10 writes and deletes,
 // and executes in a single transaction
 func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes []TupleKey, opts ...RequestOption) (*ofgaclient.ClientWriteResponse, error) {
+	if len(writes) == 0 && len(deletes) == 0 {
+		return nil, nil
+	}
+
 	wopts := getWriteOptions(opts...)
 	// ensure authorization model id is set from client config when available
 	if c.Config.AuthorizationModelId != "" {
@@ -270,9 +275,50 @@ func (c *Client) checkWriteResponse(resp *ofgaclient.ClientWriteResponse, err er
 		return nil
 	}
 
+	if isIgnorableWriteError(err) {
+		return nil
+	}
+
 	log.Debug().Err(err).Interface("writes", resp.Writes).Interface("deletes", resp.Deletes).Msg("error in relationship tuples operation")
 
 	return err
+}
+
+func isIgnorableWriteError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if bodyErr := extractErrorMessage(err); bodyErr != "" {
+		if ignorableConflict(bodyErr) {
+			return true
+		}
+	}
+
+	return ignorableConflict(err.Error())
+}
+
+func extractErrorMessage(err error) string {
+	var apiErr interface {
+		Body() []byte
+	}
+
+	if errors.As(err, &apiErr) {
+		return string(apiErr.Body())
+	}
+
+	return ""
+}
+
+func ignorableConflict(message string) bool {
+	if message == "" {
+		return false
+	}
+
+	lower := strings.ToLower(message)
+
+	return strings.Contains(lower, "tuple to be written already existed") ||
+		strings.Contains(lower, "tuple to be deleted did not exist")
 }
 
 // deleteRelationshipTuple deletes a relationship tuple in the openFGA store

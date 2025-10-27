@@ -481,8 +481,11 @@ func TestRefreshAudience(t *testing.T) {
 	require.NoError(t, err)
 
 	conf := tokens.Config{
-		Audience: "http://localhost:3000",
-		Issuer:   "https://example.com",
+		Audience:        "http://localhost:3000",
+		Issuer:          "https://example.com",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tm, err := tokens.NewWithKey(key, conf)
@@ -496,26 +499,32 @@ func TestRefreshAudience(t *testing.T) {
 	require.NoError(t, err)
 
 	badConf := tokens.Config{
-		Audience: "http://localhost:3000",
-		Issuer:   "%gh$?",
+		Audience:        "http://localhost:3000",
+		Issuer:          "%gh$?",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tmBad, err := tokens.NewWithKey(badKey, badConf)
 	require.NoError(t, err)
 	require.Equal(t, tokens.DefaultRefreshAudience, tmBad.RefreshAudience())
 
-	// RefreshAudience from config should be ignored
+	// RefreshAudience from config should be respected
 	confOverride := tokens.Config{
 		Audience:        "http://localhost:3000",
 		Issuer:          "https://example.com",
 		RefreshAudience: "https://override.example.com/refresh",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	_, key2, err := ed25519.GenerateKey(rand.Reader) //nolint:gosec
 	require.NoError(t, err)
 	tmOverride, err := tokens.NewWithKey(key2, confOverride)
 	require.NoError(t, err)
-	require.Equal(t, "https://example.com/v1/refresh", tmOverride.RefreshAudience())
+	require.Equal(t, "https://override.example.com/refresh", tmOverride.RefreshAudience())
 }
 
 func TestTokenManagerAllowsNonULIDKeyID(t *testing.T) {
