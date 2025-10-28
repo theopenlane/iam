@@ -118,6 +118,7 @@ func NewFGATestcontainer(ctx context.Context, opts ...Option) *OpenFGATestFixtur
 		container,
 		WithCustomizer(c.reuse, c.containerName, c.memory, c.cpu),
 		testcontainers.WithEnv(c.envVars),
+		testcontainers.WithAlwaysPull(),
 	)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to run openfga container")
