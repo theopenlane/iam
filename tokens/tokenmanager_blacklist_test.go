@@ -19,6 +19,7 @@ func TestTokenManagerWithBlacklist(t *testing.T) {
 	// Setup Redis
 	mr, err := miniredis.Run()
 	assert.NoError(t, err)
+
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{
@@ -217,6 +218,7 @@ func TestTokenManagerBlacklistEdgeCases(t *testing.T) {
 	// Setup Redis
 	mr, err := miniredis.Run()
 	assert.NoError(t, err)
+
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{
@@ -283,6 +285,7 @@ func BenchmarkTokenManagerBlacklist(b *testing.B) {
 	// Setup Redis
 	mr, err := miniredis.Run()
 	assert.NoError(b, err)
+
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{

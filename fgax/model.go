@@ -139,6 +139,7 @@ func (c *Client) AddOrReplaceRole(ctx context.Context, r RoleRequest) error {
 
 			// add the role to the relation map
 			var metadata *openfga.Metadata
+
 			relations[r.Role], metadata = generateUserset(r)
 
 			// set the relation map and metadata

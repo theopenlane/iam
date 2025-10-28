@@ -113,6 +113,7 @@ func (klm *keyLifecycleManager) AddKey(kid string, algorithm string) {
 func (klm *keyLifecycleManager) GetMetadata(kid string) (*KeyMetadata, bool) {
 	klm.mu.RLock()
 	defer klm.mu.RUnlock()
+
 	meta, exists := klm.metadata[kid]
 
 	return meta, exists
@@ -178,6 +179,7 @@ func (klm *keyLifecycleManager) RevokeKey(kid string) bool {
 func (klm *keyLifecycleManager) RemoveKey(kid string) {
 	klm.mu.Lock()
 	defer klm.mu.Unlock()
+
 	delete(klm.metadata, kid)
 }
 

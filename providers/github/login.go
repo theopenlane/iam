@@ -53,8 +53,8 @@ func githubHandler(config *oauth2.Config, clientConfig *ClientConfig, success, f
 
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
-		token, err := oauth2Login.TokenFromContext(ctx)
 
+		token, err := oauth2Login.TokenFromContext(ctx)
 		if err != nil {
 			ctx = WithError(ctx, err)
 			failure.ServeHTTP(w, req.WithContext(ctx))
