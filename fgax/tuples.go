@@ -277,6 +277,7 @@ func (c *Client) checkWriteResponse(resp *ofgaclient.ClientWriteResponse, err er
 	}
 
 	log.Debug().Err(err).Interface("writes", resp.Writes).Interface("deletes", resp.Deletes).Msg("error in relationship tuples operation")
+
 	return err
 }
 

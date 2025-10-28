@@ -54,8 +54,8 @@ func LoginHandler(config *oauth2.Config, failure http.Handler) http.Handler {
 
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
-		state, err := StateFromContext(ctx)
 
+		state, err := StateFromContext(ctx)
 		if err != nil {
 			ctx = WithError(ctx, err)
 			failure.ServeHTTP(w, req.WithContext(ctx))

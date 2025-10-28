@@ -34,8 +34,8 @@ var DefaultFailureHandler = http.HandlerFunc(failureHandler)
 
 func failureHandler(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	err := ErrorFromContext(ctx)
 
+	err := ErrorFromContext(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

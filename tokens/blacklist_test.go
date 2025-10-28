@@ -19,6 +19,7 @@ func TestRedisTokenBlacklist(t *testing.T) {
 	// Setup miniredis for testing
 	mr, err := miniredis.Run()
 	assert.NoError(t, err)
+
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{
@@ -186,6 +187,7 @@ func TestTokenBlacklistIntegration(t *testing.T) {
 	// This test verifies the blacklist works correctly with concurrent operations
 	mr, err := miniredis.Run()
 	assert.NoError(t, err)
+
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{
@@ -235,6 +237,7 @@ func TestTokenBlacklistIntegration(t *testing.T) {
 			go func() {
 				revoked, err := bl.IsRevoked(ctx, tokenID)
 				assert.NoError(t, err)
+
 				results <- revoked
 			}()
 		}
@@ -250,6 +253,7 @@ func TestTokenBlacklistIntegration(t *testing.T) {
 func BenchmarkRedisTokenBlacklist(b *testing.B) {
 	mr, err := miniredis.Run()
 	assert.NoError(b, err)
+
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{
@@ -295,6 +299,7 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 	// Setup Redis
 	mr, err := miniredis.Run()
 	assert.NoError(t, err)
+
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{
@@ -523,6 +528,7 @@ func TestTokenBlacklistUserSuspension(t *testing.T) {
 	// Setup Redis
 	mr, err := miniredis.Run()
 	assert.NoError(t, err)
+
 	defer mr.Close()
 
 	client := redis.NewClient(&redis.Options{
