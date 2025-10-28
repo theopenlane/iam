@@ -314,8 +314,8 @@ func (c *Client) deleteRelationshipTuple(ctx context.Context, tuples []openfga.T
 	return resp, nil
 }
 
-// getAllTuples gets all the relationship tuples in the openFGA store
-func (c *Client) getAllTuples(ctx context.Context, opts ...RequestOption) ([]openfga.Tuple, error) {
+// GetAllTuples gets all the relationship tuples in the openFGA store
+func (c *Client) GetAllTuples(ctx context.Context, opts ...RequestOption) ([]openfga.Tuple, error) {
 	var tuples []openfga.Tuple
 
 	ropts := getReadOptions(opts...)
@@ -342,6 +342,42 @@ func (c *Client) getAllTuples(ctx context.Context, opts ...RequestOption) ([]ope
 	return tuples, nil
 }
 
+// GetTuplesForObject gets all the relationship tuples for a specific object in the openFGA store
+func (c *Client) GetTuplesForObject(ctx context.Context, object string) ([]openfga.Tuple, error) {
+	var tuples []openfga.Tuple
+
+	readRequest := ofgaclient.ClientReadRequest{
+		Object: openfga.PtrString(object),
+	}
+
+	opts := ofgaclient.ClientReadOptions{
+		PageSize:    openfga.PtrInt32(defaultPageSize),
+		Consistency: &defaultConsistency,
+	}
+
+	notComplete := true
+
+	for notComplete {
+		resp, err := c.Ofga.Read(ctx).Body(readRequest).Options(opts).Execute()
+		if err != nil {
+			log.Error().Err(err).Str("object", object).Msg("error getting relationship tuples for object")
+
+			return nil, err
+		}
+
+		tuples = append(tuples, resp.GetTuples()...)
+
+		if resp.ContinuationToken == "" {
+			notComplete = false
+			continue
+		}
+
+		opts.ContinuationToken = &resp.ContinuationToken
+	}
+
+	return tuples, nil
+}
+
 // DeleteAllObjectRelations deletes all the relationship tuples for a given object
 func (c *Client) DeleteAllObjectRelations(ctx context.Context, object string, excludeRelations []string, opts ...RequestOption) error {
 	// validate object is not empty
@@ -354,28 +390,26 @@ func (c *Client) DeleteAllObjectRelations(ctx context.Context, object string, ex
 		return newInvalidEntityError(object)
 	}
 
-	tuples, err := c.getAllTuples(ctx, opts...)
+	tuples, err := c.GetTuplesForObject(ctx, object)
 	if err != nil {
 		return err
 	}
 
 	var tuplesToDelete []openfga.TupleKeyWithoutCondition
 
-	// check all the tuples for the object
+	// Filter out relations that should be excluded
 	for _, t := range tuples {
-		if t.Key.Object == object {
-			// if the relation is in the exclude list, skip it
-			if slices.Contains(excludeRelations, t.Key.Relation) {
-				continue
-			}
-
-			k := openfga.TupleKeyWithoutCondition{
-				User:     t.Key.User,
-				Relation: t.Key.Relation,
-				Object:   t.Key.Object,
-			}
-			tuplesToDelete = append(tuplesToDelete, k)
+		// if the relation is in the exclude list, skip it
+		if slices.Contains(excludeRelations, t.Key.Relation) {
+			continue
 		}
+
+		k := openfga.TupleKeyWithoutCondition{
+			User:     t.Key.User,
+			Relation: t.Key.Relation,
+			Object:   t.Key.Object,
+		}
+		tuplesToDelete = append(tuplesToDelete, k)
 	}
 
 	// delete the tuples in batches of 10, the max supported by the OpenFGA transactional write api
