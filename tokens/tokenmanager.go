@@ -5,6 +5,7 @@ import (
 	"crypto"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
@@ -39,7 +40,10 @@ type loadedKey struct {
 type TokenManager struct {
 	*Issuer
 	validator
-	blacklist TokenBlacklist
+	blacklist       TokenBlacklist
+	apiTokenKeyring *APITokenKeyring
+	apiTokenEntropy io.Reader
+	apiTokenConfig  APITokenConfig
 }
 
 // New creates a TokenManager with the specified keys which should be a mapping of key identifiers
@@ -61,6 +65,8 @@ func New(conf Config) (tm *TokenManager, err error) {
 		},
 	}
 
+	tm.apiTokenConfig = defaultRuntimeAPITokenConfig()
+
 	// default to in-memory no-op implementations
 	tm.blacklist = NewNoOpTokenBlacklist()
 	tm.validator.blacklist = tm.blacklist
@@ -74,6 +80,16 @@ func New(conf Config) (tm *TokenManager, err error) {
 		tm.validator.blacklist = tm.blacklist
 	}
 
+	if conf.APITokens.Enabled {
+		keyring, err := loadAPITokenKeyringFromConfig(conf.APITokens)
+		if err != nil {
+			return nil, err
+		}
+
+		tm.WithAPITokenKeyring(keyring)
+		tm.apiTokenConfig = conf.APITokens.cloneWithDefaults()
+	}
+
 	return tm, nil
 }
 
@@ -83,6 +99,24 @@ func (tm *TokenManager) WithBlacklist(blacklist TokenBlacklist) *TokenManager {
 	tm.validator.blacklist = blacklist
 
 	return tm
+}
+
+// WithAPITokenKeyring configures the symmetric keyring used for opaque API tokens.
+func (tm *TokenManager) WithAPITokenKeyring(keyring *APITokenKeyring) *TokenManager {
+	tm.apiTokenKeyring = keyring
+
+	return tm
+}
+
+// WithAPITokenConfig overrides the runtime API token configuration used for generation and verification.
+func (tm *TokenManager) WithAPITokenConfig(cfg APITokenConfig) *TokenManager {
+	tm.apiTokenConfig = cfg.cloneWithDefaults()
+
+	return tm
+}
+
+func (tm *TokenManager) withAPITokenEntropySource(reader io.Reader) {
+	tm.apiTokenEntropy = reader
 }
 
 // NewWithKey is a constructor function that creates a new instance of the TokenManager struct
@@ -107,6 +141,8 @@ func NewWithKey(key crypto.Signer, conf Config) (tm *TokenManager, err error) {
 		},
 	}
 
+	tm.apiTokenConfig = defaultRuntimeAPITokenConfig()
+
 	// default to in-memory no-op implementations
 	tm.blacklist = NewNoOpTokenBlacklist()
 	tm.validator.blacklist = tm.blacklist
@@ -118,6 +154,16 @@ func NewWithKey(key crypto.Signer, conf Config) (tm *TokenManager, err error) {
 		// Initialize blacklist with Redis
 		tm.blacklist = NewRedisTokenBlacklist(redisClient, conf.Redis.BlacklistPrefix)
 		tm.validator.blacklist = tm.blacklist
+	}
+
+	if conf.APITokens.Enabled {
+		keyring, err := loadAPITokenKeyringFromConfig(conf.APITokens)
+		if err != nil {
+			return nil, err
+		}
+
+		tm.WithAPITokenKeyring(keyring)
+		tm.apiTokenConfig = conf.APITokens.cloneWithDefaults()
 	}
 
 	return tm, nil

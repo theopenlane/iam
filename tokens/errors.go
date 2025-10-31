@@ -21,6 +21,62 @@ var (
 	ErrUnknownSigningKey = errors.New("unknown signing key")
 	// ErrConfigIsInvalid returns when the token manager configuration is invalid
 	ErrConfigIsInvalid = errors.New("token manager configuration is invalid")
+	// ErrAPITokenKeyringNotConfigured is returned when API token operations are attempted without a configured keyring
+	ErrAPITokenKeyringNotConfigured = errors.New("api token keyring not configured")
+	// ErrAPITokenNoActiveKey is returned when the keyring does not contain an active key
+	ErrAPITokenNoActiveKey = errors.New("api token keyring has no active key")
+	// ErrAPITokenMultipleActiveKeys is returned when more than one active key is provided
+	ErrAPITokenMultipleActiveKeys = errors.New("api token keyring has more than one active key")
+	// ErrAPITokenMissingKeyVersion is returned when an empty key version is supplied
+	ErrAPITokenMissingKeyVersion = errors.New("api token key version is required")
+	// ErrAPITokenKeyVersionUnknown is returned when the provided key version cannot be found
+	ErrAPITokenKeyVersionUnknown = errors.New("api token key version unknown")
+	// ErrAPITokenKeyRevoked is returned when the provided key has been revoked
+	ErrAPITokenKeyRevoked = errors.New("api token key is revoked")
+	// ErrAPITokenInvalidFormat is returned when an opaque token cannot be parsed
+	ErrAPITokenInvalidFormat = errors.New("opaque api token has invalid format")
+	// ErrAPITokenHashInvalid is returned when the stored token hash cannot be decoded
+	ErrAPITokenHashInvalid = errors.New("api token hash is invalid")
+	// ErrAPITokenVerificationFailed is returned when the provided token does not match persisted data
+	ErrAPITokenVerificationFailed = errors.New("api token verification failed")
+	// ErrAPITokenSecretMissing is returned when key material or token secrets are empty
+	ErrAPITokenSecretMissing = errors.New("api token secret material is required")
+	// ErrAPITokenDuplicateKeyVersion is returned when attempting to register the same key version twice
+	ErrAPITokenDuplicateKeyVersion = errors.New("api token key version already exists")
+	// ErrAPITokenNoKeysFound is returned when no key material is discovered for an enabled keyring
+	ErrAPITokenNoKeysFound = errors.New("api token keyring has no keys configured")
+	// ErrAPITokenInvalidStatus is returned when an environment-provided key has an unknown status flag
+	ErrAPITokenInvalidStatus = errors.New("api token key status is invalid")
+	// ErrAPITokenEnvPrefixRequired is returned when an empty environment prefix is supplied
+	ErrAPITokenEnvPrefixRequired = errors.New("api token env prefix is required")
+	// ErrAPITokenVersionFromEnvMissing is returned when an environment key name omits the version suffix
+	ErrAPITokenVersionFromEnvMissing = errors.New("api token env key missing version suffix")
+	// ErrAPITokenSecretInvalid is returned when key secret material cannot be decoded
+	ErrAPITokenSecretInvalid = errors.New("api token secret material is invalid")
+	// ErrAPITokenSecretSizeInvalid is returned when an invalid secret size configuration is supplied
+	ErrAPITokenSecretSizeInvalid = errors.New("api token secret size must be positive")
+	// ErrAPITokenDelimiterInvalid is returned when the token delimiter is empty
+	ErrAPITokenDelimiterInvalid = errors.New("api token delimiter must not be empty")
+	// ErrAccessDurationInvalid is returned when the access duration is outside allowed bounds
+	ErrAccessDurationInvalid = errors.New("access duration must be positive and between allowed bounds")
+	// ErrRefreshDurationInvalid is returned when the refresh duration is outside allowed bounds
+	ErrRefreshDurationInvalid = errors.New("refresh duration must be positive and between allowed bounds")
+	// ErrRefreshOverlapInvalid is returned when the refresh overlap is not negative or too large
+	ErrRefreshOverlapInvalid = errors.New("refresh overlap must be negative and less than access duration")
+	// ErrRefreshDurationTooShort is returned when refresh duration is not longer than access duration
+	ErrRefreshDurationTooShort = errors.New("refresh duration must be greater than access duration")
+	// ErrAudienceRequired is returned when audience is not specified
+	ErrAudienceRequired = errors.New("audience is required")
+	// ErrIssuerRequired is returned when issuer is not specified
+	ErrIssuerRequired = errors.New("issuer is required")
+	// ErrAPITokenMultipleActive is returned when multiple keys are marked as active
+	ErrAPITokenMultipleActive = errors.New("only one api token key can be active at a time")
+	// ErrAPITokenNoActive is returned when API tokens are enabled but no active key exists
+	ErrAPITokenNoActive = errors.New("api tokens enabled but no active key configured")
+	// ErrAPITokenSecretTooShort is returned when a secret is below the minimum length
+	ErrAPITokenSecretTooShort = errors.New("api token secret must be at least 32 bytes")
+	// ErrAPITokenStatusInvalid is returned when a key status is not valid
+	ErrAPITokenStatusInvalid = errors.New("api token key status must be active, deprecated, or revoked")
 )
 
 var (
@@ -212,3 +268,10 @@ func newParseError(o string, v string, err error) *ParseError {
 		Err:    err,
 	}
 }
+
+const (
+	// wrappedErrorFormat is the shared format string for wrapping underlying errors.
+	wrappedErrorFormat = "%w: %v"
+	// keyWrappedErrorFormat is the shared format string when annotating key-related errors.
+	keyWrappedErrorFormat = "api token key %s: %w"
+)

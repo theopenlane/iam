@@ -1,7 +1,7 @@
 package tokens
 
 import (
-	"errors"
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -19,21 +19,16 @@ const (
 	MaxRefreshDuration = 30 * 24 * time.Hour // 30 days
 	// MinRefreshOverlap is the minimum allowed refresh overlap (most negative)
 	MinRefreshOverlap = -1 * time.Hour
-)
-
-var (
-	// ErrAccessDurationInvalid is returned when the access duration is outside allowed bounds
-	ErrAccessDurationInvalid = errors.New("access duration must be positive and between allowed bounds")
-	// ErrRefreshDurationInvalid is returned when the refresh duration is outside allowed bounds
-	ErrRefreshDurationInvalid = errors.New("refresh duration must be positive and between allowed bounds")
-	// ErrRefreshOverlapInvalid is returned when the refresh overlap is not negative or too large
-	ErrRefreshOverlapInvalid = errors.New("refresh overlap must be negative and less than access duration")
-	// ErrRefreshDurationTooShort is returned when refresh duration is not longer than access duration
-	ErrRefreshDurationTooShort = errors.New("refresh duration must be greater than access duration")
-	// ErrAudienceRequired is returned when audience is not specified
-	ErrAudienceRequired = errors.New("audience is required")
-	// ErrIssuerRequired is returned when issuer is not specified
-	ErrIssuerRequired = errors.New("issuer is required")
+	// DefaultAPITokenEnvPrefix is the default environment variable prefix for API token key material
+	DefaultAPITokenEnvPrefix = "IAM_API_TOKEN_KEY_" // nolint:gosec
+	// MinAPITokenSecretLength is the minimum length for API token secrets in bytes
+	MinAPITokenSecretLength = 32
+	// DefaultAPITokenSecretSize is the fallback number of bytes used for a generated opaque token secret.
+	DefaultAPITokenSecretSize = 32
+	// DefaultAPITokenDelimiter is the fallback delimiter used when formatting opaque token values.
+	DefaultAPITokenDelimiter = "."
+	// DefaultAPITokenPrefix is the fallback prefix applied to opaque token values.
+	DefaultAPITokenPrefix = ""
 )
 
 // Config defines the configuration settings for authentication tokens used in the server
@@ -62,6 +57,8 @@ type Config struct {
 	JWKSCacheTTL time.Duration `json:"jwksCacheTTL" koanf:"jwksCacheTTL" default:"5m"`
 	// Redis contains Redis configuration for token blacklist and JWT ID tracking
 	Redis RedisConfig `json:"redis" koanf:"redis"`
+	// APITokens contains configuration for opaque API token key management
+	APITokens APITokenConfig `json:"apiTokens" koanf:"apiTokens"`
 }
 
 // RedisConfig contains Redis configuration for token security features
@@ -72,6 +69,30 @@ type RedisConfig struct {
 	Config cache.Config `json:"config" koanf:"config"`
 	// BlacklistPrefix is the Redis key prefix for blacklisted tokens
 	BlacklistPrefix string `json:"blacklistPrefix" koanf:"blacklistPrefix" default:"token:blacklist:"`
+}
+
+// APITokenConfig contains configuration for opaque API token key management
+type APITokenConfig struct {
+	// Enabled turns on opaque API token support
+	Enabled bool `json:"enabled" koanf:"enabled" default:"false"`
+	// EnvPrefix is the environment variable prefix used to load key material
+	EnvPrefix string `json:"envPrefix" koanf:"envPrefix" default:"IAM_API_TOKEN_KEY_"`
+	// Keys describes statically configured API token keys keyed by version
+	Keys map[string]APITokenKeyConfig `json:"keys" koanf:"keys" example:"v1"`
+	// SecretSize controls the number of random bytes embedded in a generated opaque token secret
+	SecretSize int `json:"secretSize" koanf:"secretSize" default:"32"`
+	// Delimiter separates the token identifier and secret when formatting the opaque value
+	Delimiter string `json:"delimiter" koanf:"delimiter" default:"." `
+	// Prefix is prepended to the opaque token value before the identifier segment
+	Prefix string `json:"prefix" koanf:"prefix" default:""`
+}
+
+// APITokenKeyConfig defines the configuration attributes for an API token key
+type APITokenKeyConfig struct {
+	// Secret represents the symmetric key material used for hashing
+	Secret string `json:"secret" koanf:"secret" sensitive:"true"`
+	// Status indicates the lifecycle state of the key - active, deprecated, or revoked
+	Status string `json:"status" koanf:"status" default:"active"`
 }
 
 // Validate checks that the Config has valid token duration settings
@@ -120,5 +141,104 @@ func (c *Config) Validate() error {
 			ErrRefreshOverlapInvalid, c.RefreshOverlap, c.AccessDuration)
 	}
 
+	// Validate API tokens configuration
+	if c.APITokens.Enabled {
+		if err := c.APITokens.Validate(); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+// Validate checks that the APITokenConfig has valid settings
+func (a *APITokenConfig) Validate() error {
+	// Ensure either static keys or env prefix is configured
+	if len(a.Keys) == 0 && a.EnvPrefix == "" {
+		return ErrAPITokenEnvPrefixRequired
+	}
+
+	cfg := a.cloneWithDefaults()
+
+	if cfg.SecretSize <= 0 {
+		return ErrAPITokenSecretSizeInvalid
+	}
+
+	if cfg.Delimiter == "" {
+		return ErrAPITokenDelimiterInvalid
+	}
+
+	// If we have static keys, validate them
+	if len(a.Keys) > 0 {
+		activeCount := 0
+
+		for version, keyConfig := range a.Keys {
+			if err := keyConfig.Validate(); err != nil {
+				return fmt.Errorf("key %s: %w", version, err)
+			}
+
+			if keyConfig.Status == string(KeyStatusActive) {
+				activeCount++
+			}
+		}
+
+		// Ensure exactly one active key
+		if activeCount == 0 {
+			return ErrAPITokenNoActive
+		}
+
+		if activeCount > 1 {
+			return fmt.Errorf("%w: found %d active keys", ErrAPITokenMultipleActive, activeCount)
+		}
+	}
+
+	return nil
+}
+
+// Validate checks that the APITokenKeyConfig has valid settings
+func (k *APITokenKeyConfig) Validate() error {
+	// Validate status
+	switch k.Status {
+	case string(KeyStatusActive), string(KeyStatusDeprecated), string(KeyStatusRevoked):
+		// valid status
+	default:
+		return fmt.Errorf("%w: got %q", ErrAPITokenStatusInvalid, k.Status)
+	}
+
+	// Only validate secret if it's provided (may be loaded from env)
+	if k.Secret != "" {
+		// Try to decode as base64 first
+		decoded, err := base64.StdEncoding.DecodeString(k.Secret)
+		if err != nil {
+			// Not base64, treat as raw string
+			decoded = []byte(k.Secret)
+		}
+
+		// Validate minimum length
+		if len(decoded) < MinAPITokenSecretLength {
+			return fmt.Errorf("%w: got %d bytes, need at least %d",
+				ErrAPITokenSecretTooShort, len(decoded), MinAPITokenSecretLength)
+		}
+	}
+
+	return nil
+}
+
+// cloneWithDefaults returns a copy of the APITokenConfig with default values applied
+func (a APITokenConfig) cloneWithDefaults() APITokenConfig {
+	cfg := a
+
+	if cfg.SecretSize == 0 {
+		cfg.SecretSize = DefaultAPITokenSecretSize
+	}
+
+	if cfg.Delimiter == "" {
+		cfg.Delimiter = DefaultAPITokenDelimiter
+	}
+
+	if cfg.Prefix == "" {
+		cfg.Prefix = DefaultAPITokenPrefix
+	}
+
+	return cfg
 }
