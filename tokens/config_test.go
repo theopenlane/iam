@@ -9,6 +9,8 @@ import (
 	"github.com/theopenlane/iam/tokens"
 )
 
+const validSecretMaterial = "this-is-a-valid-secret-that-is-at-least-32-bytes-long"
+
 func TestConfigValidate(t *testing.T) {
 	validConfig := tokens.Config{
 		Audience:        "http://localhost:3000",
@@ -168,7 +170,7 @@ func TestConfigValidate(t *testing.T) {
 	})
 }
 
-func TestAPITokenKeyConfig_Validate(t *testing.T) {
+func TestAPITokenKeyConfigValidate(t *testing.T) {
 	tests := []struct {
 		name      string
 		keyConfig tokens.APITokenKeyConfig
@@ -177,7 +179,7 @@ func TestAPITokenKeyConfig_Validate(t *testing.T) {
 		{
 			name: "valid active key with raw secret",
 			keyConfig: tokens.APITokenKeyConfig{
-				Secret: "this-is-a-valid-secret-that-is-at-least-32-bytes-long",
+				Secret: validSecretMaterial,
 				Status: string(tokens.KeyStatusActive),
 			},
 			wantErr: nil,
@@ -185,7 +187,7 @@ func TestAPITokenKeyConfig_Validate(t *testing.T) {
 		{
 			name: "valid deprecated key",
 			keyConfig: tokens.APITokenKeyConfig{
-				Secret: "this-is-a-valid-secret-that-is-at-least-32-bytes-long",
+				Secret: validSecretMaterial,
 				Status: string(tokens.KeyStatusDeprecated),
 			},
 			wantErr: nil,
@@ -193,7 +195,7 @@ func TestAPITokenKeyConfig_Validate(t *testing.T) {
 		{
 			name: "valid revoked key",
 			keyConfig: tokens.APITokenKeyConfig{
-				Secret: "this-is-a-valid-secret-that-is-at-least-32-bytes-long",
+				Secret: validSecretMaterial,
 				Status: string(tokens.KeyStatusRevoked),
 			},
 			wantErr: nil,
@@ -201,7 +203,7 @@ func TestAPITokenKeyConfig_Validate(t *testing.T) {
 		{
 			name: "invalid status",
 			keyConfig: tokens.APITokenKeyConfig{
-				Secret: "this-is-a-valid-secret-that-is-at-least-32-bytes-long",
+				Secret: validSecretMaterial,
 				Status: "invalid",
 			},
 			wantErr: tokens.ErrAPITokenStatusInvalid,
@@ -237,9 +239,7 @@ func TestAPITokenKeyConfig_Validate(t *testing.T) {
 	}
 }
 
-func TestAPITokenConfig_Validate(t *testing.T) {
-	validSecret := "this-is-a-valid-secret-that-is-at-least-32-bytes-long"
-
+func TestAPITokenConfigValidate(t *testing.T) {
 	tests := []struct {
 		name    string
 		config  tokens.APITokenConfig
@@ -252,7 +252,7 @@ func TestAPITokenConfig_Validate(t *testing.T) {
 				EnvPrefix: tokens.DefaultAPITokenEnvPrefix,
 				Keys: map[string]tokens.APITokenKeyConfig{
 					"v1": {
-						Secret: validSecret,
+						Secret: validSecretMaterial,
 						Status: string(tokens.KeyStatusActive),
 					},
 				},
@@ -266,11 +266,11 @@ func TestAPITokenConfig_Validate(t *testing.T) {
 				EnvPrefix: tokens.DefaultAPITokenEnvPrefix,
 				Keys: map[string]tokens.APITokenKeyConfig{
 					"v1": {
-						Secret: validSecret,
+						Secret: validSecretMaterial,
 						Status: string(tokens.KeyStatusDeprecated),
 					},
 					"v2": {
-						Secret: validSecret,
+						Secret: validSecretMaterial,
 						Status: string(tokens.KeyStatusActive),
 					},
 				},
@@ -302,7 +302,7 @@ func TestAPITokenConfig_Validate(t *testing.T) {
 				EnvPrefix: tokens.DefaultAPITokenEnvPrefix,
 				Keys: map[string]tokens.APITokenKeyConfig{
 					"v1": {
-						Secret: validSecret,
+						Secret: validSecretMaterial,
 						Status: string(tokens.KeyStatusDeprecated),
 					},
 				},
@@ -316,11 +316,11 @@ func TestAPITokenConfig_Validate(t *testing.T) {
 				EnvPrefix: tokens.DefaultAPITokenEnvPrefix,
 				Keys: map[string]tokens.APITokenKeyConfig{
 					"v1": {
-						Secret: validSecret,
+						Secret: validSecretMaterial,
 						Status: string(tokens.KeyStatusActive),
 					},
 					"v2": {
-						Secret: validSecret,
+						Secret: validSecretMaterial,
 						Status: string(tokens.KeyStatusActive),
 					},
 				},

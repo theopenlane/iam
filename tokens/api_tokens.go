@@ -18,8 +18,21 @@ import (
 )
 
 const (
-	// apiTokenSecretSize controls the number of random bytes embedded in the opaque token
+	// apiTokenSecretSize controls the number of random bytes embedded in the opaque token.
 	apiTokenSecretSize = 32
+	// tokenSegments represents the number of segments when splitting an opaque token.
+	tokenSegments = 2
+	// envSplitParts represents the number of segments when splitting an environment key pair.
+	envSplitParts = 2
+	// statusSecretDelimiter separates the optional status and secret components in environment variables.
+	statusSecretDelimiter = ":"
+)
+
+const (
+	// wrappedErrorFormat is the shared format string for wrapping underlying errors.
+	wrappedErrorFormat = "%w: %v"
+	// keyWrappedErrorFormat is the shared format string when annotating key-related errors.
+	keyWrappedErrorFormat = "api token key %s: %w"
 )
 
 var (
@@ -31,6 +44,66 @@ type APITokenKey struct {
 	Version string
 	Secret  []byte
 	Status  KeyStatus
+}
+
+// validateKeyMaterial ensures the provided key contains the minimum required fields.
+func validateKeyMaterial(key APITokenKey) error {
+	if key.Version == "" {
+		return ErrAPITokenMissingKeyVersion
+	}
+
+	if len(key.Secret) == 0 {
+		return ErrAPITokenSecretMissing
+	}
+
+	return nil
+}
+
+// initialKeyStatus determines the status for a key when constructing a new keyring.
+func initialKeyStatus(status KeyStatus, assignActive bool) KeyStatus {
+	if status != "" {
+		return status
+	}
+
+	if assignActive {
+		return KeyStatusActive
+	}
+
+	return KeyStatusDeprecated
+}
+
+// upsertKeyStatus determines the status for a key during an upsert operation.
+func upsertKeyStatus(status KeyStatus) KeyStatus {
+	if status != "" {
+		return status
+	}
+
+	return KeyStatusDeprecated
+}
+
+// cloneSecretBytes returns a defensive copy of the provided secret.
+func cloneSecretBytes(secret []byte) []byte {
+	if len(secret) == 0 {
+		return nil
+	}
+
+	cloned := make([]byte, len(secret))
+	copy(cloned, secret)
+
+	return cloned
+}
+
+// ensureSingleActiveKey verifies that exactly one active key exists when building a new keyring.
+func ensureSingleActiveKey(count int) error {
+	if count == 0 {
+		return ErrAPITokenNoActiveKey
+	}
+
+	if count > 1 {
+		return ErrAPITokenMultipleActiveKeys
+	}
+
+	return nil
 }
 
 // clone creates a deep copy of the API token key to prevent external mutation of stored key material
@@ -73,49 +146,29 @@ func NewAPITokenKeyring(keys ...APITokenKey) (*APITokenKeyring, error) {
 		keys: make(map[string]*APITokenKey, len(keys)),
 	}
 
-	var activeCount int
+	activeCount := 0
 
 	for i := range keys {
 		key := keys[i]
 
-		if key.Version == "" {
-			return nil, ErrAPITokenMissingKeyVersion
-		}
-
-		if len(key.Secret) == 0 {
-			return nil, ErrAPITokenSecretMissing
+		if err := validateKeyMaterial(key); err != nil {
+			return nil, err
 		}
 
 		if _, exists := kr.keys[key.Version]; exists {
 			return nil, ErrAPITokenDuplicateKeyVersion
 		}
 
-		if key.Status == "" {
-			if kr.activeVersion == "" {
-				key.Status = KeyStatusActive
-			} else {
-				key.Status = KeyStatusDeprecated
-			}
-		}
-
+		key.Status = initialKeyStatus(key.Status, activeCount == 0)
 		if key.Status == KeyStatusActive {
 			activeCount++
 			kr.activeVersion = key.Version
 		}
 
-		copied := key.clone()
-		kr.keys[key.Version] = copied
+		kr.keys[key.Version] = key.clone()
 	}
 
-	if activeCount == 0 {
-		return nil, ErrAPITokenNoActiveKey
-	}
-
-	if activeCount > 1 {
-		return nil, ErrAPITokenMultipleActiveKeys
-	}
-
-	return kr, nil
+	return kr, ensureSingleActiveKey(activeCount)
 }
 
 // CurrentKey returns the active key material for hashing new opaque tokens
@@ -168,36 +221,17 @@ func (kr *APITokenKeyring) Upsert(keys ...APITokenKey) error {
 	for i := range keys {
 		key := keys[i]
 
-		if key.Version == "" {
-			return ErrAPITokenMissingKeyVersion
+		if err := validateKeyMaterial(key); err != nil {
+			return err
 		}
 
-		if len(key.Secret) == 0 {
-			return ErrAPITokenSecretMissing
-		}
+		status := upsertKeyStatus(key.Status)
+		entry := kr.ensureEntry(key.Version)
+		entry.Secret = cloneSecretBytes(key.Secret)
+		entry.Status = status
 
-		if key.Status == "" {
-			key.Status = KeyStatusDeprecated
-		}
-
-		entry, exists := kr.keys[key.Version]
-		if !exists {
-			entry = &APITokenKey{Version: key.Version}
-			kr.keys[key.Version] = entry
-		}
-
-		// Always replace the secret with a copy to prevent callers from mutating stored material
-		entry.Secret = make([]byte, len(key.Secret))
-		copy(entry.Secret, key.Secret)
-		entry.Status = key.Status
-
-		if key.Status == KeyStatusActive {
-			if kr.activeVersion != "" && kr.activeVersion != key.Version {
-				if current, ok := kr.keys[kr.activeVersion]; ok && current.Status == KeyStatusActive {
-					current.Status = KeyStatusDeprecated
-				}
-			}
-
+		if status == KeyStatusActive {
+			kr.deprecateCurrentActiveLocked(key.Version)
 			kr.activeVersion = key.Version
 		}
 	}
@@ -212,6 +246,28 @@ func (kr *APITokenKeyring) Upsert(keys ...APITokenKey) error {
 	}
 
 	return nil
+}
+
+// ensureEntry returns the existing key entry or creates a new placeholder for the provided version.
+func (kr *APITokenKeyring) ensureEntry(version string) *APITokenKey {
+	entry, exists := kr.keys[version]
+	if !exists {
+		entry = &APITokenKey{Version: version}
+		kr.keys[version] = entry
+	}
+
+	return entry
+}
+
+// deprecateCurrentActiveLocked marks the current active key as deprecated when switching to a new active version.
+func (kr *APITokenKeyring) deprecateCurrentActiveLocked(newVersion string) {
+	if kr.activeVersion == "" || kr.activeVersion == newVersion {
+		return
+	}
+
+	if current, exists := kr.keys[kr.activeVersion]; exists && current.Status == KeyStatusActive {
+		current.Status = KeyStatusDeprecated
+	}
 }
 
 func (kr *APITokenKeyring) currentKeyLocked() (*APITokenKey, error) {
@@ -315,7 +371,7 @@ func (tm *TokenManager) VerifyAPIToken(tokenValue string, storedHash string, key
 	// Stored hashes are base64 encoded for persistence, decode to raw bytes for comparison
 	expectedHashBytes, err := opaqueEncoding.DecodeString(storedHash)
 	if err != nil {
-		return ulid.ULID{}, fmt.Errorf("%w: %v", ErrAPITokenHashInvalid, err)
+		return ulid.ULID{}, fmt.Errorf(wrappedErrorFormat, ErrAPITokenHashInvalid, err)
 	}
 
 	// Recompute the HMAC using the key version that was active when the token was issued
@@ -328,8 +384,8 @@ func (tm *TokenManager) VerifyAPIToken(tokenValue string, storedHash string, key
 	return tokenID, nil
 }
 
-// HashAPITokenComponents recomputes the stored hash for an existing token using the provided key version
-// This is useful during key rotation where tokens should be rehashed lazily as they are presented
+// HashAPITokenComponents recomputes the stored hash for an existing token using the provided key version.
+// This is useful during key rotation where tokens should be rehashed lazily as they are presented.
 func (tm *TokenManager) HashAPITokenComponents(tokenID ulid.ULID, secret string, keyVersion string) (string, error) {
 	if tm.apiTokenKeyring == nil {
 		return "", ErrAPITokenKeyringNotConfigured
@@ -342,7 +398,7 @@ func (tm *TokenManager) HashAPITokenComponents(tokenID ulid.ULID, secret string,
 
 	secretBytes, err := opaqueEncoding.DecodeString(secret)
 	if err != nil {
-		return "", fmt.Errorf("%w: %v", ErrAPITokenInvalidFormat, err)
+		return "", fmt.Errorf(wrappedErrorFormat, ErrAPITokenInvalidFormat, err)
 	}
 
 	// The recomputed digest can replace the persisted hash during lazy rehash operations
@@ -351,9 +407,9 @@ func (tm *TokenManager) HashAPITokenComponents(tokenID ulid.ULID, secret string,
 	return opaqueEncoding.EncodeToString(digest), nil
 }
 
-// computeAPITokenDigest derives the HMAC-SHA256 digest used for storage and verification
+// computeAPITokenDigest derives the HMAC-SHA256 digest used for storage and verification.
 func computeAPITokenDigest(key []byte, tokenID ulid.ULID, secret []byte) []byte {
-	// HMAC-SHA256 guards against secret disclosure even if the database leaks
+	// HMAC-SHA256 guards against secret disclosure even if the database leaks.
 	mac := hmac.New(sha256.New, key)
 	_, _ = mac.Write(tokenID[:])
 	_, _ = mac.Write(secret)
@@ -361,32 +417,77 @@ func computeAPITokenDigest(key []byte, tokenID ulid.ULID, secret []byte) []byte 
 	return mac.Sum(nil)
 }
 
-// parseOpaqueToken splits an opaque token string into its ULID identifier and secret payload segments
+// parseOpaqueToken splits an opaque token string into its ULID identifier and secret payload segments.
 func parseOpaqueToken(value string) (ulid.ULID, []byte, error) {
 	parts := strings.Split(value, ".")
-
-	const tokenSegments = 2 // token format is <ulid>.<secret>
 	if len(parts) != tokenSegments {
 		return ulid.ULID{}, nil, ErrAPITokenInvalidFormat
 	}
 
 	tokenID, err := ulid.Parse(parts[0])
 	if err != nil {
-		return ulid.ULID{}, nil, fmt.Errorf("%w: %v", ErrAPITokenInvalidFormat, err)
+		return ulid.ULID{}, nil, fmt.Errorf(wrappedErrorFormat, ErrAPITokenInvalidFormat, err)
 	}
 
-	// The second segment is the base64-encoded secret originally issued to the caller
+	// The second segment is the base64-encoded secret originally issued to the caller.
 	secretBytes, err := opaqueEncoding.DecodeString(parts[1])
 	if err != nil {
-		return ulid.ULID{}, nil, fmt.Errorf("%w: %v", ErrAPITokenInvalidFormat, err)
+		return ulid.ULID{}, nil, fmt.Errorf(wrappedErrorFormat, ErrAPITokenInvalidFormat, err)
 	}
 
 	return tokenID, secretBytes, nil
 }
 
-// LoadAPITokenKeyringFromEnv constructs an API token keyring from environment variables that share the provided prefix
-// Each matching variable name must follow the pattern <prefix><version>=<status>:<base64-secret>
-// The status segment is optional; when omitted the key defaults to deprecated unless it becomes the first key in the set
+// splitStatusAndSecret divides the optional status prefix from the secret payload in environment values.
+func splitStatusAndSecret(raw string) (string, string) {
+	idx := strings.Index(raw, statusSecretDelimiter)
+	if idx == -1 {
+		return "", raw
+	}
+
+	return strings.TrimSpace(raw[:idx]), raw[idx+1:]
+}
+
+// parseEnvKey converts a prefixed environment variable into an API token key definition.
+func parseEnvKey(prefix, kv string) (APITokenKey, bool, error) {
+	if !strings.HasPrefix(kv, prefix) {
+		return APITokenKey{}, false, nil
+	}
+
+	nameValue := strings.SplitN(kv, "=", envSplitParts)
+	if len(nameValue) != envSplitParts {
+		return APITokenKey{}, false, nil
+	}
+
+	version := strings.TrimPrefix(nameValue[0], prefix)
+	if version == "" {
+		return APITokenKey{}, false, ErrAPITokenVersionFromEnvMissing
+	}
+
+	statusSegment, secretSegment := splitStatusAndSecret(nameValue[1])
+
+	secret, err := decodeAPITokenSecret(secretSegment)
+	if err != nil {
+		return APITokenKey{}, false, fmt.Errorf(keyWrappedErrorFormat, version, err)
+	}
+
+	key := APITokenKey{Version: version, Secret: secret}
+
+	if statusSegment != "" {
+		status, err := parseAPITokenStatus(statusSegment)
+		if err != nil {
+			return APITokenKey{}, false, fmt.Errorf(keyWrappedErrorFormat, version, err)
+		}
+
+		key.Status = status
+	}
+
+	return key, true, nil
+}
+
+// LoadAPITokenKeyringFromEnv constructs an API token keyring from environment variables that share the provided prefix.
+// Each matching variable name must follow the pattern <prefix><version>=<status>:<base64-secret>.
+// The status segment is optional; when omitted the key defaults to deprecated unless it becomes the first key in the set.
 func LoadAPITokenKeyringFromEnv(prefix string) (*APITokenKeyring, error) {
 	if prefix == "" {
 		return nil, ErrAPITokenEnvPrefixRequired
@@ -400,53 +501,14 @@ func LoadAPITokenKeyringFromEnv(prefix string) (*APITokenKeyring, error) {
 	var keys []APITokenKey
 
 	for _, kv := range environ {
-		if !strings.HasPrefix(kv, prefix) {
-			continue
-		}
-
-		// Split the environment variable into key and value so we can parse the version suffix
-		const envSplitParts = 2
-
-		nameValue := strings.SplitN(kv, "=", envSplitParts)
-		if len(nameValue) != envSplitParts {
-			continue
-		}
-
-		version := strings.TrimPrefix(nameValue[0], prefix)
-		if version == "" {
-			return nil, ErrAPITokenVersionFromEnvMissing
-		}
-
-		raw := nameValue[1]
-		statusSegment := ""
-		secretSegment := raw
-
-		if idx := strings.Index(raw, ":"); idx != -1 {
-			statusSegment = strings.TrimSpace(raw[:idx])
-			secretSegment = raw[idx+1:]
-		}
-
-		// Convert the persisted base64 secret into raw bytes for HMAC use
-		secret, err := decodeAPITokenSecret(secretSegment)
+		key, ok, err := parseEnvKey(prefix, kv)
 		if err != nil {
-			return nil, fmt.Errorf("api token key %s: %w", version, err)
+			return nil, err
 		}
 
-		key := APITokenKey{
-			Version: version,
-			Secret:  secret,
+		if ok {
+			keys = append(keys, key)
 		}
-
-		if statusSegment != "" {
-			status, err := parseAPITokenStatus(statusSegment)
-			if err != nil {
-				return nil, fmt.Errorf("api token key %s: %w", version, err)
-			}
-
-			key.Status = status
-		}
-
-		keys = append(keys, key)
 	}
 
 	if len(keys) == 0 {
@@ -487,7 +549,7 @@ func decodeAPITokenSecret(value string) ([]byte, error) {
 	}
 
 	if lastErr != nil {
-		return nil, fmt.Errorf("%w: %v", ErrAPITokenSecretInvalid, lastErr)
+		return nil, fmt.Errorf(wrappedErrorFormat, ErrAPITokenSecretInvalid, lastErr)
 	}
 
 	return nil, ErrAPITokenSecretInvalid
@@ -535,12 +597,12 @@ func NewAPITokenKeyringFromConfig(cfg APITokenConfig) (*APITokenKeyring, error) 
 
 		secret, err := decodeAPITokenSecret(entry.Secret)
 		if err != nil {
-			return nil, fmt.Errorf("api token key %s: %w", version, err)
+			return nil, fmt.Errorf(keyWrappedErrorFormat, version, err)
 		}
 
 		status, err := parseAPITokenStatus(entry.Status)
 		if err != nil {
-			return nil, fmt.Errorf("api token key %s: %w", version, err)
+			return nil, fmt.Errorf(keyWrappedErrorFormat, version, err)
 		}
 
 		keys = append(keys, APITokenKey{

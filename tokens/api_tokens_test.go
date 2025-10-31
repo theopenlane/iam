@@ -9,6 +9,11 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
+const (
+	errCreateKeyringFmt   = "failed to create keyring: %v"
+	errTokenGenerationFmt = "expected token generation to succeed: %v"
+)
+
 func TestNewAPITokenKeyring(t *testing.T) {
 	key1 := APITokenKey{
 		Version: "v1",
@@ -154,7 +159,7 @@ func TestGenerateAndVerifyAPIToken(t *testing.T) {
 		Status:  KeyStatusActive,
 	})
 	if err != nil {
-		t.Fatalf("failed to create keyring: %v", err)
+		t.Fatalf(errCreateKeyringFmt, err)
 	}
 
 	tm := &TokenManager{}
@@ -163,7 +168,7 @@ func TestGenerateAndVerifyAPIToken(t *testing.T) {
 
 	token, err := tm.GenerateAPIToken()
 	if err != nil {
-		t.Fatalf("expected token generation to succeed: %v", err)
+		t.Fatalf(errTokenGenerationFmt, err)
 	}
 
 	if token.TokenID.Compare(ulid.ULID{}) == 0 {
@@ -213,7 +218,7 @@ func TestVerifyAPITokenFailures(t *testing.T) {
 		Status:  KeyStatusActive,
 	})
 	if err != nil {
-		t.Fatalf("failed to create keyring: %v", err)
+		t.Fatalf(errCreateKeyringFmt, err)
 	}
 
 	tm := &TokenManager{}
@@ -222,7 +227,7 @@ func TestVerifyAPITokenFailures(t *testing.T) {
 
 	token, err := tm.GenerateAPIToken()
 	if err != nil {
-		t.Fatalf("expected token generation to succeed: %v", err)
+		t.Fatalf(errTokenGenerationFmt, err)
 	}
 
 	if _, err = tm.VerifyAPIToken(token.Value, token.Hash, "missing"); !errors.Is(err, ErrAPITokenKeyVersionUnknown) {
@@ -279,7 +284,7 @@ func TestHashAPITokenComponents(t *testing.T) {
 		Status:  KeyStatusActive,
 	})
 	if err != nil {
-		t.Fatalf("failed to create keyring: %v", err)
+		t.Fatalf(errCreateKeyringFmt, err)
 	}
 
 	tm := &TokenManager{}
@@ -288,7 +293,7 @@ func TestHashAPITokenComponents(t *testing.T) {
 
 	token, err := tm.GenerateAPIToken()
 	if err != nil {
-		t.Fatalf("expected token generation to succeed: %v", err)
+		t.Fatalf(errTokenGenerationFmt, err)
 	}
 
 	if err := keyring.Upsert(APITokenKey{
