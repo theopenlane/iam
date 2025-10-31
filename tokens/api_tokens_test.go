@@ -240,10 +240,12 @@ func TestAPITokenCustomFormat(t *testing.T) {
 	}
 
 	runtimeCfg := defaultRuntimeAPITokenConfig()
+
 	for _, opt := range options {
 		if opt == nil {
 			continue
 		}
+
 		if err := opt(&runtimeCfg); err != nil {
 			t.Fatalf("failed applying option: %v", err)
 		}

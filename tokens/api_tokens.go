@@ -85,6 +85,7 @@ func WithAPITokenSecretSize(bytes int) APITokenOption {
 		}
 
 		cfg.SecretSize = bytes
+
 		return nil
 	}
 }
@@ -97,6 +98,7 @@ func WithAPITokenDelimiter(delimiter string) APITokenOption {
 		}
 
 		cfg.Delimiter = delimiter
+
 		return nil
 	}
 }
@@ -424,7 +426,7 @@ func (tm *TokenManager) HashAPITokenComponents(tokenID ulid.ULID, secret string,
 	return opaqueEncoding.EncodeToString(digest), nil
 }
 
-// computeAPITokenDigest derives the HMAC-SHA256 digest used for storage and verification.
+// computeAPITokenDigest derives the HMAC-SHA256 digest used for storage and verification
 func computeAPITokenDigest(key []byte, tokenID ulid.ULID, secret []byte) []byte {
 	// HMAC-SHA256 guards against secret disclosure even if the database leaks
 	mac := hmac.New(sha256.New, key)
@@ -435,18 +437,20 @@ func computeAPITokenDigest(key []byte, tokenID ulid.ULID, secret []byte) []byte 
 	return mac.Sum(nil)
 }
 
-// parseOpaqueTokenWithConfig splits an opaque token string using the supplied runtime configuration.
+// parseOpaqueTokenWithConfig splits an opaque token string using the supplied runtime configuration
 func parseOpaqueTokenWithConfig(value string, cfg APITokenConfig) (ulid.ULID, []byte, error) {
 	subject := value
 	if cfg.Prefix != "" {
 		if !strings.HasPrefix(subject, cfg.Prefix) {
 			return ulid.ULID{}, nil, ErrAPITokenInvalidFormat
 		}
+
 		subject = strings.TrimPrefix(subject, cfg.Prefix)
 	}
 
-	parts := strings.SplitN(subject, cfg.Delimiter, 2)
-	if len(parts) != 2 {
+	// after token is stripped of prefix, split into ID and secret parts - seems like OK to use specific parts definition
+	parts := strings.SplitN(subject, cfg.Delimiter, 2) // nolint:mnd
+	if len(parts) != 2 {                               // nolint:mnd
 		return ulid.ULID{}, nil, ErrAPITokenInvalidFormat
 	}
 
