@@ -255,6 +255,7 @@ func (tm *TokenManager) GenerateAPIToken() (*GeneratedAPIToken, error) {
 	}
 
 	secretBytes := make([]byte, apiTokenSecretSize)
+
 	reader := tm.apiTokenEntropy
 	if reader == nil {
 		reader = cryptoRand.Reader
@@ -363,7 +364,9 @@ func computeAPITokenDigest(key []byte, tokenID ulid.ULID, secret []byte) []byte 
 // parseOpaqueToken splits an opaque token string into its ULID identifier and secret payload segments
 func parseOpaqueToken(value string) (ulid.ULID, []byte, error) {
 	parts := strings.Split(value, ".")
-	if len(parts) != 2 {
+
+	const tokenSegments = 2 // token format is <ulid>.<secret>
+	if len(parts) != tokenSegments {
 		return ulid.ULID{}, nil, ErrAPITokenInvalidFormat
 	}
 
@@ -402,8 +405,10 @@ func LoadAPITokenKeyringFromEnv(prefix string) (*APITokenKeyring, error) {
 		}
 
 		// Split the environment variable into key and value so we can parse the version suffix
-		nameValue := strings.SplitN(kv, "=", 2)
-		if len(nameValue) != 2 {
+		const envSplitParts = 2
+
+		nameValue := strings.SplitN(kv, "=", envSplitParts)
+		if len(nameValue) != envSplitParts {
 			continue
 		}
 

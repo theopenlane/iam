@@ -21,7 +21,7 @@ const (
 	// MinRefreshOverlap is the minimum allowed refresh overlap (most negative)
 	MinRefreshOverlap = -1 * time.Hour
 	// DefaultAPITokenEnvPrefix is the default environment variable prefix for API token key material
-	DefaultAPITokenEnvPrefix = "IAM_API_TOKEN_KEY_"
+	DefaultAPITokenEnvPrefix = "IAM_API_TOKEN_KEY_" // nolint:gosec
 	// MinAPITokenSecretLength is the minimum length for API token secrets in bytes
 	MinAPITokenSecretLength = 32
 )

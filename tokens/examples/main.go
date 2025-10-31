@@ -22,7 +22,7 @@ func main() {
 				Usage: "output the generated key material as JSON",
 			},
 		},
-		Action: func(ctx context.Context, cmd *cli.Command) error {
+		Action: func(_ context.Context, cmd *cli.Command) error {
 			version, secret, err := tokens.GenerateAPITokenKeyMaterial()
 			if err != nil {
 				return err
