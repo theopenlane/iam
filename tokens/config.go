@@ -1,6 +1,7 @@
 package tokens
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"time"
@@ -19,6 +20,10 @@ const (
 	MaxRefreshDuration = 30 * 24 * time.Hour // 30 days
 	// MinRefreshOverlap is the minimum allowed refresh overlap (most negative)
 	MinRefreshOverlap = -1 * time.Hour
+	// DefaultAPITokenEnvPrefix is the default environment variable prefix for API token key material
+	DefaultAPITokenEnvPrefix = "IAM_API_TOKEN_KEY_"
+	// MinAPITokenSecretLength is the minimum length for API token secrets in bytes
+	MinAPITokenSecretLength = 32
 )
 
 var (
@@ -34,6 +39,14 @@ var (
 	ErrAudienceRequired = errors.New("audience is required")
 	// ErrIssuerRequired is returned when issuer is not specified
 	ErrIssuerRequired = errors.New("issuer is required")
+	// ErrAPITokenMultipleActive is returned when multiple keys are marked as active
+	ErrAPITokenMultipleActive = errors.New("only one api token key can be active at a time")
+	// ErrAPITokenNoActive is returned when API tokens are enabled but no active key exists
+	ErrAPITokenNoActive = errors.New("api tokens enabled but no active key configured")
+	// ErrAPITokenSecretTooShort is returned when a secret is below the minimum length
+	ErrAPITokenSecretTooShort = errors.New("api token secret must be at least 32 bytes")
+	// ErrAPITokenStatusInvalid is returned when a key status is not valid
+	ErrAPITokenStatusInvalid = errors.New("api token key status must be active, deprecated, or revoked")
 )
 
 // Config defines the configuration settings for authentication tokens used in the server
@@ -62,16 +75,36 @@ type Config struct {
 	JWKSCacheTTL time.Duration `json:"jwksCacheTTL" koanf:"jwksCacheTTL" default:"5m"`
 	// Redis contains Redis configuration for token blacklist and JWT ID tracking
 	Redis RedisConfig `json:"redis" koanf:"redis"`
+	// APITokens contains configuration for opaque API token key management
+	APITokens APITokenConfig `json:"apiTokens" koanf:"apiTokens"`
 }
 
 // RedisConfig contains Redis configuration for token security features
 type RedisConfig struct {
 	// Enabled turns on Redis-based blacklist features
-	Enabled bool `json:"enabled" koanf:"enabled" default:"false"`
+	Enabled bool `json:"enabled" koanf:"enabled" default:"false" jsonschema:"description=Enabled turns on Redis-based blacklist features"`
 	// Config contains the Redis connection settings
-	Config cache.Config `json:"config" koanf:"config"`
+	Config cache.Config `json:"config" koanf:"config" jsonschema:"description=Config contains the Redis connection settings"`
 	// BlacklistPrefix is the Redis key prefix for blacklisted tokens
-	BlacklistPrefix string `json:"blacklistPrefix" koanf:"blacklistPrefix" default:"token:blacklist:"`
+	BlacklistPrefix string `json:"blacklistPrefix" koanf:"blacklistPrefix" default:"token:blacklist:" jsonschema:"description=BlacklistPrefix is the Redis key prefix for blacklisted tokens"`
+}
+
+// APITokenConfig contains configuration for opaque API token key management
+type APITokenConfig struct {
+	// Enabled turns on opaque API token support
+	Enabled bool `json:"enabled" koanf:"enabled" default:"false" jsonschema:"description=Enabled turns on opaque API token support"`
+	// EnvPrefix is the environment variable prefix used to load key material
+	EnvPrefix string `json:"envPrefix" koanf:"envPrefix" default:"IAM_API_TOKEN_KEY_" jsonschema:"description=EnvPrefix is the environment variable prefix used to load key material"`
+	// Keys describes statically configured API token keys keyed by version
+	Keys map[string]APITokenKeyConfig `json:"keys" koanf:"keys" example:"v1" jsonschema:"description=Keys describes statically configured API token keys keyed by version"`
+}
+
+// APITokenKeyConfig defines the configuration attributes for an API token key
+type APITokenKeyConfig struct {
+	// Secret represents the symmetric key material used for hashing
+	Secret string `json:"secret" koanf:"secret" sensitive:"true" jsonschema:"description=Secret represents the symmetric key material used for hashing"`
+	// Status indicates the lifecycle state of the key
+	Status string `json:"status" koanf:"status" default:"active" jsonschema:"description=Status indicates the lifecycle state of the key: active, deprecated, or revoked"`
 }
 
 // Validate checks that the Config has valid token duration settings
@@ -118,6 +151,76 @@ func (c *Config) Validate() error {
 	if -c.RefreshOverlap >= c.AccessDuration {
 		return fmt.Errorf("%w: overlap %v is too large for access duration %v",
 			ErrRefreshOverlapInvalid, c.RefreshOverlap, c.AccessDuration)
+	}
+
+	// Validate API tokens configuration
+	if c.APITokens.Enabled {
+		if err := c.APITokens.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Validate checks that the APITokenConfig has valid settings
+func (a *APITokenConfig) Validate() error {
+	// Ensure either static keys or env prefix is configured
+	if len(a.Keys) == 0 && a.EnvPrefix == "" {
+		return ErrAPITokenEnvPrefixRequired
+	}
+
+	// If we have static keys, validate them
+	if len(a.Keys) > 0 {
+		activeCount := 0
+
+		for version, keyConfig := range a.Keys {
+			if err := keyConfig.Validate(); err != nil {
+				return fmt.Errorf("key %s: %w", version, err)
+			}
+
+			if keyConfig.Status == string(KeyStatusActive) {
+				activeCount++
+			}
+		}
+
+		// Ensure exactly one active key
+		if activeCount == 0 {
+			return ErrAPITokenNoActive
+		}
+
+		if activeCount > 1 {
+			return fmt.Errorf("%w: found %d active keys", ErrAPITokenMultipleActive, activeCount)
+		}
+	}
+
+	return nil
+}
+
+// Validate checks that the APITokenKeyConfig has valid settings
+func (k *APITokenKeyConfig) Validate() error {
+	// Validate status
+	switch k.Status {
+	case string(KeyStatusActive), string(KeyStatusDeprecated), string(KeyStatusRevoked):
+		// valid status
+	default:
+		return fmt.Errorf("%w: got %q", ErrAPITokenStatusInvalid, k.Status)
+	}
+
+	// Only validate secret if it's provided (may be loaded from env)
+	if k.Secret != "" {
+		// Try to decode as base64 first
+		decoded, err := base64.StdEncoding.DecodeString(k.Secret)
+		if err != nil {
+			// Not base64, treat as raw string
+			decoded = []byte(k.Secret)
+		}
+
+		// Validate minimum length
+		if len(decoded) < MinAPITokenSecretLength {
+			return fmt.Errorf("%w: got %d bytes, need at least %d",
+				ErrAPITokenSecretTooShort, len(decoded), MinAPITokenSecretLength)
+		}
 	}
 
 	return nil

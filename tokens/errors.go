@@ -21,6 +21,38 @@ var (
 	ErrUnknownSigningKey = errors.New("unknown signing key")
 	// ErrConfigIsInvalid returns when the token manager configuration is invalid
 	ErrConfigIsInvalid = errors.New("token manager configuration is invalid")
+	// ErrAPITokenKeyringNotConfigured is returned when API token operations are attempted without a configured keyring
+	ErrAPITokenKeyringNotConfigured = errors.New("api token keyring not configured")
+	// ErrAPITokenNoActiveKey is returned when the keyring does not contain an active key
+	ErrAPITokenNoActiveKey = errors.New("api token keyring has no active key")
+	// ErrAPITokenMultipleActiveKeys is returned when more than one active key is provided
+	ErrAPITokenMultipleActiveKeys = errors.New("api token keyring has more than one active key")
+	// ErrAPITokenMissingKeyVersion is returned when an empty key version is supplied
+	ErrAPITokenMissingKeyVersion = errors.New("api token key version is required")
+	// ErrAPITokenKeyVersionUnknown is returned when the provided key version cannot be found
+	ErrAPITokenKeyVersionUnknown = errors.New("api token key version unknown")
+	// ErrAPITokenKeyRevoked is returned when the provided key has been revoked
+	ErrAPITokenKeyRevoked = errors.New("api token key is revoked")
+	// ErrAPITokenInvalidFormat is returned when an opaque token cannot be parsed
+	ErrAPITokenInvalidFormat = errors.New("opaque api token has invalid format")
+	// ErrAPITokenHashInvalid is returned when the stored token hash cannot be decoded
+	ErrAPITokenHashInvalid = errors.New("api token hash is invalid")
+	// ErrAPITokenVerificationFailed is returned when the provided token does not match persisted data
+	ErrAPITokenVerificationFailed = errors.New("api token verification failed")
+	// ErrAPITokenSecretMissing is returned when key material or token secrets are empty
+	ErrAPITokenSecretMissing = errors.New("api token secret material is required")
+	// ErrAPITokenDuplicateKeyVersion is returned when attempting to register the same key version twice
+	ErrAPITokenDuplicateKeyVersion = errors.New("api token key version already exists")
+	// ErrAPITokenNoKeysFound is returned when no key material is discovered for an enabled keyring
+	ErrAPITokenNoKeysFound = errors.New("api token keyring has no keys configured")
+	// ErrAPITokenInvalidStatus is returned when an environment-provided key has an unknown status flag
+	ErrAPITokenInvalidStatus = errors.New("api token key status is invalid")
+	// ErrAPITokenEnvPrefixRequired is returned when an empty environment prefix is supplied
+	ErrAPITokenEnvPrefixRequired = errors.New("api token env prefix is required")
+	// ErrAPITokenVersionFromEnvMissing is returned when an environment key name omits the version suffix
+	ErrAPITokenVersionFromEnvMissing = errors.New("api token env key missing version suffix")
+	// ErrAPITokenSecretInvalid is returned when key secret material cannot be decoded
+	ErrAPITokenSecretInvalid = errors.New("api token secret material is invalid")
 )
 
 var (

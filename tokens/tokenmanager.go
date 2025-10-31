@@ -5,6 +5,7 @@ import (
 	"crypto"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
@@ -39,7 +40,9 @@ type loadedKey struct {
 type TokenManager struct {
 	*Issuer
 	validator
-	blacklist TokenBlacklist
+	blacklist       TokenBlacklist
+	apiTokenKeyring *APITokenKeyring
+	apiTokenEntropy io.Reader
 }
 
 // New creates a TokenManager with the specified keys which should be a mapping of key identifiers
@@ -74,6 +77,15 @@ func New(conf Config) (tm *TokenManager, err error) {
 		tm.validator.blacklist = tm.blacklist
 	}
 
+	if conf.APITokens.Enabled {
+		keyring, err := loadAPITokenKeyringFromConfig(conf.APITokens)
+		if err != nil {
+			return nil, err
+		}
+
+		tm.WithAPITokenKeyring(keyring)
+	}
+
 	return tm, nil
 }
 
@@ -83,6 +95,17 @@ func (tm *TokenManager) WithBlacklist(blacklist TokenBlacklist) *TokenManager {
 	tm.validator.blacklist = blacklist
 
 	return tm
+}
+
+// WithAPITokenKeyring configures the symmetric keyring used for opaque API tokens.
+func (tm *TokenManager) WithAPITokenKeyring(keyring *APITokenKeyring) *TokenManager {
+	tm.apiTokenKeyring = keyring
+
+	return tm
+}
+
+func (tm *TokenManager) withAPITokenEntropySource(reader io.Reader) {
+	tm.apiTokenEntropy = reader
 }
 
 // NewWithKey is a constructor function that creates a new instance of the TokenManager struct
@@ -118,6 +141,15 @@ func NewWithKey(key crypto.Signer, conf Config) (tm *TokenManager, err error) {
 		// Initialize blacklist with Redis
 		tm.blacklist = NewRedisTokenBlacklist(redisClient, conf.Redis.BlacklistPrefix)
 		tm.validator.blacklist = tm.blacklist
+	}
+
+	if conf.APITokens.Enabled {
+		keyring, err := loadAPITokenKeyringFromConfig(conf.APITokens)
+		if err != nil {
+			return nil, err
+		}
+
+		tm.WithAPITokenKeyring(keyring)
 	}
 
 	return tm, nil

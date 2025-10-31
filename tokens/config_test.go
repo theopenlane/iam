@@ -167,3 +167,191 @@ func TestConfigValidate(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+func TestAPITokenKeyConfig_Validate(t *testing.T) {
+	tests := []struct {
+		name      string
+		keyConfig tokens.APITokenKeyConfig
+		wantErr   error
+	}{
+		{
+			name: "valid active key with raw secret",
+			keyConfig: tokens.APITokenKeyConfig{
+				Secret: "this-is-a-valid-secret-that-is-at-least-32-bytes-long",
+				Status: string(tokens.KeyStatusActive),
+			},
+			wantErr: nil,
+		},
+		{
+			name: "valid deprecated key",
+			keyConfig: tokens.APITokenKeyConfig{
+				Secret: "this-is-a-valid-secret-that-is-at-least-32-bytes-long",
+				Status: string(tokens.KeyStatusDeprecated),
+			},
+			wantErr: nil,
+		},
+		{
+			name: "valid revoked key",
+			keyConfig: tokens.APITokenKeyConfig{
+				Secret: "this-is-a-valid-secret-that-is-at-least-32-bytes-long",
+				Status: string(tokens.KeyStatusRevoked),
+			},
+			wantErr: nil,
+		},
+		{
+			name: "invalid status",
+			keyConfig: tokens.APITokenKeyConfig{
+				Secret: "this-is-a-valid-secret-that-is-at-least-32-bytes-long",
+				Status: "invalid",
+			},
+			wantErr: tokens.ErrAPITokenStatusInvalid,
+		},
+		{
+			name: "secret too short",
+			keyConfig: tokens.APITokenKeyConfig{
+				Secret: "short",
+				Status: string(tokens.KeyStatusActive),
+			},
+			wantErr: tokens.ErrAPITokenSecretTooShort,
+		},
+		{
+			name: "empty secret is allowed",
+			keyConfig: tokens.APITokenKeyConfig{
+				Secret: "",
+				Status: string(tokens.KeyStatusActive),
+			},
+			wantErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.keyConfig.Validate()
+			if tt.wantErr != nil {
+				require.Error(t, err)
+				require.ErrorIs(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestAPITokenConfig_Validate(t *testing.T) {
+	validSecret := "this-is-a-valid-secret-that-is-at-least-32-bytes-long"
+
+	tests := []struct {
+		name    string
+		config  tokens.APITokenConfig
+		wantErr error
+	}{
+		{
+			name: "valid config with one active key",
+			config: tokens.APITokenConfig{
+				Enabled:   true,
+				EnvPrefix: tokens.DefaultAPITokenEnvPrefix,
+				Keys: map[string]tokens.APITokenKeyConfig{
+					"v1": {
+						Secret: validSecret,
+						Status: string(tokens.KeyStatusActive),
+					},
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "valid config with one active and one deprecated key",
+			config: tokens.APITokenConfig{
+				Enabled:   true,
+				EnvPrefix: tokens.DefaultAPITokenEnvPrefix,
+				Keys: map[string]tokens.APITokenKeyConfig{
+					"v1": {
+						Secret: validSecret,
+						Status: string(tokens.KeyStatusDeprecated),
+					},
+					"v2": {
+						Secret: validSecret,
+						Status: string(tokens.KeyStatusActive),
+					},
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "valid config with env prefix only",
+			config: tokens.APITokenConfig{
+				Enabled:   true,
+				EnvPrefix: tokens.DefaultAPITokenEnvPrefix,
+				Keys:      nil,
+			},
+			wantErr: nil,
+		},
+		{
+			name: "no keys and no env prefix",
+			config: tokens.APITokenConfig{
+				Enabled:   true,
+				EnvPrefix: "",
+				Keys:      nil,
+			},
+			wantErr: tokens.ErrAPITokenEnvPrefixRequired,
+		},
+		{
+			name: "no active keys",
+			config: tokens.APITokenConfig{
+				Enabled:   true,
+				EnvPrefix: tokens.DefaultAPITokenEnvPrefix,
+				Keys: map[string]tokens.APITokenKeyConfig{
+					"v1": {
+						Secret: validSecret,
+						Status: string(tokens.KeyStatusDeprecated),
+					},
+				},
+			},
+			wantErr: tokens.ErrAPITokenNoActive,
+		},
+		{
+			name: "multiple active keys",
+			config: tokens.APITokenConfig{
+				Enabled:   true,
+				EnvPrefix: tokens.DefaultAPITokenEnvPrefix,
+				Keys: map[string]tokens.APITokenKeyConfig{
+					"v1": {
+						Secret: validSecret,
+						Status: string(tokens.KeyStatusActive),
+					},
+					"v2": {
+						Secret: validSecret,
+						Status: string(tokens.KeyStatusActive),
+					},
+				},
+			},
+			wantErr: tokens.ErrAPITokenMultipleActive,
+		},
+		{
+			name: "invalid key configuration",
+			config: tokens.APITokenConfig{
+				Enabled:   true,
+				EnvPrefix: tokens.DefaultAPITokenEnvPrefix,
+				Keys: map[string]tokens.APITokenKeyConfig{
+					"v1": {
+						Secret: "short",
+						Status: string(tokens.KeyStatusActive),
+					},
+				},
+			},
+			wantErr: tokens.ErrAPITokenSecretTooShort,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.config.Validate()
+			if tt.wantErr != nil {
+				require.Error(t, err)
+				require.ErrorIs(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
