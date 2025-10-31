@@ -106,9 +106,18 @@ keyring, _ := tokens.NewAPITokenKeyring(
 )
 tm.WithAPITokenKeyring(keyring)
 
-opaque, _ := tm.GenerateAPIToken(ctx)
+opaque, _ := tm.GenerateAPIToken()
 // Persist opaque.TokenID (ULID), opaque.Hash, and opaque.KeyVersion.
-// Only opaque.Value is shown to the caller.
+// Only opaque.Value should shown to the caller
+
+// Functional options let you reshape the token format when needed. For example,
+// add a static prefix, change the delimiter, and increase the secret size:
+customFormat := []tokens.APITokenOption{
+    tokens.WithAPITokenPrefix("ol_"),
+    tokens.WithAPITokenDelimiter("-"),
+    tokens.WithAPITokenSecretSize(48),
+}
+opaqueCustom, _ := tm.GenerateAPIToken(customFormat...)
 ```
 
 When a request presents the token, look up the stored metadata and verify:
@@ -118,6 +127,14 @@ tokenID, err := tm.VerifyAPIToken(token.Value, storedHash, storedKeyVersion)
 if err != nil {
     return err
 }
+
+// If you emitted a custom format when issuing the token, pass the same options
+// so verification applies the matching parsing rules.
+customID, err := tm.VerifyAPIToken(opaqueCustom.Value, storedHash, storedKeyVersion, customFormat...)
+if err != nil {
+    return err
+}
+// customID now contains the ULID portion of the custom formatted token.
 ```
 
 During rotation, publish a new key (mark it `active` in config), demote the prior key to `deprecated`, and redeploy; the loader rebuilds the keyring on startup and `HashAPITokenComponents` lets you re-hash persisted tokens lazily as they are presented.
@@ -127,6 +144,9 @@ Opaque token keys are provided through configuration so the process remains full
 ```go
 config.APITokens = tokens.APITokenConfig{
     Enabled: true,
+    SecretSize: tokens.DefaultAPITokenSecretSize,
+    Delimiter:  tokens.DefaultAPITokenDelimiter,
+    Prefix:     "",
     Keys: map[string]tokens.APITokenKeyConfig{
         "01HKH8M2MD6QXQ6Y8Q8KQKJ4ZW": {Status: "active", Secret: "<base64 secret>"},
         "01HKH7WPR4Y9YH0JYH0A7RZG9F": {Status: "deprecated", Secret: "<base64 secret>"},
@@ -206,28 +226,11 @@ The package now provides:
   - Adds `Verify()` and `VerifyWithContext()` for validation
   - Adds blacklist and replay prevention features
 
-### Breaking Changes
-
-- `tokens.New()` and `tokens.NewWithKey()` now accept `crypto.Signer` instead of `*rsa.PrivateKey`
-- `(*TokenManager).AddSigningKey()` requires `crypto.Signer` and returns error
-- Multi-algorithm support: EdDSA (Ed25519) is primary, RSA (RS256/RS384/RS512) supported for migration
-
-## Validation Notes
-
-- `validator` continues to enforce issuer and audience but now restricts tokens
-  to `EdDSA` signatures.
-- `tokens.ParseUnverified` and `tokens.ParseUnverifiedTokenClaims` validate
-  Ed25519 signatures during parsing so behaviour matches the previous RSA flow.
-
 ## Signer Helpers
 
 Helper constructors are available when loading keys from files:
 
 - `NewFileSigner(path)` loads an Ed25519 key pair from a PEM file and returns it as a `crypto.Signer`.
-
-## Redis-Backed Security Features
-
-The tokens package supports optional Redis-backed features for enhanced security:
 
 ### Token Blacklist
 
@@ -267,17 +270,3 @@ config := tokens.Config{
 
 tm, err := tokens.New(config)
 ```
-
-### Backward Compatibility
-
-The `WithBlacklist()` method remains available for:
-- Testing with mock implementations
-- Runtime configuration changes
-- Custom Redis client management
-
-```go
-// Override config-based initialization
-tm.WithBlacklist(customBlacklist)
-```
-
-When Redis is disabled (`Redis.Enabled = false`), the package uses a no-op blacklist implementation that gracefully degrades functionality without errors.

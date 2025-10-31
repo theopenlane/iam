@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/oklog/ulid/v2"
@@ -164,6 +165,7 @@ func TestGenerateAndVerifyAPIToken(t *testing.T) {
 
 	tm := &TokenManager{}
 	tm.WithAPITokenKeyring(keyring)
+	tm.WithAPITokenConfig(defaultRuntimeAPITokenConfig())
 	tm.withAPITokenEntropySource(bytes.NewReader(bytes.Repeat([]byte{0xBB}, 64)))
 
 	token, err := tm.GenerateAPIToken()
@@ -179,7 +181,7 @@ func TestGenerateAndVerifyAPIToken(t *testing.T) {
 		t.Fatalf("expected key version v1, got %s", token.KeyVersion)
 	}
 
-	id, secretBytes, err := parseOpaqueToken(token.Value)
+	id, secretBytes, err := parseOpaqueTokenWithConfig(token.Value, defaultRuntimeAPITokenConfig())
 	if err != nil {
 		t.Fatalf("expected to parse token: %v", err)
 	}
@@ -211,6 +213,88 @@ func TestGenerateAndVerifyAPIToken(t *testing.T) {
 	}
 }
 
+func TestAPITokenCustomFormat(t *testing.T) {
+	keyring, err := NewAPITokenKeyring(APITokenKey{
+		Version: "v1",
+		Secret:  bytes.Repeat([]byte{0xAB}, 32),
+		Status:  KeyStatusActive,
+	})
+	if err != nil {
+		t.Fatalf(errCreateKeyringFmt, err)
+	}
+
+	tm := &TokenManager{}
+	tm.WithAPITokenKeyring(keyring)
+	tm.WithAPITokenConfig(defaultRuntimeAPITokenConfig())
+	tm.withAPITokenEntropySource(bytes.NewReader(bytes.Repeat([]byte{0xCD}, 128)))
+
+	options := []APITokenOption{
+		WithAPITokenSecretSize(48),
+		WithAPITokenDelimiter("-"),
+		WithAPITokenPrefix("ol_"),
+	}
+
+	token, err := tm.GenerateAPIToken(options...)
+	if err != nil {
+		t.Fatalf(errTokenGenerationFmt, err)
+	}
+
+	runtimeCfg := defaultRuntimeAPITokenConfig()
+	for _, opt := range options {
+		if opt == nil {
+			continue
+		}
+		if err := opt(&runtimeCfg); err != nil {
+			t.Fatalf("failed applying option: %v", err)
+		}
+	}
+
+	id, secretBytes, err := parseOpaqueTokenWithConfig(token.Value, runtimeCfg)
+	if err != nil {
+		t.Fatalf("expected custom token to parse: %v", err)
+	}
+
+	if !strings.HasPrefix(token.Value, "ol_") {
+		t.Fatalf("expected custom prefix, got %s", token.Value)
+	}
+
+	if opaqueEncoding.EncodeToString(secretBytes) != token.Secret {
+		t.Fatalf("expected stored secret to remain unchanged")
+	}
+
+	returnedID, err := tm.VerifyAPIToken(token.Value, token.Hash, token.KeyVersion, options...)
+	if err != nil {
+		t.Fatalf("verification with custom format failed: %v", err)
+	}
+
+	if returnedID != id {
+		t.Fatalf("expected verification to return custom token ID")
+	}
+}
+
+func TestAPITokenInvalidOptions(t *testing.T) {
+	keyring, err := NewAPITokenKeyring(APITokenKey{
+		Version: "v1",
+		Secret:  bytes.Repeat([]byte{0x01}, 32),
+		Status:  KeyStatusActive,
+	})
+	if err != nil {
+		t.Fatalf(errCreateKeyringFmt, err)
+	}
+
+	tm := &TokenManager{}
+	tm.WithAPITokenKeyring(keyring)
+	tm.WithAPITokenConfig(defaultRuntimeAPITokenConfig())
+
+	if _, err := tm.GenerateAPIToken(WithAPITokenSecretSize(0)); !errors.Is(err, ErrAPITokenSecretSizeInvalid) {
+		t.Fatalf("expected ErrAPITokenSecretSizeInvalid, got %v", err)
+	}
+
+	if _, err := tm.GenerateAPIToken(WithAPITokenDelimiter("")); !errors.Is(err, ErrAPITokenDelimiterInvalid) {
+		t.Fatalf("expected ErrAPITokenDelimiterInvalid, got %v", err)
+	}
+}
+
 func TestVerifyAPITokenFailures(t *testing.T) {
 	keyring, err := NewAPITokenKeyring(APITokenKey{
 		Version: "v1",
@@ -223,6 +307,7 @@ func TestVerifyAPITokenFailures(t *testing.T) {
 
 	tm := &TokenManager{}
 	tm.WithAPITokenKeyring(keyring)
+	tm.WithAPITokenConfig(defaultRuntimeAPITokenConfig())
 	tm.withAPITokenEntropySource(bytes.NewReader(bytes.Repeat([]byte{0xCC}, 32)))
 
 	token, err := tm.GenerateAPIToken()
@@ -242,7 +327,7 @@ func TestVerifyAPITokenFailures(t *testing.T) {
 		t.Fatalf("expected ErrAPITokenHashInvalid, got %v", err)
 	}
 
-	_, secretBytes, err := parseOpaqueToken(token.Value)
+	_, secretBytes, err := parseOpaqueTokenWithConfig(token.Value, defaultRuntimeAPITokenConfig())
 	if err != nil {
 		t.Fatalf("failed to parse token: %v", err)
 	}
@@ -250,7 +335,8 @@ func TestVerifyAPITokenFailures(t *testing.T) {
 	modified := append([]byte(nil), secretBytes...)
 	modified[0] ^= 0xFF
 
-	invalidValue := token.TokenID.String() + "." + opaqueEncoding.EncodeToString(modified)
+	cfg := defaultRuntimeAPITokenConfig()
+	invalidValue := token.TokenID.String() + cfg.Delimiter + opaqueEncoding.EncodeToString(modified)
 
 	if _, err = tm.VerifyAPIToken(invalidValue, token.Hash, token.KeyVersion); !errors.Is(err, ErrAPITokenVerificationFailed) {
 		t.Fatalf("expected ErrAPITokenVerificationFailed, got %v", err)
@@ -289,6 +375,7 @@ func TestHashAPITokenComponents(t *testing.T) {
 
 	tm := &TokenManager{}
 	tm.WithAPITokenKeyring(keyring)
+	tm.WithAPITokenConfig(defaultRuntimeAPITokenConfig())
 	tm.withAPITokenEntropySource(bytes.NewReader(bytes.Repeat([]byte{0xDD}, 32)))
 
 	token, err := tm.GenerateAPIToken()
@@ -487,8 +574,8 @@ func TestGenerateAPITokenKeyMaterial(t *testing.T) {
 		t.Fatalf("expected key material generation to succeed: %v", err)
 	}
 
-	if len(secret) != apiTokenSecretSize {
-		t.Fatalf("expected secret size %d, got %d", apiTokenSecretSize, len(secret))
+	if len(secret) != DefaultAPITokenSecretSize {
+		t.Fatalf("expected secret size %d, got %d", DefaultAPITokenSecretSize, len(secret))
 	}
 
 	if _, err := ulid.Parse(version); err != nil {

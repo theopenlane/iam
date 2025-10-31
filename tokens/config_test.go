@@ -341,6 +341,15 @@ func TestAPITokenConfigValidate(t *testing.T) {
 			},
 			wantErr: tokens.ErrAPITokenSecretTooShort,
 		},
+		{
+			name: "invalid secret size",
+			config: tokens.APITokenConfig{
+				Enabled:    true,
+				EnvPrefix:  tokens.DefaultAPITokenEnvPrefix,
+				SecretSize: -1,
+			},
+			wantErr: tokens.ErrAPITokenSecretSizeInvalid,
+		},
 	}
 
 	for _, tt := range tests {

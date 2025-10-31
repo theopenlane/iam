@@ -53,6 +53,30 @@ var (
 	ErrAPITokenVersionFromEnvMissing = errors.New("api token env key missing version suffix")
 	// ErrAPITokenSecretInvalid is returned when key secret material cannot be decoded
 	ErrAPITokenSecretInvalid = errors.New("api token secret material is invalid")
+	// ErrAPITokenSecretSizeInvalid is returned when an invalid secret size configuration is supplied
+	ErrAPITokenSecretSizeInvalid = errors.New("api token secret size must be positive")
+	// ErrAPITokenDelimiterInvalid is returned when the token delimiter is empty
+	ErrAPITokenDelimiterInvalid = errors.New("api token delimiter must not be empty")
+	// ErrAccessDurationInvalid is returned when the access duration is outside allowed bounds
+	ErrAccessDurationInvalid = errors.New("access duration must be positive and between allowed bounds")
+	// ErrRefreshDurationInvalid is returned when the refresh duration is outside allowed bounds
+	ErrRefreshDurationInvalid = errors.New("refresh duration must be positive and between allowed bounds")
+	// ErrRefreshOverlapInvalid is returned when the refresh overlap is not negative or too large
+	ErrRefreshOverlapInvalid = errors.New("refresh overlap must be negative and less than access duration")
+	// ErrRefreshDurationTooShort is returned when refresh duration is not longer than access duration
+	ErrRefreshDurationTooShort = errors.New("refresh duration must be greater than access duration")
+	// ErrAudienceRequired is returned when audience is not specified
+	ErrAudienceRequired = errors.New("audience is required")
+	// ErrIssuerRequired is returned when issuer is not specified
+	ErrIssuerRequired = errors.New("issuer is required")
+	// ErrAPITokenMultipleActive is returned when multiple keys are marked as active
+	ErrAPITokenMultipleActive = errors.New("only one api token key can be active at a time")
+	// ErrAPITokenNoActive is returned when API tokens are enabled but no active key exists
+	ErrAPITokenNoActive = errors.New("api tokens enabled but no active key configured")
+	// ErrAPITokenSecretTooShort is returned when a secret is below the minimum length
+	ErrAPITokenSecretTooShort = errors.New("api token secret must be at least 32 bytes")
+	// ErrAPITokenStatusInvalid is returned when a key status is not valid
+	ErrAPITokenStatusInvalid = errors.New("api token key status must be active, deprecated, or revoked")
 )
 
 var (
@@ -244,3 +268,10 @@ func newParseError(o string, v string, err error) *ParseError {
 		Err:    err,
 	}
 }
+
+const (
+	// wrappedErrorFormat is the shared format string for wrapping underlying errors.
+	wrappedErrorFormat = "%w: %v"
+	// keyWrappedErrorFormat is the shared format string when annotating key-related errors.
+	keyWrappedErrorFormat = "api token key %s: %w"
+)
