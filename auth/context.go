@@ -107,6 +107,33 @@ func AuthenticatedUserFromContextOrFunc(ctx context.Context, f func() *Authentic
 	return contextx.FromOrFunc(ctx, f)
 }
 
+// AnonymousQuestionnaireUser contains user information for anonymously accessing and filling
+// a questionnaire
+type AnonymousQuestionnaireUser struct {
+	// SubjectID is the user ID of the authenticated user or the api token ID if the user is an API token
+	SubjectID string
+	// SubjectName is the name of the authenticated user
+	SubjectName string
+	// SubjectEmail is the email of the authenticated user
+	SubjectEmail string
+	// OrganizationID is the organization ID of the authenticated user
+	OrganizationID string
+	// AuthenticationType is the type of authentication used to authenticate the user (JWT, PAT, API Token)
+	AuthenticationType AuthenticationType
+	// AssessmentID is the ID of the assessment the user is accessing
+	AssessmentID string
+}
+
+// WithAnonymousQuestionnaireUser sets the anonymous questionnaire user in the context
+func WithAnonymousQuestionnaireUser(ctx context.Context, user *AnonymousQuestionnaireUser) context.Context {
+	return contextx.With(ctx, user)
+}
+
+// AnonymousQuestionnaireUserFromContext retrieves the anonymous questionnaire user from the context
+func AnonymousQuestionnaireUserFromContext(ctx context.Context) (*AnonymousQuestionnaireUser, bool) {
+	return contextx.From[*AnonymousQuestionnaireUser](ctx)
+}
+
 // AnonymousTrustCenterUser contains user information for anonymous trust center access
 // This allows unauthenticated users to access specific trust center resources
 type AnonymousTrustCenterUser struct {
@@ -280,6 +307,33 @@ func GetAnonymousTrustCenterUserContextOr(c echo.Context, def *AnonymousTrustCen
 
 // GetAnonymousTrustCenterUserContextOrFunc retrieves the anonymous trust center user from the echo context or returns the result of the provided function if not found
 func GetAnonymousTrustCenterUserContextOrFunc(c echo.Context, f func() *AnonymousTrustCenterUser) *AnonymousTrustCenterUser {
+	return contextx.FromOrFunc(c.Request().Context(), f)
+}
+
+// SetAnonymousQuestionnaireUserContext sets the anonymous questionnaire user context in the echo context
+func SetAnonymousQuestionnaireUserContext(c echo.Context, user *AnonymousQuestionnaireUser) {
+	ctx := c.Request().Context()
+	ctx = WithAnonymousQuestionnaireUser(ctx, user)
+	c.SetRequest(c.Request().WithContext(ctx))
+}
+
+// GetAnonymousQuestionnaireUserContext retrieves the anonymous questionnaire user from the echo context
+func GetAnonymousQuestionnaireUserContext(c echo.Context) (*AnonymousQuestionnaireUser, bool) {
+	return AnonymousQuestionnaireUserFromContext(c.Request().Context())
+}
+
+// MustGetAnonymousQuestionnaireUserContext retrieves the anonymous questionnaire user from the echo context or panics if not found
+func MustGetAnonymousQuestionnaireUserContext(c echo.Context) *AnonymousQuestionnaireUser {
+	return contextx.MustFrom[*AnonymousQuestionnaireUser](c.Request().Context())
+}
+
+// GetAnonymousQuestionnaireUserContextOr retrieves the anonymous questionnaire user from the echo context or returns the provided default value if not found
+func GetAnonymousQuestionnaireUserContextOr(c echo.Context, def *AnonymousQuestionnaireUser) *AnonymousQuestionnaireUser {
+	return contextx.FromOr(c.Request().Context(), def)
+}
+
+// GetAnonymousQuestionnaireUserContextOrFunc retrieves the anonymous questionnaire user from the echo context or returns the result of the provided function if not found
+func GetAnonymousQuestionnaireUserContextOrFunc(c echo.Context, f func() *AnonymousQuestionnaireUser) *AnonymousQuestionnaireUser {
 	return contextx.FromOrFunc(c.Request().Context(), f)
 }
 

@@ -240,6 +240,7 @@ func TestGetEffectiveUser(t *testing.T) {
 						SubjectEmail: "support@example.com",
 					},
 				}
+
 				return WithImpersonatedUser(ctx, impUser)
 			},
 			wantUser: &AuthenticatedUser{
@@ -256,6 +257,7 @@ func TestGetEffectiveUser(t *testing.T) {
 					SubjectID:    "user123",
 					SubjectEmail: "user@example.com",
 				}
+
 				return WithAuthenticatedUser(ctx, user)
 			},
 			wantUser: &AuthenticatedUser{
