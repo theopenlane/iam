@@ -33,7 +33,7 @@ require (
 	github.com/theopenlane/utils v0.5.2
 	github.com/urfave/cli/v3 v3.5.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
-	golang.org/x/oauth2 v0.32.0
+	golang.org/x/oauth2 v0.33.0
 	golang.org/x/tools v0.38.0
 	google.golang.org/api v0.254.0
 	google.golang.org/protobuf v1.36.10
