@@ -12,6 +12,7 @@ require (
 	github.com/go-webauthn/webauthn v0.14.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-github/v74 v74.0.0
+	github.com/google/go-github/v78 v78.0.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/lestrrat-go/httprc/v3 v3.0.1
 	github.com/lestrrat-go/jwx/v3 v3.0.12
