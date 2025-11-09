@@ -7,7 +7,7 @@ require (
 	github.com/99designs/gqlgen v0.17.81
 	github.com/Yamashou/gqlgenc v0.33.0
 	github.com/alicebob/miniredis/v2 v2.35.0
-	github.com/brianvoe/gofakeit/v7 v7.8.2
+	github.com/brianvoe/gofakeit/v7 v7.9.0
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/go-webauthn/webauthn v0.14.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
