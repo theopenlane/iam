@@ -4,7 +4,7 @@ go 1.25.1
 
 require (
 	entgo.io/ent v0.14.5
-	github.com/99designs/gqlgen v0.17.81
+	github.com/99designs/gqlgen v0.17.83
 	github.com/Yamashou/gqlgenc v0.33.0
 	github.com/alicebob/miniredis/v2 v2.35.0
 	github.com/brianvoe/gofakeit/v7 v7.9.0
@@ -31,7 +31,7 @@ require (
 	github.com/theopenlane/echox v0.2.4
 	github.com/theopenlane/entx v0.15.1
 	github.com/theopenlane/utils v0.5.2
-	github.com/urfave/cli/v3 v3.5.0
+	github.com/urfave/cli/v3 v3.6.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.33.0
 	golang.org/x/tools v0.38.0
@@ -156,7 +156,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.7 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/vektah/gqlparser/v2 v2.5.30 // indirect
+	github.com/vektah/gqlparser/v2 v2.5.31 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
