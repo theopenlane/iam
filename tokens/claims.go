@@ -34,6 +34,9 @@ type Claims struct {
 
 	// Email is the email address of the user
 	Email string `json:"email,omitempty"`
+
+	// AssessmentID is the id of the questionnaire to fill
+	AssessmentID string `json:"assessment_id,omitempty"`
 }
 
 // ParseUserID returns the ID of the user from the Subject of the claims

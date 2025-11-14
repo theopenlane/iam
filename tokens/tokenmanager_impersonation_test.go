@@ -298,6 +298,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 
 				token, err := wrongTM.CreateImpersonationToken(ctx, validOpts)
 				assert.NoError(t, err)
+
 				return token
 			},
 			wantErr: true,
@@ -313,6 +314,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 
 				token, err := tm.CreateImpersonationToken(ctx, expiredOpts)
 				assert.NoError(t, err)
+
 				return token
 			},
 			wantErr: true,
@@ -339,6 +341,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 				token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 				tokenString, err := tm.Sign(token)
 				assert.NoError(t, err)
+
 				return tokenString
 			},
 			wantErr: true,
@@ -364,6 +367,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 				token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 				tokenString, err := tm.Sign(token)
 				assert.NoError(t, err)
+
 				return tokenString
 			},
 			wantErr: true,
@@ -389,6 +393,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 				token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 				tokenString, err := tm.Sign(token)
 				assert.NoError(t, err)
+
 				return tokenString
 			},
 			wantErr: true,
@@ -414,6 +419,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 				token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 				tokenString, err := tm.Sign(token)
 				assert.NoError(t, err)
+
 				return tokenString
 			},
 			wantErr: true,
@@ -439,6 +445,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 				token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 				tokenString, err := tm.Sign(token)
 				assert.NoError(t, err)
+
 				return tokenString
 			},
 			wantErr: true,
