@@ -50,6 +50,9 @@ type AcmeSolverContextKey struct{}
 // TrustCenterContextKey is the context key name for the trust center context
 type TrustCenterContextKey struct{}
 
+// QuestionnaireContextKey is the context key name for the questionnaire context
+type QuestionnaireContextKey struct{}
+
 // TrustCenterNDAContextKey is the context key name for the trust center NDA context
 type TrustCenterNDAContextKey struct {
 	OrgID string
