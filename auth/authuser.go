@@ -64,6 +64,8 @@ func GetOrganizationIDFromContext(ctx context.Context) (string, error) {
 	var orgID string
 	if anon, ok := AnonymousTrustCenterUserFromContext(ctx); ok {
 		orgID = anon.OrganizationID
+	} else if anon, ok := AnonymousQuestionnaireUserFromContext(ctx); ok {
+		orgID = anon.OrganizationID
 	} else {
 		au, ok := AuthenticatedUserFromContext(ctx)
 		if !ok || au == nil {
@@ -89,6 +91,8 @@ func GetOrganizationIDFromContext(ctx context.Context) (string, error) {
 func GetOrganizationIDsFromContext(ctx context.Context) ([]string, error) {
 	var orgIDs []string
 	if anon, ok := AnonymousTrustCenterUserFromContext(ctx); ok {
+		orgIDs = []string{anon.OrganizationID}
+	} else if anon, ok := AnonymousQuestionnaireUserFromContext(ctx); ok {
 		orgIDs = []string{anon.OrganizationID}
 	} else {
 		au, ok := AuthenticatedUserFromContext(ctx)

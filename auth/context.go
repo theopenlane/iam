@@ -92,7 +92,21 @@ func WithAuthenticatedUser(ctx context.Context, user *AuthenticatedUser) context
 
 // AuthenticatedUserFromContext retrieves the authenticated user from the context
 func AuthenticatedUserFromContext(ctx context.Context) (*AuthenticatedUser, bool) {
-	return contextx.From[*AuthenticatedUser](ctx)
+	if user, ok := contextx.From[*AuthenticatedUser](ctx); ok {
+		return user, true
+	}
+
+	if user, ok := contextx.From[*AnonymousQuestionnaireUser](ctx); ok {
+		return &AuthenticatedUser{
+			OrganizationID:     user.OrganizationID,
+			SubjectID:          user.SubjectID,
+			SubjectName:        user.SubjectName,
+			SubjectEmail:       user.SubjectEmail,
+			AuthenticationType: user.AuthenticationType,
+		}, true
+	}
+
+	return nil, false
 }
 
 // MustAuthenticatedUserFromContext retrieves the authenticated user from the context or panics if not found
