@@ -38,27 +38,27 @@ type Config struct {
 	// Audience represents the target audience for the tokens.
 	Audience string `json:"audience" koanf:"audience" jsonschema:"required" domain:"inherit" domainPrefix:"https://api"`
 	// RefreshAudience represents the audience for refreshing tokens.
-	RefreshAudience string `json:"refreshAudience" koanf:"refreshAudience" domain:"inherit" domainPrefix:"https://api"`
+	RefreshAudience string `json:"refreshaudience" koanf:"refreshaudience" domain:"inherit" domainPrefix:"https://api"`
 	// Issuer represents the issuer of the tokens
 	Issuer string `json:"issuer" koanf:"issuer" jsonschema:"required" domain:"inherit" domainPrefix:"https://api"`
 	// AccessDuration represents the duration of the access token is valid for
-	AccessDuration time.Duration `json:"accessDuration" koanf:"accessDuration" default:"1h"`
+	AccessDuration time.Duration `json:"accessduration" koanf:"accessduration" default:"1h"`
 	// RefreshDuration represents the duration of the refresh token is valid for
-	RefreshDuration time.Duration `json:"refreshDuration" koanf:"refreshDuration" default:"2h"`
+	RefreshDuration time.Duration `json:"refreshduration" koanf:"refreshduration" default:"2h"`
 	// RefreshOverlap represents the overlap time for a refresh and access token
-	RefreshOverlap time.Duration `json:"refreshOverlap" koanf:"refreshOverlap" default:"-15m" `
+	RefreshOverlap time.Duration `json:"refreshoverlap" koanf:"refreshoverlap" default:"-15m" `
 	// JWKSEndpoint represents the endpoint for the JSON Web Key Set
-	JWKSEndpoint string `json:"jwksEndpoint" koanf:"jwksEndpoint" domain:"inherit" domainPrefix:"https://api" domainSuffix:"/.well-known/jwks.json"`
+	JWKSEndpoint string `json:"jwksendpoint" koanf:"jwksendpoint" domain:"inherit" domainPrefix:"https://api" domainSuffix:"/.well-known/jwks.json"`
 	// Keys represents the key pairs used for signing the tokens
 	Keys map[string]string `json:"keys" koanf:"keys" jsonschema:"required"`
 	// GenerateKeys is a boolean to determine if the keys should be generated
-	GenerateKeys bool `json:"generateKeys" koanf:"generateKeys" default:"true"`
+	GenerateKeys bool `json:"generatekeys" koanf:"generatekeys" default:"true"`
 	// JWKSCacheTTL is the duration to cache JWKS responses
-	JWKSCacheTTL time.Duration `json:"jwksCacheTTL" koanf:"jwksCacheTTL" default:"5m"`
+	JWKSCacheTTL time.Duration `json:"jwkscachettl" koanf:"jwkscachettl" default:"5m"`
 	// Redis contains Redis configuration for token blacklist and JWT ID tracking
 	Redis RedisConfig `json:"redis" koanf:"redis"`
 	// APITokens contains configuration for opaque API token key management
-	APITokens APITokenConfig `json:"apiTokens" koanf:"apiTokens"`
+	APITokens APITokenConfig `json:"apitokens" koanf:"apitokens"`
 }
 
 // RedisConfig contains Redis configuration for token security features
@@ -68,7 +68,7 @@ type RedisConfig struct {
 	// Config contains the Redis connection settings
 	Config cache.Config `json:"config" koanf:"config"`
 	// BlacklistPrefix is the Redis key prefix for blacklisted tokens
-	BlacklistPrefix string `json:"blacklistPrefix" koanf:"blacklistPrefix" default:"token:blacklist:"`
+	BlacklistPrefix string `json:"blacklistprefix" koanf:"blacklistprefix" default:"token:blacklist:"`
 }
 
 // APITokenConfig contains configuration for opaque API token key management
@@ -76,11 +76,11 @@ type APITokenConfig struct {
 	// Enabled turns on opaque API token support
 	Enabled bool `json:"enabled" koanf:"enabled" default:"false"`
 	// EnvPrefix is the environment variable prefix used to load key material
-	EnvPrefix string `json:"envPrefix" koanf:"envPrefix" default:"IAM_API_TOKEN_KEY_"`
+	EnvPrefix string `json:"envprefix" koanf:"envprefix" default:"IAM_API_TOKEN_KEY_"`
 	// Keys describes statically configured API token keys keyed by version
 	Keys map[string]APITokenKeyConfig `json:"keys" koanf:"keys" example:"v1"`
 	// SecretSize controls the number of random bytes embedded in a generated opaque token secret
-	SecretSize int `json:"secretSize" koanf:"secretSize" default:"32"`
+	SecretSize int `json:"secretsize" koanf:"secretsize" default:"32"`
 	// Delimiter separates the token identifier and secret when formatting the opaque value
 	Delimiter string `json:"delimiter" koanf:"delimiter" default:"." `
 	// Prefix is prepended to the opaque token value before the identifier segment

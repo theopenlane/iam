@@ -22,17 +22,17 @@ type Config struct {
 	// Enabled - checks this first before reading the config
 	Enabled bool `json:"enabled" koanf:"enabled" jsonschema:"description=enables authorization checks with openFGA" default:"true"`
 	// StoreName of the FGA Store
-	StoreName string `json:"storeName" koanf:"storeName" jsonschema:"description=name of openFGA store" default:"openlane"`
+	StoreName string `json:"storename" koanf:"storename" jsonschema:"description=name of openFGA store" default:"openlane"`
 	// HostURL of the fga API, replaces Host and Scheme settings
-	HostURL string `json:"hostUrl" koanf:"hostUrl" jsonschema:"description=host url with scheme of the openFGA API,required" default:"https://authz.theopenlane.io"`
+	HostURL string `json:"hosturl" koanf:"hosturl" jsonschema:"description=host url with scheme of the openFGA API,required" default:"https://authz.theopenlane.io"`
 	// StoreID of the authorization store in FGA
-	StoreID string `json:"storeId" koanf:"storeId" jsonschema:"description=id of openFGA store"`
+	StoreID string `json:"storeid" koanf:"storeid" jsonschema:"description=id of openFGA store"`
 	// ModelID that already exists in authorization store to be used
-	ModelID string `json:"modelId" koanf:"modelId" jsonschema:"description=id of openFGA model"`
+	ModelID string `json:"modelid" koanf:"modelid" jsonschema:"description=id of openFGA model"`
 	// CreateNewModel force creates a new model, even if one already exists
-	CreateNewModel bool `json:"createNewModel" koanf:"createNewModel" jsonschema:"description=force create a new model, even if one already exists" default:"false"`
+	CreateNewModel bool `json:"createnewmodel" koanf:"createnewmodel" jsonschema:"description=force create a new model, even if one already exists" default:"false"`
 	// ModelFile is the path to the model file
-	ModelFile string `json:"modelFile" koanf:"modelFile" jsonschema:"description=path to the fga model file" default:"fga/model/model.fga"`
+	ModelFile string `json:"modelfile" koanf:"modelfile" jsonschema:"description=path to the fga model file" default:"fga/model/model.fga"`
 	// Credentials for the client
 	Credentials Credentials `json:"credentials" koanf:"credentials" jsonschema:"description=credentials for the openFGA client"`
 }
@@ -40,11 +40,11 @@ type Config struct {
 // Credentials for the openFGA client
 type Credentials struct {
 	// APIToken is the token to use for the client, required if using API token authentication
-	APIToken string `json:"apiToken" koanf:"apiToken" jsonschema:"description=api token for the openFGA client, required if using pre-shared key authentication" sensitive:"true"`
+	APIToken string `json:"apitoken" koanf:"apitoken" jsonschema:"description=api token for the openFGA client, required if using pre-shared key authentication" sensitive:"true"`
 	// ClientID is the client ID to use for the client, required if using client credentials
-	ClientID string `json:"clientId" koanf:"clientId" jsonschema:"description=client id for the openFGA client, required if using client credentials authentication"`
+	ClientID string `json:"clientid" koanf:"clientid" jsonschema:"description=client id for the openFGA client, required if using client credentials authentication"`
 	// ClientSecret is the client secret to use for the client, required if using client credentials
-	ClientSecret string `json:"clientSecret" koanf:"clientSecret" jsonschema:"description=client secret for the openFGA client, required if using client credentials authentication" sensitive:"true"`
+	ClientSecret string `json:"clientsecret" koanf:"clientsecret" jsonschema:"description=client secret for the openFGA client, required if using client credentials authentication" sensitive:"true"`
 	// Audience is the audience to use for the client, required if using client credentials
 	Audience string `json:"audience" koanf:"audience" jsonschema:"description=audience for the openFGA client"`
 	// Issuer is the issuer to use for the client, required if using client credentials
