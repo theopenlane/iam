@@ -16,18 +16,18 @@ type ProviderConfig struct {
 	// Enabled is the provider enabled
 	Enabled bool `json:"enabled" koanf:"enabled" default:"true"`
 	// DisplayName is the site display name
-	DisplayName string `json:"displayName" koanf:"displayName" jsonschema:"required"`
+	DisplayName string `json:"displayname" koanf:"displayname" jsonschema:"required"`
 	// RelyingPartyID is the relying party identifier
 	// set to localhost for development, no port
-	RelyingPartyID string `json:"relyingPartyId" koanf:"relyingPartyId" jsonschema:"required" domain:"inherit"`
+	RelyingPartyID string `json:"relyingpartyid" koanf:"relyingpartyid" jsonschema:"required" domain:"inherit"`
 	// RequestOrigins the origin domain(s) for authentication requests
 	// include the scheme and port
-	RequestOrigins []string `json:"requestOrigins" koanf:"requestOrigins" jsonschema:"required" domain:"inherit" domainPrefix:"https://console"`
+	RequestOrigins []string `json:"requestorigins" koanf:"requestorigins" jsonschema:"required" domain:"inherit" domainPrefix:"https://console"`
 	// MaxDevices is the maximum number of devices that can be associated with a user
-	MaxDevices int `json:"maxDevices" koanf:"maxDevices" default:"10"`
+	MaxDevices int `json:"maxdevices" koanf:"maxdevices" default:"10"`
 	// EnforceTimeout at the Relying Party / Server. This means if enabled and the user takes too long that even if the browser does not
 	// enforce a timeout, the server will
-	EnforceTimeout bool `json:"enforceTimeout" koanf:"enforceTimeout" default:"true"`
+	EnforceTimeout bool `json:"enforcetimeout" koanf:"enforcetimeout" default:"true"`
 	// Timeout is the timeout in seconds
 	Timeout time.Duration `json:"timeout" koanf:"timeout" default:"60s"`
 	// Debug enables debug mode

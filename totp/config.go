@@ -11,7 +11,7 @@ type Config struct {
 	// Enabled is a flag to enable or disable the OTP service
 	Enabled bool `json:"enabled" koanf:"enabled" default:"true"`
 	// CodeLength is the length of the OTP code
-	CodeLength int `json:"codeLength" koanf:"codeLength" default:"6"`
+	CodeLength int `json:"codelength" koanf:"codelength" default:"6"`
 	// Issuer is the issuer for TOTP codes
 	Issuer string `json:"issuer" koanf:"issuer" domain:"inherit"`
 	// WithRedis configures the service with a redis client
@@ -19,9 +19,9 @@ type Config struct {
 	// Secret stores a versioned secret key for cryptography functions
 	Secret string `json:"secret" koanf:"secret" sensitive:"true"`
 	// RecoveryCodeCount is the number of recovery codes to generate
-	RecoveryCodeCount int `json:"recoveryCodeCount" koanf:"recoveryCodeCount" default:"16"`
+	RecoveryCodeCount int `json:"recoverycodecount" koanf:"recoverycodecount" default:"16"`
 	// RecoveryCodeLength is the length of a recovery code
-	RecoveryCodeLength int `json:"recoveryCodeLength" koanf:"recoveryCodeLength" default:"8"`
+	RecoveryCodeLength int `json:"recoverycodelength" koanf:"recoverycodelength" default:"8"`
 }
 
 // NewOTP returns a new OTP validator

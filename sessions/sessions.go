@@ -10,19 +10,19 @@ import (
 // Config contains the configuration for the session store
 type Config struct {
 	// SigningKey must be a 16, 32, or 64 character string used to encode the cookie
-	SigningKey string `json:"signingKey" koanf:"signingKey" sensitive:"true" default:"my-signing-secret"`
+	SigningKey string `json:"signingkey" koanf:"signingkey" sensitive:"true" default:"my-signing-secret"`
 	// EncryptionKey must be a 16, 32, or 64 character string used to encode the cookie
-	EncryptionKey string `json:"encryptionKey" koanf:"encryptionKey" sensitive:"true" default:"encryptionsecret"`
+	EncryptionKey string `json:"encryptionkey" koanf:"encryptionkey" sensitive:"true" default:"encryptionsecret"`
 	// Domain is the domain for the cookie, leave empty to use the default value of the server
 	Domain string `json:"domain" koanf:"domain" domain:"inherit"`
 	// MaxAge is the maximum age of the session cookie in seconds. After this time, the cookie will be invalidated
-	MaxAge int `json:"maxAge" koanf:"maxAge" default:"3600"` // 1 hour by default in seconds
+	MaxAge int `json:"maxage" koanf:"maxage" default:"3600"` // 1 hour by default in seconds
 	// Secure indicates whether the session cookie should only be sent over HTTPS
 	Secure bool `json:"secure" koanf:"secure" default:"true"`
 	// HTTPOnly indicates whether the session cookie should be accessible only via HTTP(S) and not JavaScript
-	HTTPOnly bool `json:"httpOnly" koanf:"httpOnly" default:"true"`
+	HTTPOnly bool `json:"httponly" koanf:"httponly" default:"true"`
 	// SameSite indicates the SameSite attribute for the session cookie
-	SameSite string `json:"sameSite" koanf:"sameSite" default:"Strict"`
+	SameSite string `json:"samesite" koanf:"samesite" default:"Strict"`
 }
 
 // Session represents state values maintained in a sessions Store
