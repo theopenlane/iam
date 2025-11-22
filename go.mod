@@ -4,7 +4,7 @@ go 1.25.1
 
 require (
 	entgo.io/ent v0.14.5
-	github.com/99designs/gqlgen v0.17.81
+	github.com/99designs/gqlgen v0.17.83
 	github.com/Yamashou/gqlgenc v0.33.0
 	github.com/alicebob/miniredis/v2 v2.35.0
 	github.com/brianvoe/gofakeit/v7 v7.9.0
@@ -29,7 +29,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.40.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.40.0
 	github.com/theopenlane/echox v0.2.4
-	github.com/theopenlane/entx v0.15.1
+	github.com/theopenlane/entx v0.17.1
 	github.com/theopenlane/utils v0.5.2
 	github.com/urfave/cli/v3 v3.6.1
 	github.com/vmihailenco/msgpack/v5 v5.4.1
@@ -50,7 +50,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
-	github.com/XSAM/otelsql v0.39.0 // indirect
+	github.com/XSAM/otelsql v0.40.0 // indirect
 	github.com/Yiling-J/theine-go v0.6.2 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
@@ -155,7 +155,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.7 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/vektah/gqlparser/v2 v2.5.30 // indirect
+	github.com/vektah/gqlparser/v2 v2.5.31 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
