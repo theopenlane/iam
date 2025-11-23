@@ -227,6 +227,8 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 		if err := c.checkWriteResponse(resp, err); err != nil {
 			return nil, err
 		}
+
+		return resp, nil
 	}
 
 	// if more than max batch size, split into multiple requests

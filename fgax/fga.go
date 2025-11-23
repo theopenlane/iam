@@ -220,7 +220,7 @@ func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
 
 	// set max batch write size
 	client.MaxBatchWriteSize = c.MaxBatchWriteSize
-	if client.MaxBatchWriteSize == 0 {
+	if client.MaxBatchWriteSize <= 0 {
 		client.MaxBatchWriteSize = defaultMaxWriteBatchSize
 	}
 

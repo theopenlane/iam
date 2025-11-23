@@ -99,7 +99,6 @@ func getRequestOptions(opts ...RequestOption) RequestOptions {
 	ro := RequestOptions{
 		Consistency:             &defaultConsistency,
 		IgnoreDuplicateKeyError: true,
-		MaxBatchWriteSize:       defaultMaxWriteBatchSize,
 		MaxParallelRequests:     defaultMaxParallelRequests,
 	}
 
