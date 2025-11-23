@@ -8,6 +8,21 @@ import (
 const (
 	// HeaderXRequestID is the header name for request id
 	HeaderXRequestID = "X-Request-Id"
+	// defaultMaxParallelRequests is the default maximum number of parallel requests for batch operations
+	defaultMaxParallelRequests = 10
+	// defaultMaxWriteBatchSize is the default maximum number of writes per batch in a transaction
+	defaultMaxWriteBatchSize int32 = 100
+	// defaultPageSize is based on the openfga max of 100
+	defaultPageSize = 100
+)
+
+var (
+	// defaultConsistency is the default consistency preference for requests
+	defaultConsistency = openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY
+	// batchSizeLimit is the limit for batch size in batch check operations
+	batchSizeLimit int32 = 100
+	// batchParallelLimit is the limit for parallel requests in batch check operations
+	batchParallelLimit int32 = 10
 )
 
 // RequestOptions holds per-request options that can be applied to OpenFGA requests
@@ -18,6 +33,11 @@ type RequestOptions struct {
 	Consistency *openfga.ConsistencyPreference
 	// IgnoreDuplicateKeyError indicates whether to ignore duplicate key errors and missing deletes, defaults to true
 	IgnoreDuplicateKeyError bool
+	// MaxBatchWriteSize holds the maximum number of writes per batch in a transaction, this is configurable in the server
+	// and defaults to 100
+	MaxBatchWriteSize int32
+	// MaxParallelRequests holds the maximum number of parallel requests for batch operations
+	MaxParallelRequests int32
 }
 
 // RequestOption is a functional option for RequestOptions
@@ -60,11 +80,27 @@ func WithIgnoreDuplicateKeyError(ignore bool) RequestOption {
 	}
 }
 
+// WithMaxBatchWriteSize sets the maximum number of writes per batch in a transaction, defaults to 100 unless configured otherwise on the server
+func WithMaxBatchWriteSize(size int32) RequestOption {
+	return func(ro *RequestOptions) {
+		ro.MaxBatchWriteSize = size
+	}
+}
+
+// WithMaxParallelRequests sets the maximum number of parallel requests for batch operations, which defaults to 10
+func WithMaxParallelRequests(count int32) RequestOption {
+	return func(ro *RequestOptions) {
+		ro.MaxParallelRequests = count
+	}
+}
+
 // getRequestOptions aggregates functional RequestOptions into a RequestOptions struct
 func getRequestOptions(opts ...RequestOption) RequestOptions {
 	ro := RequestOptions{
 		Consistency:             &defaultConsistency,
 		IgnoreDuplicateKeyError: true,
+		MaxBatchWriteSize:       defaultMaxWriteBatchSize,
+		MaxParallelRequests:     defaultMaxParallelRequests,
 	}
 
 	for _, o := range opts {
@@ -129,6 +165,13 @@ func getWriteOptions(opts ...RequestOption) ofgaclient.ClientWriteOptions {
 
 	if len(ro.Headers) > 0 {
 		o.RequestOptions = ofgaclient.RequestOptions{Headers: ro.Headers}
+	}
+
+	// Set MaxParallelRequests if provided
+	if ro.MaxParallelRequests > 0 {
+		o.Transaction = &ofgaclient.TransactionOptions{
+			MaxParallelRequests: ro.MaxParallelRequests,
+		}
 	}
 
 	// Set conflict options based on IgnoreDuplicateKeyError setting

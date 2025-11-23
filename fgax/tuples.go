@@ -61,14 +61,6 @@ const (
 	CanViewAuditLog = "audit_log_viewer"
 )
 
-const (
-	// defaultPageSize is based on the openfga max of 100
-	defaultPageSize = 100
-	// maxWrites is the maximum number of Writes and Deletes supported by the OpenFGA transactional write api
-	// see https://openfga.dev/docs/interacting/transactional-writes for more details
-	maxWrites = 10
-)
-
 // TupleKey represents a relationship tuple in OpenFGA
 type TupleKey struct {
 	// Subject is the entity that is the subject of the relationship, usually a user
@@ -226,14 +218,57 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 		wopts.AuthorizationModelId = openfga.PtrString(c.Config.AuthorizationModelId)
 	}
 
-	body := ofgaclient.ClientWriteRequest{
-		Writes:  tupleKeyToWriteRequest(writes),
-		Deletes: tupleKeyToDeleteRequest(deletes),
+	if len(writes)+len(deletes) <= int(c.MaxBatchWriteSize) {
+		body := ofgaclient.ClientWriteRequest{
+			Writes:  tupleKeyToWriteRequest(writes),
+			Deletes: tupleKeyToDeleteRequest(deletes),
+		}
+
+		resp, err := c.Ofga.Write(ctx).Body(body).Options(wopts).Execute()
+		if err := c.checkWriteResponse(resp, err); err != nil {
+			return nil, err
+		}
 	}
 
-	resp, err := c.Ofga.Write(ctx).Body(body).Options(wopts).Execute()
-	if err := c.checkWriteResponse(resp, err); err != nil {
-		return nil, err
+	// if more than max batch size, split into multiple requests
+	var (
+		resp *ofgaclient.ClientWriteResponse
+		err  error
+	)
+
+	// process deletes first
+
+	for i := 0; i < len(deletes); i += int(c.MaxBatchWriteSize) {
+		end := i + int(c.MaxBatchWriteSize)
+		if end > len(deletes) {
+			end = len(deletes)
+		}
+
+		body := ofgaclient.ClientWriteRequest{
+			Deletes: tupleKeyToDeleteRequest(deletes[i:end]),
+		}
+
+		resp, err = c.Ofga.Write(ctx).Body(body).Options(wopts).Execute()
+		if err := c.checkWriteResponse(resp, err); err != nil {
+			return nil, err
+		}
+	}
+
+	// process writes next
+	for i := 0; i < len(writes); i += int(c.MaxBatchWriteSize) {
+		end := i + int(c.MaxBatchWriteSize)
+		if end > len(writes) {
+			end = len(writes)
+		}
+
+		body := ofgaclient.ClientWriteRequest{
+			Writes: tupleKeyToWriteRequest(writes[i:end]),
+		}
+
+		resp, err = c.Ofga.Write(ctx).Body(body).Options(wopts).Execute()
+		if err := c.checkWriteResponse(resp, err); err != nil {
+			return nil, err
+		}
 	}
 
 	return resp, nil
@@ -412,9 +447,9 @@ func (c *Client) DeleteAllObjectRelations(ctx context.Context, object string, ex
 		tuplesToDelete = append(tuplesToDelete, k)
 	}
 
-	// delete the tuples in batches of 10, the max supported by the OpenFGA transactional write api
-	for i := 0; i < len(tuplesToDelete); i += maxWrites {
-		end := i + maxWrites
+	// delete the tuples in batches of 100, the max supported by the OpenFGA transactional write api unless configured otherwise
+	for i := 0; i < len(tuplesToDelete); i += int(c.MaxBatchWriteSize) {
+		end := i + int(c.MaxBatchWriteSize)
 		if end > len(tuplesToDelete) {
 			end = len(tuplesToDelete)
 		}
