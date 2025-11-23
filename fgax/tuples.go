@@ -217,7 +217,7 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 		wopts.AuthorizationModelId = openfga.PtrString(c.Config.AuthorizationModelId)
 	}
 
-	if len(writes)+len(deletes) <= int(c.MaxBatchWriteSize) {
+	if len(writes)+len(deletes) <= c.MaxBatchWriteSize {
 		body := ofgaclient.ClientWriteRequest{
 			Writes:  tupleKeyToWriteRequest(writes),
 			Deletes: tupleKeyToDeleteRequest(deletes),
@@ -236,8 +236,8 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 	)
 
 	// process deletes first
-	for i := 0; i < len(deletes); i += int(c.MaxBatchWriteSize) {
-		end := i + int(c.MaxBatchWriteSize)
+	for i := 0; i < len(deletes); i += c.MaxBatchWriteSize {
+		end := i + c.MaxBatchWriteSize
 		if end > len(deletes) {
 			end = len(deletes)
 		}
@@ -253,8 +253,8 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 	}
 
 	// process writes next
-	for i := 0; i < len(writes); i += int(c.MaxBatchWriteSize) {
-		end := i + int(c.MaxBatchWriteSize)
+	for i := 0; i < len(writes); i += c.MaxBatchWriteSize {
+		end := i + c.MaxBatchWriteSize
 		if end > len(writes) {
 			end = len(writes)
 		}
@@ -446,8 +446,8 @@ func (c *Client) DeleteAllObjectRelations(ctx context.Context, object string, ex
 	}
 
 	// delete the tuples in batches of 100, the max supported by the OpenFGA transactional write api unless configured otherwise
-	for i := 0; i < len(tuplesToDelete); i += int(c.MaxBatchWriteSize) {
-		end := i + int(c.MaxBatchWriteSize)
+	for i := 0; i < len(tuplesToDelete); i += c.MaxBatchWriteSize {
+		end := i + c.MaxBatchWriteSize
 		if end > len(tuplesToDelete) {
 			end = len(tuplesToDelete)
 		}

@@ -16,7 +16,7 @@ type Client struct {
 	// Config is the client configuration
 	Config ofgaclient.ClientConfiguration
 	// MaxBatchWriteSize is the maximum number of writes per batch in a transaction, default 100
-	MaxBatchWriteSize int32
+	MaxBatchWriteSize int
 }
 
 // Config configures the openFGA setup
@@ -38,7 +38,7 @@ type Config struct {
 	// Credentials for the client
 	Credentials Credentials `json:"credentials" koanf:"credentials" jsonschema:"description=credentials for the openFGA client"`
 	// MaxBatchWriteSize is the maximum number of writes per batch in a transaction, default 100
-	MaxBatchWriteSize int32 `json:"maxbatchwritesize" koanf:"maxbatchwritesize" jsonschema:"description=maximum number of writes per batch in a transaction, defaults to 100" default:"100"`
+	MaxBatchWriteSize int `json:"maxbatchwritesize" koanf:"maxbatchwritesize" jsonschema:"description=maximum number of writes per batch in a transaction, defaults to 100" default:"100"`
 }
 
 // Credentials for the openFGA client

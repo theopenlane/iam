@@ -11,7 +11,7 @@ const (
 	// defaultMaxParallelRequests is the default maximum number of parallel requests for batch operations
 	defaultMaxParallelRequests = 10
 	// defaultMaxWriteBatchSize is the default maximum number of writes per batch in a transaction
-	defaultMaxWriteBatchSize int32 = 100
+	defaultMaxWriteBatchSize = 100
 	// defaultPageSize is based on the openfga max of 100
 	defaultPageSize = 100
 )
