@@ -203,8 +203,7 @@ func tupleKeyToDeleteRequest(deletes []TupleKey) (d []openfga.TupleKeyWithoutCon
 	return
 }
 
-// WriteTupleKeys takes a tuples keys, converts them to a client write request, which can contain up to 10 writes and deletes,
-// and executes in a single transaction
+// WriteTupleKeys takes a tuples keys, converts them to a client write request and writes them to FGA
 func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes []TupleKey, opts ...RequestOption) (*ofgaclient.ClientWriteResponse, error) {
 	// if there are no writes or deletes, return nil
 	// otherwise FGA will return an error
@@ -237,7 +236,6 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 	)
 
 	// process deletes first
-
 	for i := 0; i < len(deletes); i += int(c.MaxBatchWriteSize) {
 		end := i + int(c.MaxBatchWriteSize)
 		if end > len(deletes) {
