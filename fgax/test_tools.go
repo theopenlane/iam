@@ -16,7 +16,8 @@ func NewMockFGAClient(c *mock_fga.MockSdkClient) *Client {
 			AuthorizationModelId: *openfga.PtrString("test-model-id"),
 			StoreId:              *openfga.PtrString("test-store-id"),
 		},
-		Ofga: c,
+		Ofga:              c,
+		MaxBatchWriteSize: defaultMaxWriteBatchSize,
 	}
 
 	return &client

@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/rs/zerolog/log"
 	"github.com/theopenlane/utils/ulids"
@@ -20,12 +19,6 @@ const (
 	organizationObject = "organization"
 	groupObject        = "group"
 	roleObject         = "role"
-)
-
-var (
-	defaultConsistency       = openfga.CONSISTENCYPREFERENCE_MINIMIZE_LATENCY
-	batchSizeLimit     int32 = 100
-	batchParallelLimit int32 = 10
 )
 
 // AccessCheck is a struct to hold the information needed to check access

@@ -15,6 +15,8 @@ type Client struct {
 	Ofga ofgaclient.SdkClient
 	// Config is the client configuration
 	Config ofgaclient.ClientConfiguration
+	// MaxBatchWriteSize is the maximum number of writes per batch in a transaction, default 100
+	MaxBatchWriteSize int
 }
 
 // Config configures the openFGA setup
@@ -35,6 +37,8 @@ type Config struct {
 	ModelFile string `json:"modelfile" koanf:"modelfile" jsonschema:"description=path to the fga model file" default:"fga/model/model.fga"`
 	// Credentials for the client
 	Credentials Credentials `json:"credentials" koanf:"credentials" jsonschema:"description=credentials for the openFGA client"`
+	// MaxBatchWriteSize is the maximum number of writes per batch in a transaction, default 100
+	MaxBatchWriteSize int `json:"maxbatchwritesize" koanf:"maxbatchwritesize" jsonschema:"description=maximum number of writes per batch in a transaction, defaults to 100" default:"100"`
 }
 
 // Credentials for the openFGA client
@@ -170,7 +174,7 @@ func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
 			return nil, err
 		}
 
-		c.StoreID, err = fgaClient.CreateStore(c.StoreName)
+		c.StoreID, err = fgaClient.CreateStore(ctx, c.StoreName)
 		if err != nil {
 			return nil, err
 		}
@@ -206,19 +210,30 @@ func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
 	)
 
 	// create fga client with store ID
-	return NewClient(
+	client, err := NewClient(
 		c.HostURL,
 		opts...,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	// set max batch write size
+	client.MaxBatchWriteSize = c.MaxBatchWriteSize
+	if client.MaxBatchWriteSize <= 0 {
+		client.MaxBatchWriteSize = defaultMaxWriteBatchSize
+	}
+
+	return client, nil
 }
 
 // CreateStore creates a new fine grained authorization store and returns the store ID
-func (c *Client) CreateStore(storeName string) (string, error) {
+func (c *Client) CreateStore(ctx context.Context, storeName string) (string, error) {
 	options := ofgaclient.ClientListStoresOptions{
 		ContinuationToken: openfga.PtrString(""),
 	}
 
-	stores, err := c.Ofga.ListStores(context.Background()).Options(options).Execute()
+	stores, err := c.Ofga.ListStores(ctx).Options(options).Execute()
 	if err != nil {
 		return "", err
 	}
@@ -232,7 +247,7 @@ func (c *Client) CreateStore(storeName string) (string, error) {
 	}
 
 	// Create new store
-	storeReq := c.Ofga.CreateStore(context.Background())
+	storeReq := c.Ofga.CreateStore(ctx)
 
 	resp, err := storeReq.Body(ofgaclient.ClientCreateStoreRequest{
 		Name: storeName,
