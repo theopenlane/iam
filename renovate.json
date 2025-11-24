@@ -8,8 +8,8 @@
   ],
   "packageRules": [
     {
-      "excludePackagePatterns": [
-        "github.com/theopenlane/iam"
+      "matchPackageNames": [
+        "!/github.com/theopenlane/iam/"
       ]
     },
     {
