@@ -1,17 +1,17 @@
 module github.com/theopenlane/iam
 
-go 1.25.1
+go 1.25.4
 
 require (
 	entgo.io/ent v0.14.5
-	github.com/99designs/gqlgen v0.17.81
+	github.com/99designs/gqlgen v0.17.83
 	github.com/Yamashou/gqlgenc v0.33.0
 	github.com/alicebob/miniredis/v2 v2.35.0
-	github.com/brianvoe/gofakeit/v7 v7.9.0
+	github.com/brianvoe/gofakeit/v7 v7.11.0
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/go-webauthn/webauthn v0.15.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
-	github.com/google/go-github/v74 v74.0.0
+	github.com/google/go-github/v79 v79.0.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/lestrrat-go/httprc/v3 v3.0.1
 	github.com/lestrrat-go/jwx/v3 v3.0.12
@@ -21,7 +21,7 @@ require (
 	github.com/openfga/openfga v1.11.1
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.5.0
-	github.com/redis/go-redis/v9 v9.14.1
+	github.com/redis/go-redis/v9 v9.17.0
 	github.com/rs/zerolog v1.34.0
 	github.com/samber/lo v1.52.0
 	github.com/stoewer/go-strcase v1.3.1
@@ -30,12 +30,12 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.40.0
 	github.com/theopenlane/echox v0.2.4
 	github.com/theopenlane/entx v0.15.1
-	github.com/theopenlane/utils v0.5.2
+	github.com/theopenlane/utils v0.6.1
 	github.com/urfave/cli/v3 v3.6.1
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.33.0
 	golang.org/x/tools v0.39.0
-	google.golang.org/api v0.255.0
+	google.golang.org/api v0.256.0
 	google.golang.org/protobuf v1.36.10
 )
 
@@ -96,7 +96,7 @@ require (
 	github.com/google/go-tpm v0.9.6 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.7 // indirect
 	github.com/googleapis/gax-go/v2 v2.15.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3 // indirect
@@ -155,7 +155,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.7 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/vektah/gqlparser/v2 v2.5.30 // indirect
+	github.com/vektah/gqlparser/v2 v2.5.31 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
@@ -181,7 +181,7 @@ require (
 	golang.org/x/time v0.14.0 // indirect
 	gonum.org/v1/gonum v0.16.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251022142026-3a174f9686a8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251029180050-ab9386a59fda // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
 	google.golang.org/grpc v1.77.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
