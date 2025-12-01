@@ -106,6 +106,7 @@ func (s *TokenTestSuite) TestTokenManager() {
 	require.IsType(&tokens.Claims{}, accessToken.Claims)
 
 	time.Sleep(500 * time.Millisecond)
+
 	now := time.Now()
 
 	// Check access token claims
