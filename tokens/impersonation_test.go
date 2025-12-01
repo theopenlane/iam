@@ -261,12 +261,15 @@ func TestImpersonationTokenManager_ValidationChecks(t *testing.T) {
 			switch {
 			case tt.claims.Type == "":
 				err = assert.AnError
+
 				assert.Contains(t, "impersonation token missing type", "impersonation token missing type")
 			case tt.claims.ImpersonatorID == "":
 				err = assert.AnError
+
 				assert.Contains(t, "impersonation token missing impersonator ID", "impersonation token missing impersonator ID")
 			case tt.claims.UserID == "":
 				err = assert.AnError
+
 				assert.Contains(t, "impersonation token missing target user ID", "impersonation token missing target user ID")
 			}
 
