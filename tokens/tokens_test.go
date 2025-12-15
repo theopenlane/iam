@@ -182,6 +182,58 @@ func (s *TokenTestSuite) TestValidTokens() {
 	require.NoError(err)
 }
 
+func (s *TokenTestSuite) TestCreateAccessTokenUsesCorrectDuration() {
+	require := s.Require()
+
+	conf := tokens.Config{
+		Keys:                     s.testdata,
+		Audience:                 audience,
+		Issuer:                   issuer,
+		AccessDuration:           1 * time.Hour,
+		AssessmentAccessDuration: 2 * time.Hour,
+		RefreshDuration:          3 * time.Hour,
+		RefreshOverlap:           -15 * time.Minute,
+	}
+
+	tm, err := tokens.New(conf)
+	require.NoError(err, "could not initialize token manager")
+
+	regularSubject := "01H6PGFB4T34D4WWEXQMAGJNMK"
+	regularCreds := &tokens.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: regularSubject,
+		},
+	}
+
+	regularToken, err := tm.CreateAccessToken(regularCreds)
+	require.NoError(err, "could not create access token with regular subject")
+
+	regularClaims := regularToken.Claims.(*tokens.Claims)
+	regularDuration := regularClaims.ExpiresAt.Time.Sub(regularClaims.IssuedAt.Time)
+	require.Equal(conf.AccessDuration, regularDuration,
+		"regular subject token should use AccessDuration")
+
+	anonSubject := "anon_questionnaire_01H6PGFB4T34D4WWEXQMAGJNMK"
+	anonCreds := &tokens.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: anonSubject,
+		},
+	}
+
+	anonToken, err := tm.CreateAccessToken(anonCreds)
+	require.NoError(err, "could not create access token with anonymous assessment subject")
+
+	anonClaims := anonToken.Claims.(*tokens.Claims)
+	anonDuration := anonClaims.ExpiresAt.Time.Sub(anonClaims.IssuedAt.Time)
+	require.Equal(conf.AssessmentAccessDuration, anonDuration,
+		"anonymous assessment subject token should use AssessmentAccessDuration")
+
+	require.NotEqual(regularDuration, anonDuration,
+		"tokens with different subjects should have different durations")
+	require.NotEqual(regularClaims.ExpiresAt.Time, anonClaims.ExpiresAt.Time,
+		"tokens with different subjects should have different expiration times")
+}
+
 func (s *TokenTestSuite) TestInvalidTokens() {
 	// Create the token manager
 	require := s.Require()

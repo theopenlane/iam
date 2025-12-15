@@ -59,6 +59,8 @@ type Config struct {
 	Redis RedisConfig `json:"redis" koanf:"redis"`
 	// APITokens contains configuration for opaque API token key management
 	APITokens APITokenConfig `json:"apitokens" koanf:"apitokens"`
+	// AssessmentAccessDuration represents the validity duration of the access token used for assessments
+	AssessmentAccessDuration time.Duration `json:"assessmentaccessduration" koanf:"assessmentaccessduration" default:"1h"`
 }
 
 // RedisConfig contains Redis configuration for token security features

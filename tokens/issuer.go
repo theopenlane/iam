@@ -15,6 +15,11 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
+const (
+	// do not want to have the import core package
+	anonAssessmentJWTPrefix = "anon_questionnaire_"
+)
+
 // Issuer handles JWT token creation and signing. It manages signing keys and
 // provides methods to create access tokens, refresh tokens, and sign them
 type Issuer struct {
@@ -148,6 +153,11 @@ func (i *Issuer) CreateAccessToken(claims *Claims) (*jwt.Token, error) {
 		return nil, err
 	}
 
+	durationToAdd := i.conf.AccessDuration
+	if strings.HasPrefix(sub, anonAssessmentJWTPrefix) {
+		durationToAdd = i.conf.AssessmentAccessDuration
+	}
+
 	issueTime := jwt.NewNumericDate(now)
 	claims.RegisteredClaims = jwt.RegisteredClaims{
 		ID:        strings.ToLower(kid.String()),
@@ -156,7 +166,7 @@ func (i *Issuer) CreateAccessToken(claims *Claims) (*jwt.Token, error) {
 		Issuer:    i.conf.Issuer,
 		IssuedAt:  issueTime,
 		NotBefore: issueTime,
-		ExpiresAt: jwt.NewNumericDate(now.Add(i.conf.AccessDuration)),
+		ExpiresAt: jwt.NewNumericDate(now.Add(durationToAdd)),
 	}
 
 	return jwt.NewWithClaims(i.currentSigningMethod, claims), nil
