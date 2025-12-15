@@ -160,6 +160,8 @@ type templateInfo struct {
 	GeneratedPkg string
 	// GeneratedPath is the path to the generated files by ent
 	GeneratedPath string
+	// GeneratedSchemaPrefix is the package name with trailing `.` for the main generated ent schema when it differs from GeneratedPkg
+	GeneratedSchemaPrefix string
 }
 
 // parseAuthzChecksTemplate parses the template and sets values in the template

@@ -28,6 +28,9 @@ type Config struct {
 	GeneratedPath string
 	// GeneratedPkg is the package that the generated code will be placed in
 	GeneratedPkg string
+	// MainGeneratedPackage is the main package where the ent code is generated,
+	// this is used when the authz generated code is in a different package
+	MainGeneratedPackage string
 }
 
 func (c Config) Name() string {
@@ -47,10 +50,11 @@ func New(opts ...ConfigOption) *AuthzExtension {
 	extension := &AuthzExtension{
 		// Set configuration defaults that can get overridden with ConfigOption
 		config: &Config{
-			SoftDeletes:   false,
-			GeneratedPkg:  defaultGeneratedPkg,
-			GeneratedPath: defaultGeneratedPath,
-			SchemaPath:    defaultSchemaPath,
+			SoftDeletes:          false,
+			GeneratedPkg:         defaultGeneratedPkg,
+			MainGeneratedPackage: defaultGeneratedPkg,
+			GeneratedPath:        defaultGeneratedPath,
+			SchemaPath:           defaultSchemaPath,
 		},
 	}
 
@@ -94,6 +98,14 @@ func WithGeneratedPkg(generatedPkg string) ConfigOption {
 	}
 }
 
+// WithMainGeneratedPackage allows you to set an alternative main generated package
+// Defaults to "generated"
+func WithMainGeneratedPackage(mainGeneratedPackage string) ConfigOption {
+	return func(c *Config) {
+		c.MainGeneratedPackage = mainGeneratedPackage
+	}
+}
+
 // GenerateAuthzChecks generates the authz checks for the ent schema
 // this is separate to allow the function to be called outside the entc generation
 // due to dependencies between the ent policies and the authz checks
@@ -107,6 +119,10 @@ func (e *AuthzExtension) GenerateAuthzChecks() error {
 		Graph:         *graph,
 		GeneratedPkg:  e.config.GeneratedPkg,
 		GeneratedPath: e.config.GeneratedPath,
+	}
+
+	if e.config.MainGeneratedPackage != e.config.GeneratedPkg {
+		info.GeneratedSchemaPrefix = e.config.MainGeneratedPackage + "."
 	}
 
 	return parseAuthzChecksTemplate(info)

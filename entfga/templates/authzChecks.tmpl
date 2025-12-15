@@ -32,7 +32,7 @@ var (
     {{- $nillable := extractNillableIDField $n.Annotations.Authz.NillableIDField  }}
     {{- $orgOwned := extractOrgOwnedField $n.Annotations.Authz.OrgOwnedField  }}
 
-    func (q *{{ $querier }}) CheckAccess(ctx context.Context) error {
+    func (q *{{ .GeneratedSchemaPrefix }}{{ $querier }}) CheckAccess(ctx context.Context) error {
         gCtx := graphql.GetFieldContext(ctx)
 
         if gCtx == nil {
@@ -112,7 +112,7 @@ var (
     }
 
     {{ if $n.Annotations.EntGQL | hasMutationInputSet }}
-    func (m *{{ $mutator }}) CheckAccessForEdit(ctx context.Context) error {
+    func (m *{{ .GeneratedSchemaPrefix }}{{ $mutator }}) CheckAccessForEdit(ctx context.Context) error {
         var objectID string
 
         {{ if $orgOwned }}
@@ -217,7 +217,7 @@ var (
         return ErrPermissionDenied
     }
 
-    func (m *{{ $mutator }}) CheckAccessForDelete(ctx context.Context) error {
+    func (m *{{ .GeneratedSchemaPrefix }}{{ $mutator }}) CheckAccessForDelete(ctx context.Context) error {
         gCtx := graphql.GetFieldContext(ctx)
         if gCtx == nil {
             // Skip to the next privacy rule (equivalent to return nil)
