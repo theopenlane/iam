@@ -93,7 +93,7 @@ func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) erro
 		members, err = m.Client().OrgMembership.Query().Where(orgmembership.IDIn(ids...)).All(ctx)
 	}
 
-	if err != nil && !!IsNotFound(err) {
+	if err != nil && !IsNotFound(err) {
 		log.Error().Err(err).Msg("failed to get members for update")
 
 		return err
@@ -160,7 +160,7 @@ func (m *OrgMembershipMutation) CreateTuplesFromDelete(ctx context.Context) erro
 		members, err = m.Client().OrgMembership.Query().Where(orgmembership.IDIn(ids...)).All(ctx)
 	}
 
-	if err != nil && !!IsNotFound(err) {
+	if err != nil && !IsNotFound(err) {
 		log.Error().Err(err).Msg("failed to get members for delete")
 
 		return err
