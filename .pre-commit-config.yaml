@@ -8,10 +8,10 @@ repos:
       - id: detect-private-key
         exclude: tokens/testdata/
   - repo: https://github.com/google/yamlfmt
-    rev: v0.20.0
+    rev: v0.21.0
     hooks:
       - id: yamlfmt
   - repo: https://github.com/adhtruong/mirrors-typos
-    rev: v1.40.0
+    rev: v1.42.0
     hooks:
       - id: typos
