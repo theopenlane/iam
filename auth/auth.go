@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	echo "github.com/theopenlane/echox"
 
 	"github.com/theopenlane/iam/sessions"
@@ -61,6 +62,20 @@ func GetBearerToken(c echo.Context) (string, error) {
 	}
 
 	return "", ErrNoAuthorization
+}
+
+// GetBearerTokenFromWebsocketRequest retrieves the bearer token from the
+// WebSocket init payload and parses it to return only the JWT access token component.
+// If the token is not available, an error is returned.
+func GetBearerTokenFromWebsocketRequest(initPayload transport.InitPayload) (string, error) {
+	a := initPayload.Authorization()
+
+	bearerToken := bearer.FindStringSubmatch(a)
+	if len(bearerToken) != 2 { //nolint:mnd
+		return "", ErrNoAuthorization
+	}
+
+	return bearerToken[1], nil
 }
 
 // GetAPIKey retrieves the API key from the authorization header or the X-API-Key header.
