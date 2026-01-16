@@ -23,38 +23,38 @@ type OrgMembershipUpdate struct {
 }
 
 // Where appends a list predicates to the OrgMembershipUpdate builder.
-func (omu *OrgMembershipUpdate) Where(ps ...predicate.OrgMembership) *OrgMembershipUpdate {
-	omu.mutation.Where(ps...)
-	return omu
+func (_u *OrgMembershipUpdate) Where(ps ...predicate.OrgMembership) *OrgMembershipUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetRole sets the "role" field.
-func (omu *OrgMembershipUpdate) SetRole(e enums.Role) *OrgMembershipUpdate {
-	omu.mutation.SetRole(e)
-	return omu
+func (_u *OrgMembershipUpdate) SetRole(v enums.Role) *OrgMembershipUpdate {
+	_u.mutation.SetRole(v)
+	return _u
 }
 
 // SetNillableRole sets the "role" field if the given value is not nil.
-func (omu *OrgMembershipUpdate) SetNillableRole(e *enums.Role) *OrgMembershipUpdate {
-	if e != nil {
-		omu.SetRole(*e)
+func (_u *OrgMembershipUpdate) SetNillableRole(v *enums.Role) *OrgMembershipUpdate {
+	if v != nil {
+		_u.SetRole(*v)
 	}
-	return omu
+	return _u
 }
 
 // Mutation returns the OrgMembershipMutation object of the builder.
-func (omu *OrgMembershipUpdate) Mutation() *OrgMembershipMutation {
-	return omu.mutation
+func (_u *OrgMembershipUpdate) Mutation() *OrgMembershipMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (omu *OrgMembershipUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, omu.sqlSave, omu.mutation, omu.hooks)
+func (_u *OrgMembershipUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (omu *OrgMembershipUpdate) SaveX(ctx context.Context) int {
-	affected, err := omu.Save(ctx)
+func (_u *OrgMembershipUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -62,47 +62,47 @@ func (omu *OrgMembershipUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (omu *OrgMembershipUpdate) Exec(ctx context.Context) error {
-	_, err := omu.Save(ctx)
+func (_u *OrgMembershipUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (omu *OrgMembershipUpdate) ExecX(ctx context.Context) {
-	if err := omu.Exec(ctx); err != nil {
+func (_u *OrgMembershipUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (omu *OrgMembershipUpdate) check() error {
-	if v, ok := omu.mutation.Role(); ok {
+func (_u *OrgMembershipUpdate) check() error {
+	if v, ok := _u.mutation.Role(); ok {
 		if err := orgmembership.RoleValidator(v); err != nil {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "OrgMembership.role": %w`, err)}
 		}
 	}
-	if omu.mutation.OrganizationCleared() && len(omu.mutation.OrganizationIDs()) > 0 {
+	if _u.mutation.OrganizationCleared() && len(_u.mutation.OrganizationIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "OrgMembership.organization"`)
 	}
 	return nil
 }
 
-func (omu *OrgMembershipUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := omu.check(); err != nil {
-		return n, err
+func (_u *OrgMembershipUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(orgmembership.Table, orgmembership.Columns, sqlgraph.NewFieldSpec(orgmembership.FieldID, field.TypeString))
-	if ps := omu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := omu.mutation.Role(); ok {
+	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(orgmembership.FieldRole, field.TypeEnum, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, omu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{orgmembership.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -110,8 +110,8 @@ func (omu *OrgMembershipUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		return 0, err
 	}
-	omu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // OrgMembershipUpdateOne is the builder for updating a single OrgMembership entity.
@@ -123,45 +123,45 @@ type OrgMembershipUpdateOne struct {
 }
 
 // SetRole sets the "role" field.
-func (omuo *OrgMembershipUpdateOne) SetRole(e enums.Role) *OrgMembershipUpdateOne {
-	omuo.mutation.SetRole(e)
-	return omuo
+func (_u *OrgMembershipUpdateOne) SetRole(v enums.Role) *OrgMembershipUpdateOne {
+	_u.mutation.SetRole(v)
+	return _u
 }
 
 // SetNillableRole sets the "role" field if the given value is not nil.
-func (omuo *OrgMembershipUpdateOne) SetNillableRole(e *enums.Role) *OrgMembershipUpdateOne {
-	if e != nil {
-		omuo.SetRole(*e)
+func (_u *OrgMembershipUpdateOne) SetNillableRole(v *enums.Role) *OrgMembershipUpdateOne {
+	if v != nil {
+		_u.SetRole(*v)
 	}
-	return omuo
+	return _u
 }
 
 // Mutation returns the OrgMembershipMutation object of the builder.
-func (omuo *OrgMembershipUpdateOne) Mutation() *OrgMembershipMutation {
-	return omuo.mutation
+func (_u *OrgMembershipUpdateOne) Mutation() *OrgMembershipMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the OrgMembershipUpdate builder.
-func (omuo *OrgMembershipUpdateOne) Where(ps ...predicate.OrgMembership) *OrgMembershipUpdateOne {
-	omuo.mutation.Where(ps...)
-	return omuo
+func (_u *OrgMembershipUpdateOne) Where(ps ...predicate.OrgMembership) *OrgMembershipUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (omuo *OrgMembershipUpdateOne) Select(field string, fields ...string) *OrgMembershipUpdateOne {
-	omuo.fields = append([]string{field}, fields...)
-	return omuo
+func (_u *OrgMembershipUpdateOne) Select(field string, fields ...string) *OrgMembershipUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated OrgMembership entity.
-func (omuo *OrgMembershipUpdateOne) Save(ctx context.Context) (*OrgMembership, error) {
-	return withHooks(ctx, omuo.sqlSave, omuo.mutation, omuo.hooks)
+func (_u *OrgMembershipUpdateOne) Save(ctx context.Context) (*OrgMembership, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (omuo *OrgMembershipUpdateOne) SaveX(ctx context.Context) *OrgMembership {
-	node, err := omuo.Save(ctx)
+func (_u *OrgMembershipUpdateOne) SaveX(ctx context.Context) *OrgMembership {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -169,42 +169,42 @@ func (omuo *OrgMembershipUpdateOne) SaveX(ctx context.Context) *OrgMembership {
 }
 
 // Exec executes the query on the entity.
-func (omuo *OrgMembershipUpdateOne) Exec(ctx context.Context) error {
-	_, err := omuo.Save(ctx)
+func (_u *OrgMembershipUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (omuo *OrgMembershipUpdateOne) ExecX(ctx context.Context) {
-	if err := omuo.Exec(ctx); err != nil {
+func (_u *OrgMembershipUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (omuo *OrgMembershipUpdateOne) check() error {
-	if v, ok := omuo.mutation.Role(); ok {
+func (_u *OrgMembershipUpdateOne) check() error {
+	if v, ok := _u.mutation.Role(); ok {
 		if err := orgmembership.RoleValidator(v); err != nil {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "OrgMembership.role": %w`, err)}
 		}
 	}
-	if omuo.mutation.OrganizationCleared() && len(omuo.mutation.OrganizationIDs()) > 0 {
+	if _u.mutation.OrganizationCleared() && len(_u.mutation.OrganizationIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "OrgMembership.organization"`)
 	}
 	return nil
 }
 
-func (omuo *OrgMembershipUpdateOne) sqlSave(ctx context.Context) (_node *OrgMembership, err error) {
-	if err := omuo.check(); err != nil {
+func (_u *OrgMembershipUpdateOne) sqlSave(ctx context.Context) (_node *OrgMembership, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(orgmembership.Table, orgmembership.Columns, sqlgraph.NewFieldSpec(orgmembership.FieldID, field.TypeString))
-	id, ok := omuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "OrgMembership.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := omuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, orgmembership.FieldID)
 		for _, f := range fields {
@@ -216,20 +216,20 @@ func (omuo *OrgMembershipUpdateOne) sqlSave(ctx context.Context) (_node *OrgMemb
 			}
 		}
 	}
-	if ps := omuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := omuo.mutation.Role(); ok {
+	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(orgmembership.FieldRole, field.TypeEnum, value)
 	}
-	_node = &OrgMembership{config: omuo.config}
+	_node = &OrgMembership{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, omuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{orgmembership.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -237,6 +237,6 @@ func (omuo *OrgMembershipUpdateOne) sqlSave(ctx context.Context) (_node *OrgMemb
 		}
 		return nil, err
 	}
-	omuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

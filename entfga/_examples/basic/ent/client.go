@@ -288,8 +288,8 @@ func (c *OrgMembershipClient) Update() *OrgMembershipUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *OrgMembershipClient) UpdateOne(om *OrgMembership) *OrgMembershipUpdateOne {
-	mutation := newOrgMembershipMutation(c.config, OpUpdateOne, withOrgMembership(om))
+func (c *OrgMembershipClient) UpdateOne(_m *OrgMembership) *OrgMembershipUpdateOne {
+	mutation := newOrgMembershipMutation(c.config, OpUpdateOne, withOrgMembership(_m))
 	return &OrgMembershipUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -306,8 +306,8 @@ func (c *OrgMembershipClient) Delete() *OrgMembershipDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *OrgMembershipClient) DeleteOne(om *OrgMembership) *OrgMembershipDeleteOne {
-	return c.DeleteOneID(om.ID)
+func (c *OrgMembershipClient) DeleteOne(_m *OrgMembership) *OrgMembershipDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -342,16 +342,16 @@ func (c *OrgMembershipClient) GetX(ctx context.Context, id string) *OrgMembershi
 }
 
 // QueryOrganization queries the organization edge of a OrgMembership.
-func (c *OrgMembershipClient) QueryOrganization(om *OrgMembership) *OrganizationQuery {
+func (c *OrgMembershipClient) QueryOrganization(_m *OrgMembership) *OrganizationQuery {
 	query := (&OrganizationClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := om.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(orgmembership.Table, orgmembership.FieldID, id),
 			sqlgraph.To(organization.Table, organization.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, orgmembership.OrganizationTable, orgmembership.OrganizationColumn),
 		)
-		fromV = sqlgraph.Neighbors(om.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -438,8 +438,8 @@ func (c *OrganizationClient) Update() *OrganizationUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *OrganizationClient) UpdateOne(o *Organization) *OrganizationUpdateOne {
-	mutation := newOrganizationMutation(c.config, OpUpdateOne, withOrganization(o))
+func (c *OrganizationClient) UpdateOne(_m *Organization) *OrganizationUpdateOne {
+	mutation := newOrganizationMutation(c.config, OpUpdateOne, withOrganization(_m))
 	return &OrganizationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -456,8 +456,8 @@ func (c *OrganizationClient) Delete() *OrganizationDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *OrganizationClient) DeleteOne(o *Organization) *OrganizationDeleteOne {
-	return c.DeleteOneID(o.ID)
+func (c *OrganizationClient) DeleteOne(_m *Organization) *OrganizationDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
