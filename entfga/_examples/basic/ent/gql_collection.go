@@ -11,18 +11,18 @@ import (
 )
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
-func (om *OrgMembershipQuery) CollectFields(ctx context.Context, satisfies ...string) (*OrgMembershipQuery, error) {
+func (_q *OrgMembershipQuery) CollectFields(ctx context.Context, satisfies ...string) (*OrgMembershipQuery, error) {
 	fc := graphql.GetFieldContext(ctx)
 	if fc == nil {
-		return om, nil
+		return _q, nil
 	}
-	if err := om.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
 		return nil, err
 	}
-	return om, nil
+	return _q, nil
 }
 
-func (om *OrgMembershipQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+func (_q *OrgMembershipQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
 	path = append([]string(nil), path...)
 	var (
 		unknownSeen    bool
@@ -36,12 +36,12 @@ func (om *OrgMembershipQuery) collectField(ctx context.Context, oneNode bool, op
 			var (
 				alias = field.Alias
 				path  = append(path, alias)
-				query = (&OrganizationClient{config: om.config}).Query()
+				query = (&OrganizationClient{config: _q.config}).Query()
 			)
 			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, organizationImplementors)...); err != nil {
 				return err
 			}
-			om.withOrganization = query
+			_q.withOrganization = query
 			if _, ok := fieldSeen[orgmembership.FieldOrganizationID]; !ok {
 				selectedFields = append(selectedFields, orgmembership.FieldOrganizationID)
 				fieldSeen[orgmembership.FieldOrganizationID] = struct{}{}
@@ -68,7 +68,7 @@ func (om *OrgMembershipQuery) collectField(ctx context.Context, oneNode bool, op
 		}
 	}
 	if !unknownSeen {
-		om.Select(selectedFields...)
+		_q.Select(selectedFields...)
 	}
 	return nil
 }
@@ -103,18 +103,18 @@ func newOrgMembershipPaginateArgs(rv map[string]any) *orgmembershipPaginateArgs 
 }
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
-func (o *OrganizationQuery) CollectFields(ctx context.Context, satisfies ...string) (*OrganizationQuery, error) {
+func (_q *OrganizationQuery) CollectFields(ctx context.Context, satisfies ...string) (*OrganizationQuery, error) {
 	fc := graphql.GetFieldContext(ctx)
 	if fc == nil {
-		return o, nil
+		return _q, nil
 	}
-	if err := o.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
 		return nil, err
 	}
-	return o, nil
+	return _q, nil
 }
 
-func (o *OrganizationQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+func (_q *OrganizationQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
 	path = append([]string(nil), path...)
 	var (
 		unknownSeen    bool
@@ -140,7 +140,7 @@ func (o *OrganizationQuery) collectField(ctx context.Context, oneNode bool, opCt
 		}
 	}
 	if !unknownSeen {
-		o.Select(selectedFields...)
+		_q.Select(selectedFields...)
 	}
 	return nil
 }
@@ -199,7 +199,7 @@ func fieldArgs(ctx context.Context, whereInput any, path ...string) map[string]a
 func unmarshalArgs(ctx context.Context, whereInput any, args map[string]any) map[string]any {
 	for _, k := range []string{firstField, lastField} {
 		v, ok := args[k]
-		if !ok {
+		if !ok || v == nil {
 			continue
 		}
 		i, err := graphql.UnmarshalInt(v)

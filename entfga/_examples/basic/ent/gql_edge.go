@@ -6,10 +6,10 @@ import (
 	"context"
 )
 
-func (om *OrgMembership) Organization(ctx context.Context) (*Organization, error) {
-	result, err := om.Edges.OrganizationOrErr()
+func (_m *OrgMembership) Organization(ctx context.Context) (*Organization, error) {
+	result, err := _m.Edges.OrganizationOrErr()
 	if IsNotLoaded(err) {
-		result, err = om.QueryOrganization().Only(ctx)
+		result, err = _m.QueryOrganization().Only(ctx)
 	}
 	return result, err
 }

@@ -20,44 +20,44 @@ type OrganizationCreate struct {
 }
 
 // SetName sets the "name" field.
-func (oc *OrganizationCreate) SetName(s string) *OrganizationCreate {
-	oc.mutation.SetName(s)
-	return oc
+func (_c *OrganizationCreate) SetName(v string) *OrganizationCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (oc *OrganizationCreate) SetDescription(s string) *OrganizationCreate {
-	oc.mutation.SetDescription(s)
-	return oc
+func (_c *OrganizationCreate) SetDescription(v string) *OrganizationCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (oc *OrganizationCreate) SetNillableDescription(s *string) *OrganizationCreate {
-	if s != nil {
-		oc.SetDescription(*s)
+func (_c *OrganizationCreate) SetNillableDescription(v *string) *OrganizationCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return oc
+	return _c
 }
 
 // SetID sets the "id" field.
-func (oc *OrganizationCreate) SetID(s string) *OrganizationCreate {
-	oc.mutation.SetID(s)
-	return oc
+func (_c *OrganizationCreate) SetID(v string) *OrganizationCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
-func (oc *OrganizationCreate) Mutation() *OrganizationMutation {
-	return oc.mutation
+func (_c *OrganizationCreate) Mutation() *OrganizationMutation {
+	return _c.mutation
 }
 
 // Save creates the Organization in the database.
-func (oc *OrganizationCreate) Save(ctx context.Context) (*Organization, error) {
-	return withHooks(ctx, oc.sqlSave, oc.mutation, oc.hooks)
+func (_c *OrganizationCreate) Save(ctx context.Context) (*Organization, error) {
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (oc *OrganizationCreate) SaveX(ctx context.Context) *Organization {
-	v, err := oc.Save(ctx)
+func (_c *OrganizationCreate) SaveX(ctx context.Context) *Organization {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -65,24 +65,24 @@ func (oc *OrganizationCreate) SaveX(ctx context.Context) *Organization {
 }
 
 // Exec executes the query.
-func (oc *OrganizationCreate) Exec(ctx context.Context) error {
-	_, err := oc.Save(ctx)
+func (_c *OrganizationCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (oc *OrganizationCreate) ExecX(ctx context.Context) {
-	if err := oc.Exec(ctx); err != nil {
+func (_c *OrganizationCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (oc *OrganizationCreate) check() error {
-	if _, ok := oc.mutation.Name(); !ok {
+func (_c *OrganizationCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Organization.name"`)}
 	}
-	if v, ok := oc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := organization.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Organization.name": %w`, err)}
 		}
@@ -90,12 +90,12 @@ func (oc *OrganizationCreate) check() error {
 	return nil
 }
 
-func (oc *OrganizationCreate) sqlSave(ctx context.Context) (*Organization, error) {
-	if err := oc.check(); err != nil {
+func (_c *OrganizationCreate) sqlSave(ctx context.Context) (*Organization, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := oc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, oc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -108,25 +108,25 @@ func (oc *OrganizationCreate) sqlSave(ctx context.Context) (*Organization, error
 			return nil, fmt.Errorf("unexpected Organization.ID type: %T", _spec.ID.Value)
 		}
 	}
-	oc.mutation.id = &_node.ID
-	oc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (oc *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec) {
+func (_c *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Organization{config: oc.config}
+		_node = &Organization{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(organization.Table, sqlgraph.NewFieldSpec(organization.FieldID, field.TypeString))
 	)
-	if id, ok := oc.mutation.ID(); ok {
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
-	if value, ok := oc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(organization.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := oc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(organization.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
@@ -141,16 +141,16 @@ type OrganizationCreateBulk struct {
 }
 
 // Save creates the Organization entities in the database.
-func (ocb *OrganizationCreateBulk) Save(ctx context.Context) ([]*Organization, error) {
-	if ocb.err != nil {
-		return nil, ocb.err
+func (_c *OrganizationCreateBulk) Save(ctx context.Context) ([]*Organization, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ocb.builders))
-	nodes := make([]*Organization, len(ocb.builders))
-	mutators := make([]Mutator, len(ocb.builders))
-	for i := range ocb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Organization, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ocb.builders[i]
+			builder := _c.builders[i]
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*OrganizationMutation)
 				if !ok {
@@ -163,11 +163,11 @@ func (ocb *OrganizationCreateBulk) Save(ctx context.Context) ([]*Organization, e
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ocb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ocb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -187,7 +187,7 @@ func (ocb *OrganizationCreateBulk) Save(ctx context.Context) ([]*Organization, e
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ocb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -195,8 +195,8 @@ func (ocb *OrganizationCreateBulk) Save(ctx context.Context) ([]*Organization, e
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ocb *OrganizationCreateBulk) SaveX(ctx context.Context) []*Organization {
-	v, err := ocb.Save(ctx)
+func (_c *OrganizationCreateBulk) SaveX(ctx context.Context) []*Organization {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -204,14 +204,14 @@ func (ocb *OrganizationCreateBulk) SaveX(ctx context.Context) []*Organization {
 }
 
 // Exec executes the query.
-func (ocb *OrganizationCreateBulk) Exec(ctx context.Context) error {
-	_, err := ocb.Save(ctx)
+func (_c *OrganizationCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ocb *OrganizationCreateBulk) ExecX(ctx context.Context) {
-	if err := ocb.Exec(ctx); err != nil {
+func (_c *OrganizationCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

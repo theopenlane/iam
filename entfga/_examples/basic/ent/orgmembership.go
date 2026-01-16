@@ -68,7 +68,7 @@ func (*OrgMembership) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the OrgMembership fields.
-func (om *OrgMembership) assignValues(columns []string, values []any) error {
+func (_m *OrgMembership) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -78,28 +78,28 @@ func (om *OrgMembership) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
-				om.ID = value.String
+				_m.ID = value.String
 			}
 		case orgmembership.FieldRole:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field role", values[i])
 			} else if value.Valid {
-				om.Role = enums.Role(value.String)
+				_m.Role = enums.Role(value.String)
 			}
 		case orgmembership.FieldOrganizationID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field organization_id", values[i])
 			} else if value.Valid {
-				om.OrganizationID = value.String
+				_m.OrganizationID = value.String
 			}
 		case orgmembership.FieldUserID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
-				om.UserID = value.String
+				_m.UserID = value.String
 			}
 		default:
-			om.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -107,46 +107,46 @@ func (om *OrgMembership) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the OrgMembership.
 // This includes values selected through modifiers, order, etc.
-func (om *OrgMembership) Value(name string) (ent.Value, error) {
-	return om.selectValues.Get(name)
+func (_m *OrgMembership) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryOrganization queries the "organization" edge of the OrgMembership entity.
-func (om *OrgMembership) QueryOrganization() *OrganizationQuery {
-	return NewOrgMembershipClient(om.config).QueryOrganization(om)
+func (_m *OrgMembership) QueryOrganization() *OrganizationQuery {
+	return NewOrgMembershipClient(_m.config).QueryOrganization(_m)
 }
 
 // Update returns a builder for updating this OrgMembership.
 // Note that you need to call OrgMembership.Unwrap() before calling this method if this OrgMembership
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (om *OrgMembership) Update() *OrgMembershipUpdateOne {
-	return NewOrgMembershipClient(om.config).UpdateOne(om)
+func (_m *OrgMembership) Update() *OrgMembershipUpdateOne {
+	return NewOrgMembershipClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the OrgMembership entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (om *OrgMembership) Unwrap() *OrgMembership {
-	_tx, ok := om.config.driver.(*txDriver)
+func (_m *OrgMembership) Unwrap() *OrgMembership {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: OrgMembership is not a transactional entity")
 	}
-	om.config.driver = _tx.drv
-	return om
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (om *OrgMembership) String() string {
+func (_m *OrgMembership) String() string {
 	var builder strings.Builder
 	builder.WriteString("OrgMembership(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", om.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("role=")
-	builder.WriteString(fmt.Sprintf("%v", om.Role))
+	builder.WriteString(fmt.Sprintf("%v", _m.Role))
 	builder.WriteString(", ")
 	builder.WriteString("organization_id=")
-	builder.WriteString(om.OrganizationID)
+	builder.WriteString(_m.OrganizationID)
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
-	builder.WriteString(om.UserID)
+	builder.WriteString(_m.UserID)
 	builder.WriteByte(')')
 	return builder.String()
 }

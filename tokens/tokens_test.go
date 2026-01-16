@@ -209,7 +209,7 @@ func (s *TokenTestSuite) TestCreateAccessTokenUsesCorrectDuration() {
 	require.NoError(err, "could not create access token with regular subject")
 
 	regularClaims := regularToken.Claims.(*tokens.Claims)
-	regularDuration := regularClaims.ExpiresAt.Time.Sub(regularClaims.IssuedAt.Time)
+	regularDuration := regularClaims.ExpiresAt.Sub(regularClaims.IssuedAt.Time)
 	require.Equal(conf.AccessDuration, regularDuration,
 		"regular subject token should use AccessDuration")
 
@@ -224,7 +224,7 @@ func (s *TokenTestSuite) TestCreateAccessTokenUsesCorrectDuration() {
 	require.NoError(err, "could not create access token with anonymous assessment subject")
 
 	anonClaims := anonToken.Claims.(*tokens.Claims)
-	anonDuration := anonClaims.ExpiresAt.Time.Sub(anonClaims.IssuedAt.Time)
+	anonDuration := anonClaims.ExpiresAt.Sub(anonClaims.IssuedAt.Time)
 	require.Equal(conf.AssessmentAccessDuration, anonDuration,
 		"anonymous assessment subject token should use AssessmentAccessDuration")
 

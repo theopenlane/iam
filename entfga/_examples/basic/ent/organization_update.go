@@ -22,58 +22,58 @@ type OrganizationUpdate struct {
 }
 
 // Where appends a list predicates to the OrganizationUpdate builder.
-func (ou *OrganizationUpdate) Where(ps ...predicate.Organization) *OrganizationUpdate {
-	ou.mutation.Where(ps...)
-	return ou
+func (_u *OrganizationUpdate) Where(ps ...predicate.Organization) *OrganizationUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (ou *OrganizationUpdate) SetName(s string) *OrganizationUpdate {
-	ou.mutation.SetName(s)
-	return ou
+func (_u *OrganizationUpdate) SetName(v string) *OrganizationUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (ou *OrganizationUpdate) SetNillableName(s *string) *OrganizationUpdate {
-	if s != nil {
-		ou.SetName(*s)
+func (_u *OrganizationUpdate) SetNillableName(v *string) *OrganizationUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return ou
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ou *OrganizationUpdate) SetDescription(s string) *OrganizationUpdate {
-	ou.mutation.SetDescription(s)
-	return ou
+func (_u *OrganizationUpdate) SetDescription(v string) *OrganizationUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ou *OrganizationUpdate) SetNillableDescription(s *string) *OrganizationUpdate {
-	if s != nil {
-		ou.SetDescription(*s)
+func (_u *OrganizationUpdate) SetNillableDescription(v *string) *OrganizationUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ou
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ou *OrganizationUpdate) ClearDescription() *OrganizationUpdate {
-	ou.mutation.ClearDescription()
-	return ou
+func (_u *OrganizationUpdate) ClearDescription() *OrganizationUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
-func (ou *OrganizationUpdate) Mutation() *OrganizationMutation {
-	return ou.mutation
+func (_u *OrganizationUpdate) Mutation() *OrganizationMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (ou *OrganizationUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, ou.sqlSave, ou.mutation, ou.hooks)
+func (_u *OrganizationUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ou *OrganizationUpdate) SaveX(ctx context.Context) int {
-	affected, err := ou.Save(ctx)
+func (_u *OrganizationUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -81,21 +81,21 @@ func (ou *OrganizationUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (ou *OrganizationUpdate) Exec(ctx context.Context) error {
-	_, err := ou.Save(ctx)
+func (_u *OrganizationUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ou *OrganizationUpdate) ExecX(ctx context.Context) {
-	if err := ou.Exec(ctx); err != nil {
+func (_u *OrganizationUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ou *OrganizationUpdate) check() error {
-	if v, ok := ou.mutation.Name(); ok {
+func (_u *OrganizationUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := organization.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Organization.name": %w`, err)}
 		}
@@ -103,28 +103,28 @@ func (ou *OrganizationUpdate) check() error {
 	return nil
 }
 
-func (ou *OrganizationUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := ou.check(); err != nil {
-		return n, err
+func (_u *OrganizationUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(organization.Table, organization.Columns, sqlgraph.NewFieldSpec(organization.FieldID, field.TypeString))
-	if ps := ou.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ou.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(organization.FieldName, field.TypeString, value)
 	}
-	if value, ok := ou.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(organization.FieldDescription, field.TypeString, value)
 	}
-	if ou.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(organization.FieldDescription, field.TypeString)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, ou.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{organization.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -132,8 +132,8 @@ func (ou *OrganizationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	ou.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // OrganizationUpdateOne is the builder for updating a single Organization entity.
@@ -145,65 +145,65 @@ type OrganizationUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (ouo *OrganizationUpdateOne) SetName(s string) *OrganizationUpdateOne {
-	ouo.mutation.SetName(s)
-	return ouo
+func (_u *OrganizationUpdateOne) SetName(v string) *OrganizationUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (ouo *OrganizationUpdateOne) SetNillableName(s *string) *OrganizationUpdateOne {
-	if s != nil {
-		ouo.SetName(*s)
+func (_u *OrganizationUpdateOne) SetNillableName(v *string) *OrganizationUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return ouo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ouo *OrganizationUpdateOne) SetDescription(s string) *OrganizationUpdateOne {
-	ouo.mutation.SetDescription(s)
-	return ouo
+func (_u *OrganizationUpdateOne) SetDescription(v string) *OrganizationUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ouo *OrganizationUpdateOne) SetNillableDescription(s *string) *OrganizationUpdateOne {
-	if s != nil {
-		ouo.SetDescription(*s)
+func (_u *OrganizationUpdateOne) SetNillableDescription(v *string) *OrganizationUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ouo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ouo *OrganizationUpdateOne) ClearDescription() *OrganizationUpdateOne {
-	ouo.mutation.ClearDescription()
-	return ouo
+func (_u *OrganizationUpdateOne) ClearDescription() *OrganizationUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
-func (ouo *OrganizationUpdateOne) Mutation() *OrganizationMutation {
-	return ouo.mutation
+func (_u *OrganizationUpdateOne) Mutation() *OrganizationMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the OrganizationUpdate builder.
-func (ouo *OrganizationUpdateOne) Where(ps ...predicate.Organization) *OrganizationUpdateOne {
-	ouo.mutation.Where(ps...)
-	return ouo
+func (_u *OrganizationUpdateOne) Where(ps ...predicate.Organization) *OrganizationUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (ouo *OrganizationUpdateOne) Select(field string, fields ...string) *OrganizationUpdateOne {
-	ouo.fields = append([]string{field}, fields...)
-	return ouo
+func (_u *OrganizationUpdateOne) Select(field string, fields ...string) *OrganizationUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Organization entity.
-func (ouo *OrganizationUpdateOne) Save(ctx context.Context) (*Organization, error) {
-	return withHooks(ctx, ouo.sqlSave, ouo.mutation, ouo.hooks)
+func (_u *OrganizationUpdateOne) Save(ctx context.Context) (*Organization, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ouo *OrganizationUpdateOne) SaveX(ctx context.Context) *Organization {
-	node, err := ouo.Save(ctx)
+func (_u *OrganizationUpdateOne) SaveX(ctx context.Context) *Organization {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -211,21 +211,21 @@ func (ouo *OrganizationUpdateOne) SaveX(ctx context.Context) *Organization {
 }
 
 // Exec executes the query on the entity.
-func (ouo *OrganizationUpdateOne) Exec(ctx context.Context) error {
-	_, err := ouo.Save(ctx)
+func (_u *OrganizationUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ouo *OrganizationUpdateOne) ExecX(ctx context.Context) {
-	if err := ouo.Exec(ctx); err != nil {
+func (_u *OrganizationUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ouo *OrganizationUpdateOne) check() error {
-	if v, ok := ouo.mutation.Name(); ok {
+func (_u *OrganizationUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := organization.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Organization.name": %w`, err)}
 		}
@@ -233,17 +233,17 @@ func (ouo *OrganizationUpdateOne) check() error {
 	return nil
 }
 
-func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organization, err error) {
-	if err := ouo.check(); err != nil {
+func (_u *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organization, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(organization.Table, organization.Columns, sqlgraph.NewFieldSpec(organization.FieldID, field.TypeString))
-	id, ok := ouo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Organization.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := ouo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, organization.FieldID)
 		for _, f := range fields {
@@ -255,26 +255,26 @@ func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizat
 			}
 		}
 	}
-	if ps := ouo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ouo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(organization.FieldName, field.TypeString, value)
 	}
-	if value, ok := ouo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(organization.FieldDescription, field.TypeString, value)
 	}
-	if ouo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(organization.FieldDescription, field.TypeString)
 	}
-	_node = &Organization{config: ouo.config}
+	_node = &Organization{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, ouo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{organization.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -282,6 +282,6 @@ func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizat
 		}
 		return nil, err
 	}
-	ouo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

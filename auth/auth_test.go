@@ -399,3 +399,61 @@ func TestGetAPIKey(t *testing.T) {
 		})
 	}
 }
+
+func TestGetBearerTokenFromWebsocketRequest(t *testing.T) {
+	testAccessToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2F1dGguZGF0dW0ubmV0IiwiYXVkIjoiaHR0cHM6Ly9kYXR1bS5uZXQiLCJzdWIiOiJVMVdNNHVGLTNxcGRsLWRtS0lISjQiLCJpYXQiOjE0NTg3ODU3OTYsImV4cCI6MTQ1ODg3MjE5Nn0.oXIjG4PauoHXEmZRDKRE018bkMv9rdZTjn563ujUh6o" //nolint:gosec
+
+	tests := []struct {
+		name        string
+		authHeader  string
+		wantToken   string
+		wantErr     bool
+		wantErrType error
+	}{
+		{
+			name:       "valid bearer token",
+			authHeader: "Bearer " + testAccessToken,
+			wantToken:  testAccessToken,
+			wantErr:    false,
+		},
+		{
+			name:        "missing bearer token",
+			authHeader:  "",
+			wantToken:   "",
+			wantErr:     true,
+			wantErrType: auth.ErrNoAuthorization,
+		},
+		{
+			name:        "malformed bearer token",
+			authHeader:  "Bear " + testAccessToken,
+			wantToken:   "",
+			wantErr:     true,
+			wantErrType: auth.ErrNoAuthorization,
+		},
+		{
+			name:        "bearer without space",
+			authHeader:  "Bearer" + testAccessToken,
+			wantToken:   "",
+			wantErr:     true,
+			wantErrType: auth.ErrNoAuthorization,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			payload := map[string]interface{}{
+				"Authorization": tc.authHeader,
+			}
+
+			token, err := auth.GetBearerTokenFromWebsocketRequest(payload)
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.wantErrType, err)
+				assert.Empty(t, token)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.wantToken, token)
+			}
+		})
+	}
+}

@@ -22,58 +22,58 @@ type OrgMembershipCreate struct {
 }
 
 // SetRole sets the "role" field.
-func (omc *OrgMembershipCreate) SetRole(e enums.Role) *OrgMembershipCreate {
-	omc.mutation.SetRole(e)
-	return omc
+func (_c *OrgMembershipCreate) SetRole(v enums.Role) *OrgMembershipCreate {
+	_c.mutation.SetRole(v)
+	return _c
 }
 
 // SetNillableRole sets the "role" field if the given value is not nil.
-func (omc *OrgMembershipCreate) SetNillableRole(e *enums.Role) *OrgMembershipCreate {
-	if e != nil {
-		omc.SetRole(*e)
+func (_c *OrgMembershipCreate) SetNillableRole(v *enums.Role) *OrgMembershipCreate {
+	if v != nil {
+		_c.SetRole(*v)
 	}
-	return omc
+	return _c
 }
 
 // SetOrganizationID sets the "organization_id" field.
-func (omc *OrgMembershipCreate) SetOrganizationID(s string) *OrgMembershipCreate {
-	omc.mutation.SetOrganizationID(s)
-	return omc
+func (_c *OrgMembershipCreate) SetOrganizationID(v string) *OrgMembershipCreate {
+	_c.mutation.SetOrganizationID(v)
+	return _c
 }
 
 // SetUserID sets the "user_id" field.
-func (omc *OrgMembershipCreate) SetUserID(s string) *OrgMembershipCreate {
-	omc.mutation.SetUserID(s)
-	return omc
+func (_c *OrgMembershipCreate) SetUserID(v string) *OrgMembershipCreate {
+	_c.mutation.SetUserID(v)
+	return _c
 }
 
 // SetID sets the "id" field.
-func (omc *OrgMembershipCreate) SetID(s string) *OrgMembershipCreate {
-	omc.mutation.SetID(s)
-	return omc
+func (_c *OrgMembershipCreate) SetID(v string) *OrgMembershipCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // SetOrganization sets the "organization" edge to the Organization entity.
-func (omc *OrgMembershipCreate) SetOrganization(o *Organization) *OrgMembershipCreate {
-	return omc.SetOrganizationID(o.ID)
+func (_c *OrgMembershipCreate) SetOrganization(v *Organization) *OrgMembershipCreate {
+	return _c.SetOrganizationID(v.ID)
 }
 
 // Mutation returns the OrgMembershipMutation object of the builder.
-func (omc *OrgMembershipCreate) Mutation() *OrgMembershipMutation {
-	return omc.mutation
+func (_c *OrgMembershipCreate) Mutation() *OrgMembershipMutation {
+	return _c.mutation
 }
 
 // Save creates the OrgMembership in the database.
-func (omc *OrgMembershipCreate) Save(ctx context.Context) (*OrgMembership, error) {
-	if err := omc.defaults(); err != nil {
+func (_c *OrgMembershipCreate) Save(ctx context.Context) (*OrgMembership, error) {
+	if err := _c.defaults(); err != nil {
 		return nil, err
 	}
-	return withHooks(ctx, omc.sqlSave, omc.mutation, omc.hooks)
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (omc *OrgMembershipCreate) SaveX(ctx context.Context) *OrgMembership {
-	v, err := omc.Save(ctx)
+func (_c *OrgMembershipCreate) SaveX(ctx context.Context) *OrgMembership {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -81,55 +81,55 @@ func (omc *OrgMembershipCreate) SaveX(ctx context.Context) *OrgMembership {
 }
 
 // Exec executes the query.
-func (omc *OrgMembershipCreate) Exec(ctx context.Context) error {
-	_, err := omc.Save(ctx)
+func (_c *OrgMembershipCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (omc *OrgMembershipCreate) ExecX(ctx context.Context) {
-	if err := omc.Exec(ctx); err != nil {
+func (_c *OrgMembershipCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (omc *OrgMembershipCreate) defaults() error {
-	if _, ok := omc.mutation.Role(); !ok {
+func (_c *OrgMembershipCreate) defaults() error {
+	if _, ok := _c.mutation.Role(); !ok {
 		v := orgmembership.DefaultRole
-		omc.mutation.SetRole(v)
+		_c.mutation.SetRole(v)
 	}
 	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (omc *OrgMembershipCreate) check() error {
-	if _, ok := omc.mutation.Role(); !ok {
+func (_c *OrgMembershipCreate) check() error {
+	if _, ok := _c.mutation.Role(); !ok {
 		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "OrgMembership.role"`)}
 	}
-	if v, ok := omc.mutation.Role(); ok {
+	if v, ok := _c.mutation.Role(); ok {
 		if err := orgmembership.RoleValidator(v); err != nil {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "OrgMembership.role": %w`, err)}
 		}
 	}
-	if _, ok := omc.mutation.OrganizationID(); !ok {
+	if _, ok := _c.mutation.OrganizationID(); !ok {
 		return &ValidationError{Name: "organization_id", err: errors.New(`ent: missing required field "OrgMembership.organization_id"`)}
 	}
-	if _, ok := omc.mutation.UserID(); !ok {
+	if _, ok := _c.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "OrgMembership.user_id"`)}
 	}
-	if len(omc.mutation.OrganizationIDs()) == 0 {
+	if len(_c.mutation.OrganizationIDs()) == 0 {
 		return &ValidationError{Name: "organization", err: errors.New(`ent: missing required edge "OrgMembership.organization"`)}
 	}
 	return nil
 }
 
-func (omc *OrgMembershipCreate) sqlSave(ctx context.Context) (*OrgMembership, error) {
-	if err := omc.check(); err != nil {
+func (_c *OrgMembershipCreate) sqlSave(ctx context.Context) (*OrgMembership, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := omc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, omc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -142,29 +142,29 @@ func (omc *OrgMembershipCreate) sqlSave(ctx context.Context) (*OrgMembership, er
 			return nil, fmt.Errorf("unexpected OrgMembership.ID type: %T", _spec.ID.Value)
 		}
 	}
-	omc.mutation.id = &_node.ID
-	omc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (omc *OrgMembershipCreate) createSpec() (*OrgMembership, *sqlgraph.CreateSpec) {
+func (_c *OrgMembershipCreate) createSpec() (*OrgMembership, *sqlgraph.CreateSpec) {
 	var (
-		_node = &OrgMembership{config: omc.config}
+		_node = &OrgMembership{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(orgmembership.Table, sqlgraph.NewFieldSpec(orgmembership.FieldID, field.TypeString))
 	)
-	if id, ok := omc.mutation.ID(); ok {
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
-	if value, ok := omc.mutation.Role(); ok {
+	if value, ok := _c.mutation.Role(); ok {
 		_spec.SetField(orgmembership.FieldRole, field.TypeEnum, value)
 		_node.Role = value
 	}
-	if value, ok := omc.mutation.UserID(); ok {
+	if value, ok := _c.mutation.UserID(); ok {
 		_spec.SetField(orgmembership.FieldUserID, field.TypeString, value)
 		_node.UserID = value
 	}
-	if nodes := omc.mutation.OrganizationIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.OrganizationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
@@ -192,16 +192,16 @@ type OrgMembershipCreateBulk struct {
 }
 
 // Save creates the OrgMembership entities in the database.
-func (omcb *OrgMembershipCreateBulk) Save(ctx context.Context) ([]*OrgMembership, error) {
-	if omcb.err != nil {
-		return nil, omcb.err
+func (_c *OrgMembershipCreateBulk) Save(ctx context.Context) ([]*OrgMembership, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(omcb.builders))
-	nodes := make([]*OrgMembership, len(omcb.builders))
-	mutators := make([]Mutator, len(omcb.builders))
-	for i := range omcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*OrgMembership, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := omcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*OrgMembershipMutation)
@@ -215,11 +215,11 @@ func (omcb *OrgMembershipCreateBulk) Save(ctx context.Context) ([]*OrgMembership
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, omcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, omcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -239,7 +239,7 @@ func (omcb *OrgMembershipCreateBulk) Save(ctx context.Context) ([]*OrgMembership
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, omcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -247,8 +247,8 @@ func (omcb *OrgMembershipCreateBulk) Save(ctx context.Context) ([]*OrgMembership
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (omcb *OrgMembershipCreateBulk) SaveX(ctx context.Context) []*OrgMembership {
-	v, err := omcb.Save(ctx)
+func (_c *OrgMembershipCreateBulk) SaveX(ctx context.Context) []*OrgMembership {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -256,14 +256,14 @@ func (omcb *OrgMembershipCreateBulk) SaveX(ctx context.Context) []*OrgMembership
 }
 
 // Exec executes the query.
-func (omcb *OrgMembershipCreateBulk) Exec(ctx context.Context) error {
-	_, err := omcb.Save(ctx)
+func (_c *OrgMembershipCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (omcb *OrgMembershipCreateBulk) ExecX(ctx context.Context) {
-	if err := omcb.Exec(ctx); err != nil {
+func (_c *OrgMembershipCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
