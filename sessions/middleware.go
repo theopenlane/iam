@@ -181,6 +181,16 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 			c.SetRequest(c.Request().WithContext(ctx))
 
 			c.Response().Before(func() {
+				// do not write session/cookie if context is cancelled
+				select {
+				case <-c.Request().Context().Done():
+					log.Debug().Msg("request context cancelled, skipping session save")
+					// Context cancelled, skip writing session/cookie
+					return
+				default:
+					// context is still active, proceed to write session/cookie
+				}
+
 				// refresh and save session cookie
 				ctx, err := config.CreateAndStoreSession(c.Request().Context(), c.Response().Writer, sessionID)
 				if err != nil {
