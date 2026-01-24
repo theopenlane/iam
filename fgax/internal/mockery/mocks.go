@@ -2317,6 +2317,121 @@ func (_c *MockSdkClient_SetStoreId_Call) RunAndReturn(run func(storeId string) e
 	return _c
 }
 
+// StreamedListObjects provides a mock function for the type MockSdkClient
+func (_mock *MockSdkClient) StreamedListObjects(ctx context.Context) client.SdkClientStreamedListObjectsRequestInterface {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for StreamedListObjects")
+	}
+
+	var r0 client.SdkClientStreamedListObjectsRequestInterface
+	if returnFunc, ok := ret.Get(0).(func(context.Context) client.SdkClientStreamedListObjectsRequestInterface); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(client.SdkClientStreamedListObjectsRequestInterface)
+		}
+	}
+	return r0
+}
+
+// MockSdkClient_StreamedListObjects_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'StreamedListObjects'
+type MockSdkClient_StreamedListObjects_Call struct {
+	*mock.Call
+}
+
+// StreamedListObjects is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockSdkClient_Expecter) StreamedListObjects(ctx interface{}) *MockSdkClient_StreamedListObjects_Call {
+	return &MockSdkClient_StreamedListObjects_Call{Call: _e.mock.On("StreamedListObjects", ctx)}
+}
+
+func (_c *MockSdkClient_StreamedListObjects_Call) Run(run func(ctx context.Context)) *MockSdkClient_StreamedListObjects_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockSdkClient_StreamedListObjects_Call) Return(sdkClientStreamedListObjectsRequestInterface client.SdkClientStreamedListObjectsRequestInterface) *MockSdkClient_StreamedListObjects_Call {
+	_c.Call.Return(sdkClientStreamedListObjectsRequestInterface)
+	return _c
+}
+
+func (_c *MockSdkClient_StreamedListObjects_Call) RunAndReturn(run func(ctx context.Context) client.SdkClientStreamedListObjectsRequestInterface) *MockSdkClient_StreamedListObjects_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// StreamedListObjectsExecute provides a mock function for the type MockSdkClient
+func (_mock *MockSdkClient) StreamedListObjectsExecute(request client.SdkClientStreamedListObjectsRequestInterface) (*client.ClientStreamedListObjectsResponse, error) {
+	ret := _mock.Called(request)
+
+	if len(ret) == 0 {
+		panic("no return value specified for StreamedListObjectsExecute")
+	}
+
+	var r0 *client.ClientStreamedListObjectsResponse
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(client.SdkClientStreamedListObjectsRequestInterface) (*client.ClientStreamedListObjectsResponse, error)); ok {
+		return returnFunc(request)
+	}
+	if returnFunc, ok := ret.Get(0).(func(client.SdkClientStreamedListObjectsRequestInterface) *client.ClientStreamedListObjectsResponse); ok {
+		r0 = returnFunc(request)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.ClientStreamedListObjectsResponse)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(client.SdkClientStreamedListObjectsRequestInterface) error); ok {
+		r1 = returnFunc(request)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockSdkClient_StreamedListObjectsExecute_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'StreamedListObjectsExecute'
+type MockSdkClient_StreamedListObjectsExecute_Call struct {
+	*mock.Call
+}
+
+// StreamedListObjectsExecute is a helper method to define mock.On call
+//   - request client.SdkClientStreamedListObjectsRequestInterface
+func (_e *MockSdkClient_Expecter) StreamedListObjectsExecute(request interface{}) *MockSdkClient_StreamedListObjectsExecute_Call {
+	return &MockSdkClient_StreamedListObjectsExecute_Call{Call: _e.mock.On("StreamedListObjectsExecute", request)}
+}
+
+func (_c *MockSdkClient_StreamedListObjectsExecute_Call) Run(run func(request client.SdkClientStreamedListObjectsRequestInterface)) *MockSdkClient_StreamedListObjectsExecute_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 client.SdkClientStreamedListObjectsRequestInterface
+		if args[0] != nil {
+			arg0 = args[0].(client.SdkClientStreamedListObjectsRequestInterface)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockSdkClient_StreamedListObjectsExecute_Call) Return(clientStreamedListObjectsResponse *client.ClientStreamedListObjectsResponse, err error) *MockSdkClient_StreamedListObjectsExecute_Call {
+	_c.Call.Return(clientStreamedListObjectsResponse, err)
+	return _c
+}
+
+func (_c *MockSdkClient_StreamedListObjectsExecute_Call) RunAndReturn(run func(request client.SdkClientStreamedListObjectsRequestInterface) (*client.ClientStreamedListObjectsResponse, error)) *MockSdkClient_StreamedListObjectsExecute_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Write provides a mock function for the type MockSdkClient
 func (_mock *MockSdkClient) Write(ctx context.Context) client.SdkClientWriteRequestInterface {
 	ret := _mock.Called(ctx)
@@ -5887,6 +6002,424 @@ func (_c *MockSdkClientListUsersRequestInterface_Options_Call) Return(sdkClientL
 }
 
 func (_c *MockSdkClientListUsersRequestInterface_Options_Call) RunAndReturn(run func(options client.ClientListUsersOptions) client.SdkClientListUsersRequestInterface) *MockSdkClientListUsersRequestInterface_Options_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// NewMockSdkClientStreamedListObjectsRequestInterface creates a new instance of MockSdkClientStreamedListObjectsRequestInterface. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
+// The first argument is typically a *testing.T value.
+func NewMockSdkClientStreamedListObjectsRequestInterface(t interface {
+	mock.TestingT
+	Cleanup(func())
+}) *MockSdkClientStreamedListObjectsRequestInterface {
+	mock := &MockSdkClientStreamedListObjectsRequestInterface{}
+	mock.Mock.Test(t)
+
+	t.Cleanup(func() { mock.AssertExpectations(t) })
+
+	return mock
+}
+
+// MockSdkClientStreamedListObjectsRequestInterface is an autogenerated mock type for the SdkClientStreamedListObjectsRequestInterface type
+type MockSdkClientStreamedListObjectsRequestInterface struct {
+	mock.Mock
+}
+
+type MockSdkClientStreamedListObjectsRequestInterface_Expecter struct {
+	mock *mock.Mock
+}
+
+func (_m *MockSdkClientStreamedListObjectsRequestInterface) EXPECT() *MockSdkClientStreamedListObjectsRequestInterface_Expecter {
+	return &MockSdkClientStreamedListObjectsRequestInterface_Expecter{mock: &_m.Mock}
+}
+
+// Body provides a mock function for the type MockSdkClientStreamedListObjectsRequestInterface
+func (_mock *MockSdkClientStreamedListObjectsRequestInterface) Body(body client.ClientStreamedListObjectsRequest) client.SdkClientStreamedListObjectsRequestInterface {
+	ret := _mock.Called(body)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Body")
+	}
+
+	var r0 client.SdkClientStreamedListObjectsRequestInterface
+	if returnFunc, ok := ret.Get(0).(func(client.ClientStreamedListObjectsRequest) client.SdkClientStreamedListObjectsRequestInterface); ok {
+		r0 = returnFunc(body)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(client.SdkClientStreamedListObjectsRequestInterface)
+		}
+	}
+	return r0
+}
+
+// MockSdkClientStreamedListObjectsRequestInterface_Body_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Body'
+type MockSdkClientStreamedListObjectsRequestInterface_Body_Call struct {
+	*mock.Call
+}
+
+// Body is a helper method to define mock.On call
+//   - body client.ClientStreamedListObjectsRequest
+func (_e *MockSdkClientStreamedListObjectsRequestInterface_Expecter) Body(body interface{}) *MockSdkClientStreamedListObjectsRequestInterface_Body_Call {
+	return &MockSdkClientStreamedListObjectsRequestInterface_Body_Call{Call: _e.mock.On("Body", body)}
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_Body_Call) Run(run func(body client.ClientStreamedListObjectsRequest)) *MockSdkClientStreamedListObjectsRequestInterface_Body_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 client.ClientStreamedListObjectsRequest
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientStreamedListObjectsRequest)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_Body_Call) Return(sdkClientStreamedListObjectsRequestInterface client.SdkClientStreamedListObjectsRequestInterface) *MockSdkClientStreamedListObjectsRequestInterface_Body_Call {
+	_c.Call.Return(sdkClientStreamedListObjectsRequestInterface)
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_Body_Call) RunAndReturn(run func(body client.ClientStreamedListObjectsRequest) client.SdkClientStreamedListObjectsRequestInterface) *MockSdkClientStreamedListObjectsRequestInterface_Body_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Execute provides a mock function for the type MockSdkClientStreamedListObjectsRequestInterface
+func (_mock *MockSdkClientStreamedListObjectsRequestInterface) Execute() (*client.ClientStreamedListObjectsResponse, error) {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Execute")
+	}
+
+	var r0 *client.ClientStreamedListObjectsResponse
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func() (*client.ClientStreamedListObjectsResponse, error)); ok {
+		return returnFunc()
+	}
+	if returnFunc, ok := ret.Get(0).(func() *client.ClientStreamedListObjectsResponse); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.ClientStreamedListObjectsResponse)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func() error); ok {
+		r1 = returnFunc()
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockSdkClientStreamedListObjectsRequestInterface_Execute_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Execute'
+type MockSdkClientStreamedListObjectsRequestInterface_Execute_Call struct {
+	*mock.Call
+}
+
+// Execute is a helper method to define mock.On call
+func (_e *MockSdkClientStreamedListObjectsRequestInterface_Expecter) Execute() *MockSdkClientStreamedListObjectsRequestInterface_Execute_Call {
+	return &MockSdkClientStreamedListObjectsRequestInterface_Execute_Call{Call: _e.mock.On("Execute")}
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_Execute_Call) Run(run func()) *MockSdkClientStreamedListObjectsRequestInterface_Execute_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_Execute_Call) Return(clientStreamedListObjectsResponse *client.ClientStreamedListObjectsResponse, err error) *MockSdkClientStreamedListObjectsRequestInterface_Execute_Call {
+	_c.Call.Return(clientStreamedListObjectsResponse, err)
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_Execute_Call) RunAndReturn(run func() (*client.ClientStreamedListObjectsResponse, error)) *MockSdkClientStreamedListObjectsRequestInterface_Execute_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetAuthorizationModelIdOverride provides a mock function for the type MockSdkClientStreamedListObjectsRequestInterface
+func (_mock *MockSdkClientStreamedListObjectsRequestInterface) GetAuthorizationModelIdOverride() *string {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAuthorizationModelIdOverride")
+	}
+
+	var r0 *string
+	if returnFunc, ok := ret.Get(0).(func() *string); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*string)
+		}
+	}
+	return r0
+}
+
+// MockSdkClientStreamedListObjectsRequestInterface_GetAuthorizationModelIdOverride_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAuthorizationModelIdOverride'
+type MockSdkClientStreamedListObjectsRequestInterface_GetAuthorizationModelIdOverride_Call struct {
+	*mock.Call
+}
+
+// GetAuthorizationModelIdOverride is a helper method to define mock.On call
+func (_e *MockSdkClientStreamedListObjectsRequestInterface_Expecter) GetAuthorizationModelIdOverride() *MockSdkClientStreamedListObjectsRequestInterface_GetAuthorizationModelIdOverride_Call {
+	return &MockSdkClientStreamedListObjectsRequestInterface_GetAuthorizationModelIdOverride_Call{Call: _e.mock.On("GetAuthorizationModelIdOverride")}
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetAuthorizationModelIdOverride_Call) Run(run func()) *MockSdkClientStreamedListObjectsRequestInterface_GetAuthorizationModelIdOverride_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetAuthorizationModelIdOverride_Call) Return(s *string) *MockSdkClientStreamedListObjectsRequestInterface_GetAuthorizationModelIdOverride_Call {
+	_c.Call.Return(s)
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetAuthorizationModelIdOverride_Call) RunAndReturn(run func() *string) *MockSdkClientStreamedListObjectsRequestInterface_GetAuthorizationModelIdOverride_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetBody provides a mock function for the type MockSdkClientStreamedListObjectsRequestInterface
+func (_mock *MockSdkClientStreamedListObjectsRequestInterface) GetBody() *client.ClientStreamedListObjectsRequest {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBody")
+	}
+
+	var r0 *client.ClientStreamedListObjectsRequest
+	if returnFunc, ok := ret.Get(0).(func() *client.ClientStreamedListObjectsRequest); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.ClientStreamedListObjectsRequest)
+		}
+	}
+	return r0
+}
+
+// MockSdkClientStreamedListObjectsRequestInterface_GetBody_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetBody'
+type MockSdkClientStreamedListObjectsRequestInterface_GetBody_Call struct {
+	*mock.Call
+}
+
+// GetBody is a helper method to define mock.On call
+func (_e *MockSdkClientStreamedListObjectsRequestInterface_Expecter) GetBody() *MockSdkClientStreamedListObjectsRequestInterface_GetBody_Call {
+	return &MockSdkClientStreamedListObjectsRequestInterface_GetBody_Call{Call: _e.mock.On("GetBody")}
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetBody_Call) Run(run func()) *MockSdkClientStreamedListObjectsRequestInterface_GetBody_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetBody_Call) Return(clientStreamedListObjectsRequest *client.ClientStreamedListObjectsRequest) *MockSdkClientStreamedListObjectsRequestInterface_GetBody_Call {
+	_c.Call.Return(clientStreamedListObjectsRequest)
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetBody_Call) RunAndReturn(run func() *client.ClientStreamedListObjectsRequest) *MockSdkClientStreamedListObjectsRequestInterface_GetBody_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetContext provides a mock function for the type MockSdkClientStreamedListObjectsRequestInterface
+func (_mock *MockSdkClientStreamedListObjectsRequestInterface) GetContext() context.Context {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetContext")
+	}
+
+	var r0 context.Context
+	if returnFunc, ok := ret.Get(0).(func() context.Context); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(context.Context)
+		}
+	}
+	return r0
+}
+
+// MockSdkClientStreamedListObjectsRequestInterface_GetContext_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetContext'
+type MockSdkClientStreamedListObjectsRequestInterface_GetContext_Call struct {
+	*mock.Call
+}
+
+// GetContext is a helper method to define mock.On call
+func (_e *MockSdkClientStreamedListObjectsRequestInterface_Expecter) GetContext() *MockSdkClientStreamedListObjectsRequestInterface_GetContext_Call {
+	return &MockSdkClientStreamedListObjectsRequestInterface_GetContext_Call{Call: _e.mock.On("GetContext")}
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetContext_Call) Run(run func()) *MockSdkClientStreamedListObjectsRequestInterface_GetContext_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetContext_Call) Return(context1 context.Context) *MockSdkClientStreamedListObjectsRequestInterface_GetContext_Call {
+	_c.Call.Return(context1)
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetContext_Call) RunAndReturn(run func() context.Context) *MockSdkClientStreamedListObjectsRequestInterface_GetContext_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetOptions provides a mock function for the type MockSdkClientStreamedListObjectsRequestInterface
+func (_mock *MockSdkClientStreamedListObjectsRequestInterface) GetOptions() *client.ClientStreamedListObjectsOptions {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetOptions")
+	}
+
+	var r0 *client.ClientStreamedListObjectsOptions
+	if returnFunc, ok := ret.Get(0).(func() *client.ClientStreamedListObjectsOptions); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.ClientStreamedListObjectsOptions)
+		}
+	}
+	return r0
+}
+
+// MockSdkClientStreamedListObjectsRequestInterface_GetOptions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetOptions'
+type MockSdkClientStreamedListObjectsRequestInterface_GetOptions_Call struct {
+	*mock.Call
+}
+
+// GetOptions is a helper method to define mock.On call
+func (_e *MockSdkClientStreamedListObjectsRequestInterface_Expecter) GetOptions() *MockSdkClientStreamedListObjectsRequestInterface_GetOptions_Call {
+	return &MockSdkClientStreamedListObjectsRequestInterface_GetOptions_Call{Call: _e.mock.On("GetOptions")}
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetOptions_Call) Run(run func()) *MockSdkClientStreamedListObjectsRequestInterface_GetOptions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetOptions_Call) Return(clientStreamedListObjectsOptions *client.ClientStreamedListObjectsOptions) *MockSdkClientStreamedListObjectsRequestInterface_GetOptions_Call {
+	_c.Call.Return(clientStreamedListObjectsOptions)
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetOptions_Call) RunAndReturn(run func() *client.ClientStreamedListObjectsOptions) *MockSdkClientStreamedListObjectsRequestInterface_GetOptions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetStoreIdOverride provides a mock function for the type MockSdkClientStreamedListObjectsRequestInterface
+func (_mock *MockSdkClientStreamedListObjectsRequestInterface) GetStoreIdOverride() *string {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetStoreIdOverride")
+	}
+
+	var r0 *string
+	if returnFunc, ok := ret.Get(0).(func() *string); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*string)
+		}
+	}
+	return r0
+}
+
+// MockSdkClientStreamedListObjectsRequestInterface_GetStoreIdOverride_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetStoreIdOverride'
+type MockSdkClientStreamedListObjectsRequestInterface_GetStoreIdOverride_Call struct {
+	*mock.Call
+}
+
+// GetStoreIdOverride is a helper method to define mock.On call
+func (_e *MockSdkClientStreamedListObjectsRequestInterface_Expecter) GetStoreIdOverride() *MockSdkClientStreamedListObjectsRequestInterface_GetStoreIdOverride_Call {
+	return &MockSdkClientStreamedListObjectsRequestInterface_GetStoreIdOverride_Call{Call: _e.mock.On("GetStoreIdOverride")}
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetStoreIdOverride_Call) Run(run func()) *MockSdkClientStreamedListObjectsRequestInterface_GetStoreIdOverride_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetStoreIdOverride_Call) Return(s *string) *MockSdkClientStreamedListObjectsRequestInterface_GetStoreIdOverride_Call {
+	_c.Call.Return(s)
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_GetStoreIdOverride_Call) RunAndReturn(run func() *string) *MockSdkClientStreamedListObjectsRequestInterface_GetStoreIdOverride_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Options provides a mock function for the type MockSdkClientStreamedListObjectsRequestInterface
+func (_mock *MockSdkClientStreamedListObjectsRequestInterface) Options(options client.ClientStreamedListObjectsOptions) client.SdkClientStreamedListObjectsRequestInterface {
+	ret := _mock.Called(options)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Options")
+	}
+
+	var r0 client.SdkClientStreamedListObjectsRequestInterface
+	if returnFunc, ok := ret.Get(0).(func(client.ClientStreamedListObjectsOptions) client.SdkClientStreamedListObjectsRequestInterface); ok {
+		r0 = returnFunc(options)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(client.SdkClientStreamedListObjectsRequestInterface)
+		}
+	}
+	return r0
+}
+
+// MockSdkClientStreamedListObjectsRequestInterface_Options_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Options'
+type MockSdkClientStreamedListObjectsRequestInterface_Options_Call struct {
+	*mock.Call
+}
+
+// Options is a helper method to define mock.On call
+//   - options client.ClientStreamedListObjectsOptions
+func (_e *MockSdkClientStreamedListObjectsRequestInterface_Expecter) Options(options interface{}) *MockSdkClientStreamedListObjectsRequestInterface_Options_Call {
+	return &MockSdkClientStreamedListObjectsRequestInterface_Options_Call{Call: _e.mock.On("Options", options)}
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_Options_Call) Run(run func(options client.ClientStreamedListObjectsOptions)) *MockSdkClientStreamedListObjectsRequestInterface_Options_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 client.ClientStreamedListObjectsOptions
+		if args[0] != nil {
+			arg0 = args[0].(client.ClientStreamedListObjectsOptions)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_Options_Call) Return(sdkClientStreamedListObjectsRequestInterface client.SdkClientStreamedListObjectsRequestInterface) *MockSdkClientStreamedListObjectsRequestInterface_Options_Call {
+	_c.Call.Return(sdkClientStreamedListObjectsRequestInterface)
+	return _c
+}
+
+func (_c *MockSdkClientStreamedListObjectsRequestInterface_Options_Call) RunAndReturn(run func(options client.ClientStreamedListObjectsOptions) client.SdkClientStreamedListObjectsRequestInterface) *MockSdkClientStreamedListObjectsRequestInterface_Options_Call {
 	_c.Call.Return(run)
 	return _c
 }

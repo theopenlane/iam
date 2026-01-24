@@ -25,3 +25,5 @@ packages:
         config:
       SdkClientReadAuthorizationModelRequestInterface:
         config:
+      SdkClientStreamedListObjectsRequestInterface:
+        config:
