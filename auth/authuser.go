@@ -254,3 +254,17 @@ func GetRoleFromContext(ctx context.Context) OrganizationRoleType {
 
 	return au.OrganizationRole
 }
+
+// SetOrganizationRoleInContext sets the organization role in the context
+func SetOrganizationRoleInContext(ctx context.Context, role OrganizationRoleType) error {
+	au, ok := AuthenticatedUserFromContext(ctx)
+	if !ok || au == nil {
+		return ErrNoAuthUser
+	}
+
+	au.OrganizationRole = role
+
+	WithAuthenticatedUser(ctx, au)
+
+	return nil
+}
