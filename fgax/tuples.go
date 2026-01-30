@@ -21,6 +21,8 @@ const (
 	MemberRelation = "member"
 	// AdminRelation is the relation for admins of an entity
 	AdminRelation = "admin"
+	// SuperAdminRelation is the relation for super admins of an entity
+	SuperAdminRelation = "super_admin"
 	// OwnerRelation is the relation for owners of an entity
 	OwnerRelation = "owner"
 	// AuditorRelation is the relation for auditors of an entity

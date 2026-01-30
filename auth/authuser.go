@@ -228,3 +228,29 @@ func IsSystemAdminFromContext(ctx context.Context) bool {
 
 	return au.IsSystemAdmin
 }
+
+// HasFullOrgWriteAccessFromContext checks if the user has full write access to the organization
+// This is true for owners and super admins; admins will have limited write access depending on the resource
+// so authorization checks should be done at the resource level as needed
+func HasFullOrgWriteAccessFromContext(ctx context.Context) bool {
+	au, ok := AuthenticatedUserFromContext(ctx)
+	if !ok || au == nil {
+		return false
+	}
+
+	if au.OrganizationRole == OwnerRole || au.OrganizationRole == SuperAdminRole {
+		return true
+	}
+
+	return false
+}
+
+// GetRoleFromContext returns the organization role from the context
+func GetRoleFromContext(ctx context.Context) OrganizationRoleType {
+	au, ok := AuthenticatedUserFromContext(ctx)
+	if !ok || au == nil {
+		return ""
+	}
+
+	return au.OrganizationRole
+}
