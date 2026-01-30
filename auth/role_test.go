@@ -94,7 +94,7 @@ func TestToOrganizationRoleType(t *testing.T) {
 		},
 		{
 			name:         "valid member role",
-			input:        "member",
+			input:        "MEMBER",
 			expectedRole: auth.MemberRole,
 			expectedOk:   true,
 		},

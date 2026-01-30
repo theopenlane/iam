@@ -1,5 +1,7 @@
 package auth
 
+import "github.com/stoewer/go-strcase"
+
 // OrganizationRoleType represents the role of the user in the organization
 type OrganizationRoleType string
 
@@ -35,6 +37,9 @@ func (ort OrganizationRoleType) IsValid() bool {
 
 // ToOrganizationRoleType converts a string to an OrganizationRoleType
 func ToOrganizationRoleType(role string) (OrganizationRoleType, bool) {
+	// convert to lower snake case to match the constants
+	role = strcase.SnakeCase(role)
+
 	ort := OrganizationRoleType(role)
 	if !ort.IsValid() {
 		return "", false
