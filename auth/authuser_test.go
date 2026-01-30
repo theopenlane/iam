@@ -353,3 +353,60 @@ func TestIsSystemAdminFromContext(t *testing.T) {
 		})
 	}
 }
+func TestHasFullOrgWriteAccessFromContext(t *testing.T) {
+	testCases := []struct {
+		name            string
+		au              *auth.AuthenticatedUser
+		expectedHasFull bool
+	}{
+		{
+			name: "owner role",
+			au: &auth.AuthenticatedUser{
+				OrganizationRole: auth.OwnerRole,
+			},
+			expectedHasFull: true,
+		},
+		{
+			name: "super admin role",
+			au: &auth.AuthenticatedUser{
+				OrganizationRole: auth.SuperAdminRole,
+			},
+			expectedHasFull: true,
+		},
+		{
+			name: "admin role",
+			au: &auth.AuthenticatedUser{
+				OrganizationRole: auth.AdminRole,
+			},
+			expectedHasFull: false,
+		},
+		{
+			name: "member role",
+			au: &auth.AuthenticatedUser{
+				OrganizationRole: auth.MemberRole,
+			},
+			expectedHasFull: false,
+		},
+		{
+			name:            "no authenticated user",
+			au:              nil,
+			expectedHasFull: false,
+		},
+		{
+			name:            "empty role",
+			au:              &auth.AuthenticatedUser{},
+			expectedHasFull: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			if tc.au != nil {
+				ctx = auth.WithAuthenticatedUser(ctx, tc.au)
+			}
+			got := auth.HasFullOrgWriteAccessFromContext(ctx)
+			assert.Equal(t, tc.expectedHasFull, got)
+		})
+	}
+}

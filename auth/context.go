@@ -86,6 +86,9 @@ type AuthenticatedUser struct {
 	ActiveSubscription bool
 	// IsSystemAdmin indicates if the user is a system admin
 	IsSystemAdmin bool
+	// OrganizationRole is the role of the user in the organization (e.g., owner, admin, member) that can be used to skip certain authorization checks
+	// that are only organization role dependent
+	OrganizationRole OrganizationRoleType
 }
 
 // WithAuthenticatedUser sets the authenticated user in the context
@@ -106,6 +109,7 @@ func AuthenticatedUserFromContext(ctx context.Context) (*AuthenticatedUser, bool
 			SubjectName:        user.SubjectName,
 			SubjectEmail:       user.SubjectEmail,
 			AuthenticationType: user.AuthenticationType,
+			OrganizationRole:   AnonymousRole,
 		}, true
 	}
 
@@ -169,6 +173,9 @@ type AnonymousTrustCenterUser struct {
 	AuthenticationType AuthenticationType
 	// TrustCenterID is the ID of the trust center the user has access to
 	TrustCenterID string
+	// OrganizationRole is the role of the user in the organization (e.g., anonymous) that can be used to skip certain authorization checks
+	// that are only organization role dependent
+	OrganizationRole OrganizationRoleType
 }
 
 // WithAnonymousTrustCenterUser sets the anonymous trust center user in the context
