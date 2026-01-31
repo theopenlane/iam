@@ -12,8 +12,21 @@ import (
 )
 
 var (
-	ErrPermissionDenied = errors.New("you are not authorized to perform this action")
+    ErrPermissionDenied = errors.New("you are not authorized to perform this action")
 )
+
+// newOrganizationContextKey creates a new context key for organization checks
+// if the full email is provided it will take the domain after the `@` symbol
+func newOrganizationContextKey(e string) *map[string]any {
+    domain := e
+    if strings.Contains(e, "@") {
+        domain = strings.Split(e, "@")[1]
+    }
+
+    return &map[string]any{
+        emailDomainContextKey: domain,
+    }
+}
 
 {{- $nodes := .Graph.Nodes }}
 
@@ -88,10 +101,6 @@ var (
             return privacy.Allowf("nil request, bypassing auth check")
         }
 
-        acCtx := map[string]any{
-            "email_domain": au.SubjectEmail,
-        }
-
         // check if the user has access to the object requested
         ac := fgax.AccessCheck{
             {{- if $isHistory }}
@@ -103,7 +112,7 @@ var (
             SubjectType: auth.GetAuthzSubjectType(ctx),
             SubjectID: au.SubjectID,
             ObjectID: objectID,
-            Context: &acCtx,
+            Context: newOrganizationContextKey(au.SubjectEmail),
         }
 
         access, err := q.Authz.CheckAccess(ctx, ac)
@@ -201,17 +210,13 @@ var (
             return privacy.Skipf("unable to get authenticated user from context")
         }
 
-        acCtx := map[string]any{
-            "email_domain": au.SubjectEmail,
-        }
-
         ac := fgax.AccessCheck{
             Relation: fgax.CanEdit,
             ObjectType:  "{{ $objectType | ToLower }}",
             ObjectID: objectID,
             SubjectType: auth.GetAuthzSubjectType(ctx),
             SubjectID: au.SubjectID,
-            Context: &acCtx,
+            Context: newOrganizationContextKey(au.SubjectEmail),
         }
 
         log.Debug().Interface("access_check", ac).Msg("checking relationship tuples")
@@ -248,17 +253,13 @@ var (
             return privacy.Skipf("unable to get authenticated user from context")
         }
 
-        acCtx := map[string]any{
-            "email_domain": au.SubjectEmail,
-        }
-
         ac := fgax.AccessCheck{
             Relation: fgax.CanDelete,
             ObjectType:  "{{ $objectType | ToLower }}",
             ObjectID: objectID,
             SubjectType: auth.GetAuthzSubjectType(ctx),
             SubjectID: au.SubjectID,
-            Context: &acCtx,
+            Context: newOrganizationContextKey(au.SubjectEmail),
         }
 
         log.Debug().Interface("access_check", ac).Msg("checking relationship tuples")
