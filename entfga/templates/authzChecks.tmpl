@@ -12,8 +12,21 @@ import (
 )
 
 var (
-	ErrPermissionDenied = errors.New("you are not authorized to perform this action")
+    ErrPermissionDenied = errors.New("you are not authorized to perform this action")
 )
+
+// newOrganizationContextKey creates a new context key for organization checks
+// if the full email is provided it will take the domain after the `@` symbol
+func newOrganizationContextKey(e string) *map[string]any {
+    domain := e
+    if strings.Contains(e, "@") {
+        domain = strings.Split(e, "@")[1]
+    }
+
+    return &map[string]any{
+        "email_domain": domain,
+    }
+}
 
 {{- $nodes := .Graph.Nodes }}
 
@@ -41,11 +54,10 @@ var (
             return privacy.Skipf("not a graphql request, no context to check")
         }
 
-        subjectID, err := auth.GetSubjectIDFromContext(ctx)
+        au, err := auth.GetAuthenticatedUserFromContext(ctx)
         if err != nil {
-            log.Error().Err(err).Msg("unable to get user id from context")
-
-            return err
+            log.Error().Err(err).Msg("unable to get authenticated user from context")
+            return privacy.Skipf("unable to get authenticated user from context")
         }
 
         var objectID string
@@ -98,8 +110,9 @@ var (
             {{- end }}
             ObjectType:  "{{ $objectType | ToLower }}",
             SubjectType: auth.GetAuthzSubjectType(ctx),
-            SubjectID: subjectID,
+            SubjectID: au.SubjectID,
             ObjectID: objectID,
+            Context: newOrganizationContextKey(au.SubjectEmail),
         }
 
         access, err := q.Authz.CheckAccess(ctx, ac)
@@ -191,9 +204,10 @@ var (
             return privacy.Allowf("nil request, bypassing auth check")
         }
 
-        subjectID, err := auth.GetSubjectIDFromContext(ctx)
+        au, err := auth.GetAuthenticatedUserFromContext(ctx)
         if err != nil {
-            return err
+            log.Error().Err(err).Msg("unable to get authenticated user from context")
+            return privacy.Skipf("unable to get authenticated user from context")
         }
 
         ac := fgax.AccessCheck{
@@ -201,7 +215,8 @@ var (
             ObjectType:  "{{ $objectType | ToLower }}",
             ObjectID: objectID,
             SubjectType: auth.GetAuthzSubjectType(ctx),
-            SubjectID: subjectID,
+            SubjectID: au.SubjectID,
+            Context: newOrganizationContextKey(au.SubjectEmail),
         }
 
         log.Debug().Interface("access_check", ac).Msg("checking relationship tuples")
@@ -232,11 +247,10 @@ var (
             return privacy.Allowf("nil request, bypassing auth check")
         }
 
-        subjectID, err := auth.GetSubjectIDFromContext(ctx)
+        au, err := auth.GetAuthenticatedUserFromContext(ctx)
         if err != nil {
-            log.Error().Err(err).Msg("unable to get user id from context")
-
-            return err
+            log.Error().Err(err).Msg("unable to get authenticated user from context")
+            return privacy.Skipf("unable to get authenticated user from context")
         }
 
         ac := fgax.AccessCheck{
@@ -244,7 +258,8 @@ var (
             ObjectType:  "{{ $objectType | ToLower }}",
             ObjectID: objectID,
             SubjectType: auth.GetAuthzSubjectType(ctx),
-            SubjectID: subjectID,
+            SubjectID: au.SubjectID,
+            Context: newOrganizationContextKey(au.SubjectEmail),
         }
 
         log.Debug().Interface("access_check", ac).Msg("checking relationship tuples")
