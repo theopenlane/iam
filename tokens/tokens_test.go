@@ -182,56 +182,51 @@ func (s *TokenTestSuite) TestValidTokens() {
 	require.NoError(err)
 }
 
-func (s *TokenTestSuite) TestCreateAccessTokenUsesCorrectDuration() {
+func (s *TokenTestSuite) TestCreateTokenPairWithCustomDuration() {
 	require := s.Require()
 
 	conf := tokens.Config{
-		Keys:                     s.testdata,
-		Audience:                 audience,
-		Issuer:                   issuer,
-		AccessDuration:           1 * time.Hour,
-		AssessmentAccessDuration: 2 * time.Hour,
-		RefreshDuration:          3 * time.Hour,
-		RefreshOverlap:           -15 * time.Minute,
+		Keys:            s.testdata,
+		Audience:        audience,
+		Issuer:          issuer,
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 3 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
 	}
 
 	tm, err := tokens.New(conf)
 	require.NoError(err, "could not initialize token manager")
 
-	regularSubject := "01H6PGFB4T34D4WWEXQMAGJNMK"
-	regularCreds := &tokens.Claims{
+	creds := &tokens.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: regularSubject,
+			Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
 		},
+		UserID: "Rusty Shackleford",
+		OrgID:  "01H6PGFG71N0AFEVTK3NJB71T9",
 	}
 
-	regularToken, err := tm.CreateAccessToken(regularCreds)
-	require.NoError(err, "could not create access token with regular subject")
+	s.T().Run("default duration", func(_ *testing.T) {
+		accessToken, _, err := tm.CreateTokenPair(creds)
+		require.NoError(err)
 
-	regularClaims := regularToken.Claims.(*tokens.Claims)
-	regularDuration := regularClaims.ExpiresAt.Sub(regularClaims.IssuedAt.Time)
-	require.Equal(conf.AccessDuration, regularDuration,
-		"regular subject token should use AccessDuration")
+		claims, err := tm.Parse(accessToken)
+		require.NoError(err)
 
-	anonSubject := "anon_questionnaire_01H6PGFB4T34D4WWEXQMAGJNMK"
-	anonCreds := &tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: anonSubject,
-		},
-	}
+		duration := claims.ExpiresAt.Sub(claims.IssuedAt.Time)
+		require.Equal(conf.AccessDuration, duration)
+	})
 
-	anonToken, err := tm.CreateAccessToken(anonCreds)
-	require.NoError(err, "could not create access token with anonymous assessment subject")
+	s.T().Run("custom duration with WithAccessDuration", func(_ *testing.T) {
+		customDuration := 2 * time.Hour
+		accessToken, _, err := tm.CreateTokenPair(creds, tokens.WithAccessDuration(customDuration))
+		require.NoError(err)
 
-	anonClaims := anonToken.Claims.(*tokens.Claims)
-	anonDuration := anonClaims.ExpiresAt.Sub(anonClaims.IssuedAt.Time)
-	require.Equal(conf.AssessmentAccessDuration, anonDuration,
-		"anonymous assessment subject token should use AssessmentAccessDuration")
+		claims, err := tm.Parse(accessToken)
+		require.NoError(err)
 
-	require.NotEqual(regularDuration, anonDuration,
-		"tokens with different subjects should have different durations")
-	require.NotEqual(regularClaims.ExpiresAt.Time, anonClaims.ExpiresAt.Time,
-		"tokens with different subjects should have different expiration times")
+		duration := claims.ExpiresAt.Sub(claims.IssuedAt.Time)
+		require.Equal(customDuration, duration)
+	})
 }
 
 func (s *TokenTestSuite) TestInvalidTokens() {

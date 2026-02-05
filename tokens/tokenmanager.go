@@ -363,11 +363,33 @@ func (tm *TokenManager) SuspendUserWithDuration(ctx context.Context, userID stri
 	return tm.SuspendUser(ctx, userID, duration)
 }
 
+// CreateTokenPairOption allows you configure token pair generations
+type CreateTokenPairOption func(*createTokenPairConfig)
+
+type createTokenPairConfig struct {
+	duration time.Duration
+}
+
+// WithAccessDuration sets a custom access token duration, it overrides the default value set in the config
+func WithAccessDuration(d time.Duration) CreateTokenPairOption {
+	return func(c *createTokenPairConfig) {
+		c.duration = d
+	}
+}
+
 // CreateTokenPair returns signed access and refresh tokens for the specified claims in one step since usually you want both access and refresh tokens at the same time
-func (tm *TokenManager) CreateTokenPair(claims *Claims) (accessToken, refreshToken string, err error) {
+func (tm *TokenManager) CreateTokenPair(claims *Claims, opts ...CreateTokenPairOption) (accessToken, refreshToken string, err error) {
 	var atk, rtk *jwt.Token
 
-	if atk, err = tm.CreateAccessToken(claims); err != nil {
+	cfg := &createTokenPairConfig{
+		duration: tm.conf.AccessDuration,
+	}
+
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	if atk, err = tm.createAccessTokenWithDuration(claims, cfg.duration); err != nil {
 		return "", "", fmt.Errorf("could not create access token: %w", err)
 	}
 
