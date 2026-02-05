@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -13,11 +14,6 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/lestrrat-go/jwx/v3/jwk"
 	"github.com/oklog/ulid/v2"
-)
-
-const (
-	// do not want to have the import core package
-	anonAssessmentJWTPrefix = "anon_questionnaire_"
 )
 
 // Issuer handles JWT token creation and signing. It manages signing keys and
@@ -145,17 +141,17 @@ func (i *Issuer) Sign(token *jwt.Token) (string, error) {
 
 // CreateAccessToken creates an access token from the provided claims.
 func (i *Issuer) CreateAccessToken(claims *Claims) (*jwt.Token, error) {
+	return i.createAccessTokenWithDuration(claims, i.conf.AccessDuration)
+}
+
+// createAccessTokenWithDuration creates an access token with a specified duration.
+func (i *Issuer) createAccessTokenWithDuration(claims *Claims, duration time.Duration) (*jwt.Token, error) {
 	now := time.Now()
 	sub := claims.Subject
 
 	kid, err := i.genKeyID()
 	if err != nil {
 		return nil, err
-	}
-
-	durationToAdd := i.conf.AccessDuration
-	if strings.HasPrefix(sub, anonAssessmentJWTPrefix) {
-		durationToAdd = i.conf.AssessmentAccessDuration
 	}
 
 	issueTime := jwt.NewNumericDate(now)
@@ -166,7 +162,7 @@ func (i *Issuer) CreateAccessToken(claims *Claims) (*jwt.Token, error) {
 		Issuer:    i.conf.Issuer,
 		IssuedAt:  issueTime,
 		NotBefore: issueTime,
-		ExpiresAt: jwt.NewNumericDate(now.Add(durationToAdd)),
+		ExpiresAt: jwt.NewNumericDate(now.Add(duration)),
 	}
 
 	return jwt.NewWithClaims(i.currentSigningMethod, claims), nil
@@ -412,18 +408,10 @@ func (i *Issuer) Config() Config {
 }
 
 // keyFunc is the jwt.Keyfunc used for token verification.
-func (i *Issuer) keyFunc(token *jwt.Token) (interface{}, error) {
+func (i *Issuer) keyFunc(token *jwt.Token) (any, error) {
 	alg := token.Method.Alg()
-	allowed := false
 
-	for _, allowedAlg := range allowedAlgorithms {
-		if alg == allowedAlg {
-			allowed = true
-			break
-		}
-	}
-
-	if !allowed {
+	if !slices.Contains(allowedAlgorithms, alg) {
 		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"]) //nolint:err113
 	}
 
