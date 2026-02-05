@@ -61,6 +61,8 @@ type Config struct {
 	APITokens APITokenConfig `json:"apitokens" koanf:"apitokens"`
 	// AssessmentAccessDuration represents the validity duration of the access token used for assessments
 	AssessmentAccessDuration time.Duration `json:"assessmentaccessduration" koanf:"assessmentaccessduration" default:"1h"`
+	// TrustCenterNDARequestAccessDuration represents the validity duration of the access token used for trust center NDA requests
+	TrustCenterNDARequestAccessDuration time.Duration `json:"trustcenterndarequestaccessduration" koanf:"trustcenterndarequestaccessduration" default:"1h"`
 }
 
 // RedisConfig contains Redis configuration for token security features
