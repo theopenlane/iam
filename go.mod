@@ -13,7 +13,7 @@ require (
 	github.com/google/go-github/v80 v80.0.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/gqlgo/gqlgenc v0.33.1
-	github.com/lestrrat-go/httprc/v3 v3.0.3
+	github.com/lestrrat-go/httprc/v3 v3.0.4
 	github.com/lestrrat-go/jwx/v3 v3.0.13
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/openfga/go-sdk v0.7.4
