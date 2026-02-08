@@ -1,11 +1,10 @@
 module github.com/theopenlane/iam
 
-go 1.25.5
+go 1.25.7
 
 require (
 	entgo.io/ent v0.14.5
 	github.com/99designs/gqlgen v0.17.86
-	github.com/Yamashou/gqlgenc v0.33.0
 	github.com/alicebob/miniredis/v2 v2.35.0
 	github.com/brianvoe/gofakeit/v7 v7.14.0
 	github.com/docker/docker v28.5.2+incompatible
@@ -13,6 +12,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v80 v80.0.0
 	github.com/gorilla/securecookie v1.1.2
+	github.com/gqlgo/gqlgenc v0.33.1
 	github.com/lestrrat-go/httprc/v3 v3.0.3
 	github.com/lestrrat-go/jwx/v3 v3.0.13
 	github.com/oklog/ulid/v2 v2.1.1
