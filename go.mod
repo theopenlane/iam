@@ -10,7 +10,7 @@ require (
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/go-webauthn/webauthn v0.15.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
-	github.com/google/go-github/v80 v80.0.0
+	github.com/google/go-github/v83 v83.0.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/gqlgo/gqlgenc v0.33.1
 	github.com/lestrrat-go/httprc/v3 v3.0.4
