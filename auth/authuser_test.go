@@ -405,6 +405,7 @@ func TestHasFullOrgWriteAccessFromContext(t *testing.T) {
 			if tc.au != nil {
 				ctx = auth.WithAuthenticatedUser(ctx, tc.au)
 			}
+
 			got := auth.HasFullOrgWriteAccessFromContext(ctx)
 			assert.Equal(t, tc.expectedHasFull, got)
 		})
