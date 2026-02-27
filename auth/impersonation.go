@@ -3,8 +3,6 @@ package auth
 import (
 	"context"
 	"time"
-
-	"github.com/theopenlane/utils/contextx"
 )
 
 // ImpersonationType represents the type of impersonation being performed
@@ -59,13 +57,13 @@ func (i *ImpersonationContext) HasScope(scope string) bool {
 	return false
 }
 
-// ImpersonatedUser extends AuthenticatedUser with impersonation information
+// ImpersonatedUser extends Caller with impersonation information
 type ImpersonatedUser struct {
-	*AuthenticatedUser
+	*Caller
 	// ImpersonationContext contains details about the active impersonation
 	ImpersonationContext *ImpersonationContext
-	// OriginalUser is the user who initiated the impersonation (support staff, etc.)
-	OriginalUser *AuthenticatedUser
+	// OriginalUser is the caller who initiated the impersonation (support staff, etc.)
+	OriginalUser *Caller
 }
 
 // IsImpersonated returns true if this user is being impersonated
@@ -88,28 +86,26 @@ func (i *ImpersonatedUser) CanPerformAction(scope string) bool {
 
 // WithImpersonatedUser sets an impersonated user in the context
 func WithImpersonatedUser(ctx context.Context, user *ImpersonatedUser) context.Context {
-	return contextx.With(ctx, user)
+	return ImpersonatedUserKey.Set(ctx, user)
 }
 
 // ImpersonatedUserFromContext retrieves an impersonated user from the context
 func ImpersonatedUserFromContext(ctx context.Context) (*ImpersonatedUser, bool) {
-	return contextx.From[*ImpersonatedUser](ctx)
+	return ImpersonatedUserKey.Get(ctx)
 }
 
 // MustImpersonatedUserFromContext retrieves an impersonated user from the context or panics
 func MustImpersonatedUserFromContext(ctx context.Context) *ImpersonatedUser {
-	return contextx.MustFrom[*ImpersonatedUser](ctx)
+	return ImpersonatedUserKey.MustGet(ctx)
 }
 
-// GetEffectiveUser returns the impersonated user if present, otherwise the regular authenticated user
-func GetEffectiveUser(ctx context.Context) (*AuthenticatedUser, bool) {
-	// First check for impersonated user
+// GetEffectiveUser returns the impersonated caller if present, otherwise the regular caller
+func GetEffectiveUser(ctx context.Context) (*Caller, bool) {
 	if impUser, ok := ImpersonatedUserFromContext(ctx); ok {
-		return impUser.AuthenticatedUser, true
+		return impUser.Caller, true
 	}
 
-	// Fall back to regular authenticated user
-	return AuthenticatedUserFromContext(ctx)
+	return CallerFromContext(ctx)
 }
 
 // ImpersonationAuditLog represents an audit log entry for impersonation events

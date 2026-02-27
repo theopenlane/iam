@@ -203,15 +203,16 @@ func TestGetSubscriptionFromContext(t *testing.T) {
 		})
 	}
 }
+
 func TestGetAuthzSubjectType(t *testing.T) {
 	testCases := []struct {
 		name     string
-		au       *auth.AuthenticatedUser
+		caller   *auth.Caller
 		expected string
 	}{
 		{
 			name: "jwt authentication",
-			au: &auth.AuthenticatedUser{
+			caller: &auth.Caller{
 				SubjectID:          ulids.New().String(),
 				AuthenticationType: auth.JWTAuthentication,
 			},
@@ -219,14 +220,15 @@ func TestGetAuthzSubjectType(t *testing.T) {
 		},
 		{
 			name: "api token authentication",
-			au: &auth.AuthenticatedUser{
+			caller: &auth.Caller{
 				SubjectID:          ulids.New().String(),
 				AuthenticationType: auth.APITokenAuthentication,
-			}, expected: auth.ServiceSubjectType,
+			},
+			expected: auth.ServiceSubjectType,
 		},
 		{
 			name: "PAT authentication",
-			au: &auth.AuthenticatedUser{
+			caller: &auth.Caller{
 				SubjectID:          ulids.New().String(),
 				AuthenticationType: auth.PATAuthentication,
 			},
@@ -234,12 +236,12 @@ func TestGetAuthzSubjectType(t *testing.T) {
 		},
 		{
 			name:     "no authentication",
-			au:       nil,
+			caller:   nil,
 			expected: "",
 		},
 		{
 			name:     "empty authentication",
-			au:       &auth.AuthenticatedUser{},
+			caller:   &auth.Caller{},
 			expected: "",
 		},
 	}
@@ -247,8 +249,8 @@ func TestGetAuthzSubjectType(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
-			if tc.au != nil {
-				ctx = auth.WithAuthenticatedUser(ctx, tc.au)
+			if tc.caller != nil {
+				ctx = auth.WithCaller(ctx, tc.caller)
 			}
 
 			got := auth.GetAuthzSubjectType(ctx)
@@ -257,15 +259,16 @@ func TestGetAuthzSubjectType(t *testing.T) {
 		})
 	}
 }
+
 func TestGetAuthTypeFromContext(t *testing.T) {
 	testCases := []struct {
 		name     string
-		au       *auth.AuthenticatedUser
+		caller   *auth.Caller
 		expected auth.AuthenticationType
 	}{
 		{
 			name: "jwt authentication",
-			au: &auth.AuthenticatedUser{
+			caller: &auth.Caller{
 				SubjectID:          ulids.New().String(),
 				AuthenticationType: auth.JWTAuthentication,
 			},
@@ -273,7 +276,7 @@ func TestGetAuthTypeFromContext(t *testing.T) {
 		},
 		{
 			name: "api token authentication",
-			au: &auth.AuthenticatedUser{
+			caller: &auth.Caller{
 				SubjectID:          ulids.New().String(),
 				AuthenticationType: auth.APITokenAuthentication,
 			},
@@ -281,7 +284,7 @@ func TestGetAuthTypeFromContext(t *testing.T) {
 		},
 		{
 			name: "PAT authentication",
-			au: &auth.AuthenticatedUser{
+			caller: &auth.Caller{
 				SubjectID:          ulids.New().String(),
 				AuthenticationType: auth.PATAuthentication,
 			},
@@ -289,12 +292,12 @@ func TestGetAuthTypeFromContext(t *testing.T) {
 		},
 		{
 			name:     "no authentication",
-			au:       nil,
+			caller:   nil,
 			expected: "",
 		},
 		{
 			name:     "empty authentication",
-			au:       &auth.AuthenticatedUser{},
+			caller:   &auth.Caller{},
 			expected: "",
 		},
 	}
@@ -302,8 +305,8 @@ func TestGetAuthTypeFromContext(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
-			if tc.au != nil {
-				ctx = auth.WithAuthenticatedUser(ctx, tc.au)
+			if tc.caller != nil {
+				ctx = auth.WithCaller(ctx, tc.caller)
 			}
 
 			got := auth.GetAuthTypeFromContext(ctx)
@@ -316,26 +319,22 @@ func TestGetAuthTypeFromContext(t *testing.T) {
 func TestIsSystemAdminFromContext(t *testing.T) {
 	testCases := []struct {
 		name     string
-		au       *auth.AuthenticatedUser
+		caller   *auth.Caller
 		expected bool
 	}{
 		{
-			name: "system admin",
-			au: &auth.AuthenticatedUser{
-				IsSystemAdmin: true,
-			},
+			name:     "system admin",
+			caller:   &auth.Caller{Capabilities: auth.CapSystemAdmin},
 			expected: true,
 		},
 		{
-			name: "not a system admin",
-			au: &auth.AuthenticatedUser{
-				IsSystemAdmin: false,
-			},
+			name:     "not a system admin",
+			caller:   &auth.Caller{},
 			expected: false,
 		},
 		{
 			name:     "no authenticated user",
-			au:       nil,
+			caller:   nil,
 			expected: false,
 		},
 	}
@@ -343,8 +342,8 @@ func TestIsSystemAdminFromContext(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
-			if tc.au != nil {
-				ctx = auth.WithAuthenticatedUser(ctx, tc.au)
+			if tc.caller != nil {
+				ctx = auth.WithCaller(ctx, tc.caller)
 			}
 
 			got := auth.IsSystemAdminFromContext(ctx)
@@ -353,48 +352,41 @@ func TestIsSystemAdminFromContext(t *testing.T) {
 		})
 	}
 }
+
 func TestHasFullOrgWriteAccessFromContext(t *testing.T) {
 	testCases := []struct {
 		name            string
-		au              *auth.AuthenticatedUser
+		caller          *auth.Caller
 		expectedHasFull bool
 	}{
 		{
-			name: "owner role",
-			au: &auth.AuthenticatedUser{
-				OrganizationRole: auth.OwnerRole,
-			},
+			name:            "owner role",
+			caller:          &auth.Caller{OrganizationRole: auth.OwnerRole},
 			expectedHasFull: true,
 		},
 		{
-			name: "super admin role",
-			au: &auth.AuthenticatedUser{
-				OrganizationRole: auth.SuperAdminRole,
-			},
+			name:            "super admin role",
+			caller:          &auth.Caller{OrganizationRole: auth.SuperAdminRole},
 			expectedHasFull: true,
 		},
 		{
-			name: "admin role",
-			au: &auth.AuthenticatedUser{
-				OrganizationRole: auth.AdminRole,
-			},
+			name:            "admin role",
+			caller:          &auth.Caller{OrganizationRole: auth.AdminRole},
 			expectedHasFull: false,
 		},
 		{
-			name: "member role",
-			au: &auth.AuthenticatedUser{
-				OrganizationRole: auth.MemberRole,
-			},
+			name:            "member role",
+			caller:          &auth.Caller{OrganizationRole: auth.MemberRole},
 			expectedHasFull: false,
 		},
 		{
 			name:            "no authenticated user",
-			au:              nil,
+			caller:          nil,
 			expectedHasFull: false,
 		},
 		{
 			name:            "empty role",
-			au:              &auth.AuthenticatedUser{},
+			caller:          &auth.Caller{},
 			expectedHasFull: false,
 		},
 	}
@@ -402,8 +394,8 @@ func TestHasFullOrgWriteAccessFromContext(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
-			if tc.au != nil {
-				ctx = auth.WithAuthenticatedUser(ctx, tc.au)
+			if tc.caller != nil {
+				ctx = auth.WithCaller(ctx, tc.caller)
 			}
 
 			got := auth.HasFullOrgWriteAccessFromContext(ctx)

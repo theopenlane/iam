@@ -33,26 +33,7 @@ func newValidClaims(subject string) *tokens.Claims {
 	return claims
 }
 
-func NewTestContextWithValidUser(subject string) context.Context {
-	ec := echocontext.NewTestEchoContext()
-
-	claims := newValidClaims(subject)
-
-	SetAuthenticatedUserContext(ec, &AuthenticatedUser{
-		SubjectID:          claims.UserID,
-		OrganizationID:     claims.OrgID,
-		OrganizationIDs:    []string{claims.OrgID},
-		AuthenticationType: JWTAuthentication,
-	})
-
-	reqCtx := contextx.With(ec.Request().Context(), ec)
-
-	ec.SetRequest(ec.Request().WithContext(reqCtx))
-
-	return reqCtx
-}
-
-// newValidClaims returns claims with a fake orgID for testing purposes ONLY
+// newValidClaimsOrgID returns claims with a fake orgID for testing purposes ONLY
 func newValidClaimsOrgID(sub, orgID string) *tokens.Claims {
 	iat := time.Now()
 	nbf := iat
@@ -73,24 +54,44 @@ func newValidClaimsOrgID(sub, orgID string) *tokens.Claims {
 	return claims
 }
 
-// NewTestContextWithOrgID creates a context with a fake orgID for testing purposes only (why all caps jeez keep it down)
-func NewTestContextWithOrgID(sub, orgID string) context.Context {
+// NewTestContextWithValidUser creates a context with a valid user for testing purposes only
+func NewTestContextWithValidUser(subject string) context.Context {
 	ec := echocontext.NewTestEchoContext()
 
-	claims := newValidClaimsOrgID(sub, orgID)
+	claims := newValidClaims(subject)
 
-	SetAuthenticatedUserContext(ec, &AuthenticatedUser{
+	ctx := WithCaller(ec.Request().Context(), &Caller{
 		SubjectID:          claims.UserID,
 		OrganizationID:     claims.OrgID,
 		OrganizationIDs:    []string{claims.OrgID},
 		AuthenticationType: JWTAuthentication,
 	})
 
-	reqCtx := contextx.With(ec.Request().Context(), ec)
+	ctx = contextx.With(ctx, ec)
 
-	ec.SetRequest(ec.Request().WithContext(reqCtx))
+	ec.SetRequest(ec.Request().WithContext(ctx))
 
-	return reqCtx
+	return ctx
+}
+
+// NewTestContextWithOrgID creates a context with a fake orgID for testing purposes only
+func NewTestContextWithOrgID(sub, orgID string) context.Context {
+	ec := echocontext.NewTestEchoContext()
+
+	claims := newValidClaimsOrgID(sub, orgID)
+
+	ctx := WithCaller(ec.Request().Context(), &Caller{
+		SubjectID:          claims.UserID,
+		OrganizationID:     claims.OrgID,
+		OrganizationIDs:    []string{claims.OrgID},
+		AuthenticationType: JWTAuthentication,
+	})
+
+	ctx = contextx.With(ctx, ec)
+
+	ec.SetRequest(ec.Request().WithContext(ctx))
+
+	return ctx
 }
 
 // NewTestContextForSystemAdmin creates a context with a fake system admin user
@@ -99,19 +100,19 @@ func NewTestContextForSystemAdmin(sub, orgID string) context.Context {
 
 	claims := newValidClaimsOrgID(sub, orgID)
 
-	SetAuthenticatedUserContext(ec, &AuthenticatedUser{
+	ctx := WithCaller(ec.Request().Context(), &Caller{
 		SubjectID:          claims.UserID,
 		OrganizationID:     claims.OrgID,
 		OrganizationIDs:    []string{claims.OrgID},
 		AuthenticationType: JWTAuthentication,
-		IsSystemAdmin:      true,
+		Capabilities:       CapSystemAdmin,
 	})
 
-	reqCtx := contextx.With(ec.Request().Context(), ec)
+	ctx = contextx.With(ctx, ec)
 
-	ec.SetRequest(ec.Request().WithContext(reqCtx))
+	ec.SetRequest(ec.Request().WithContext(ctx))
 
-	return reqCtx
+	return ctx
 }
 
 // NewTestContextWithSubscription creates a context with an active subscription for testing purposes only
@@ -120,7 +121,7 @@ func NewTestContextWithSubscription(subscription bool) context.Context {
 
 	claims := newValidClaimsOrgID(ulids.New().String(), ulids.New().String())
 
-	SetAuthenticatedUserContext(ec, &AuthenticatedUser{
+	ctx := WithCaller(ec.Request().Context(), &Caller{
 		SubjectID:          claims.UserID,
 		OrganizationID:     claims.OrgID,
 		OrganizationIDs:    []string{claims.OrgID},
@@ -128,7 +129,9 @@ func NewTestContextWithSubscription(subscription bool) context.Context {
 		ActiveSubscription: subscription,
 	})
 
-	reqCtx := contextx.With(ec.Request().Context(), ec)
+	ctx = contextx.With(ctx, ec)
 
-	return reqCtx
+	ec.SetRequest(ec.Request().WithContext(ctx))
+
+	return ctx
 }

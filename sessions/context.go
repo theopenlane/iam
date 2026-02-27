@@ -5,18 +5,17 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/theopenlane/utils/contextx"
 	"golang.org/x/oauth2"
 )
 
 // ContextWithToken returns a copy of ctx that stores the Token
 func ContextWithToken(ctx context.Context, token *oauth2.Token) context.Context {
-	return contextx.With(ctx, token)
+	return oauthTokenContextKey.Set(ctx, token)
 }
 
 // OhAuthTokenFromContext returns the Token from the ctx
 func OhAuthTokenFromContext(ctx context.Context) (*oauth2.Token, error) {
-	token, ok := contextx.From[*oauth2.Token](ctx)
+	token, ok := oauthTokenContextKey.Get(ctx)
 	if !ok {
 		return nil, errors.New("context missing Token")
 	}
@@ -28,7 +27,7 @@ func OhAuthTokenFromContext(ctx context.Context) (*oauth2.Token, error) {
 func getSessionValue[T any](ctx context.Context) (T, error) {
 	var zero T
 
-	sessionDetails, ok := contextx.From[*Session[any]](ctx)
+	sessionDetails, ok := sessionDataContextKey.Get(ctx)
 	if !ok {
 		return zero, ErrInvalidSession
 	}
@@ -40,7 +39,7 @@ func getSessionValue[T any](ctx context.Context) (T, error) {
 		return zero, ErrInvalidSession
 	}
 
-	if value, ok := sessionData.(T); ok {
+	if value, ok := any(sessionData).(T); ok {
 		return value, nil
 	}
 
@@ -50,12 +49,17 @@ func getSessionValue[T any](ctx context.Context) (T, error) {
 // UserIDFromContext returns the user ID from the ctx
 // this function assumes the session data is stored in a string map
 func UserIDFromContext(ctx context.Context) (string, error) {
-	sessionMap, err := getSessionValue[map[string]string](ctx)
+	sessionMap, err := getSessionValue[map[string]any](ctx)
 	if err != nil {
 		return "", err
 	}
 
-	userID, ok := sessionMap["userID"]
+	rawUserID, ok := sessionMap["userID"]
+	if !ok {
+		return "", ErrInvalidSession
+	}
+
+	userID, ok := rawUserID.(string)
 	if !ok {
 		return "", ErrInvalidSession
 	}
@@ -71,7 +75,12 @@ func ContextWithUserID(ctx context.Context, userID UserID) context.Context {
 		return ctx
 	}
 
-	return contextx.With(ctx, userID)
+	return userIDContextKey.Set(ctx, userID)
+}
+
+// ContextUserIDFromContext returns the UserID stored by ContextWithUserID.
+func ContextUserIDFromContext(ctx context.Context) (UserID, bool) {
+	return userIDContextKey.Get(ctx)
 }
 
 // SessionToken returns the session token from the context
@@ -87,14 +96,19 @@ func SessionToken(ctx context.Context) (string, error) {
 	return sd.store.EncodeCookie(sd)
 }
 
-// addSessionDataToContext adds session data to the context
+// addSessionDataToContext adds session data to the context.
 func (s *Session[P]) addSessionDataToContext(ctx context.Context) context.Context {
-	return contextx.With(ctx, s)
+	sessionData, ok := any(s).(*Session[map[string]any])
+	if !ok {
+		return ctx
+	}
+
+	return sessionDataContextKey.Set(ctx, sessionData)
 }
 
 // getSessionDataFromContext retrieves session data from the context
 func getSessionDataFromContext(ctx context.Context) (*Session[map[string]any], error) {
-	sessionData, ok := contextx.From[*Session[map[string]any]](ctx)
+	sessionData, ok := sessionDataContextKey.Get(ctx)
 	if !ok {
 		return nil, errors.New("context missing session data")
 	}

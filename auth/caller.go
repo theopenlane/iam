@@ -90,9 +90,28 @@ func (c *Caller) CanAccessOrg(orgID string) bool {
 	return slices.Contains(c.OrgIDs(), orgID)
 }
 
+// SubjectType returns the FGA subject type for this caller based on the authentication type.
+// Returns UserSubjectType for JWT/PAT callers and ServiceSubjectType for API token callers.
+func (c *Caller) SubjectType() string {
+	switch c.AuthenticationType {
+	case JWTAuthentication, PATAuthentication:
+		return UserSubjectType
+	case APITokenAuthentication:
+		return ServiceSubjectType
+	default:
+		return ""
+	}
+}
+
 // IsImpersonated reports whether this Caller is acting on behalf of another user
 func (c *Caller) IsImpersonated() bool {
 	return c.Impersonation != nil
+}
+
+// IsAnonymous reports whether this Caller is an anonymous user (trust center visitor,
+// questionnaire respondent, etc.) with no standard authentication type
+func (c *Caller) IsAnonymous() bool {
+	return c.OrganizationRole == AnonymousRole
 }
 
 // WithCapabilities returns a copy of the Caller with the given capabilities added
@@ -185,28 +204,3 @@ func NewSystemAdminCaller(subjectID, subjectName, subjectEmail string) *Caller {
 	}
 }
 
-// CallerFromAuthenticatedUser converts an AuthenticatedUser to a Caller.
-// For use during migration — remove once all entry points produce Callers directly.
-func CallerFromAuthenticatedUser(u *AuthenticatedUser) *Caller {
-	if u == nil {
-		return nil
-	}
-
-	var caps Capability
-	if u.IsSystemAdmin {
-		caps |= CapSystemAdmin
-	}
-
-	return &Caller{
-		SubjectID:          u.SubjectID,
-		SubjectName:        u.SubjectName,
-		SubjectEmail:       u.SubjectEmail,
-		OrganizationID:     u.OrganizationID,
-		OrganizationName:   u.OrganizationName,
-		OrganizationIDs:    u.OrganizationIDs,
-		AuthenticationType: u.AuthenticationType,
-		OrganizationRole:   u.OrganizationRole,
-		ActiveSubscription: u.ActiveSubscription,
-		Capabilities:       caps,
-	}
-}

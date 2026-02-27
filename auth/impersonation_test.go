@@ -90,7 +90,7 @@ func TestImpersonatedUser(t *testing.T) {
 	t.Run("IsImpersonated", func(t *testing.T) {
 		// Not impersonated
 		user := &ImpersonatedUser{
-			AuthenticatedUser: &AuthenticatedUser{
+			Caller: &Caller{
 				SubjectID: "user123",
 			},
 			ImpersonationContext: nil,
@@ -114,7 +114,7 @@ func TestImpersonatedUser(t *testing.T) {
 			{
 				name: "not impersonated - always allowed",
 				user: &ImpersonatedUser{
-					AuthenticatedUser:    &AuthenticatedUser{},
+					Caller:               &Caller{},
 					ImpersonationContext: nil,
 				},
 				action: "anything",
@@ -123,7 +123,7 @@ func TestImpersonatedUser(t *testing.T) {
 			{
 				name: "impersonated with expired context",
 				user: &ImpersonatedUser{
-					AuthenticatedUser: &AuthenticatedUser{},
+					Caller: &Caller{},
 					ImpersonationContext: &ImpersonationContext{
 						ExpiresAt: time.Now().Add(-1 * time.Hour),
 						Scopes:    []string{"*"},
@@ -135,7 +135,7 @@ func TestImpersonatedUser(t *testing.T) {
 			{
 				name: "impersonated with valid scope",
 				user: &ImpersonatedUser{
-					AuthenticatedUser: &AuthenticatedUser{},
+					Caller: &Caller{},
 					ImpersonationContext: &ImpersonationContext{
 						ExpiresAt: time.Now().Add(1 * time.Hour),
 						Scopes:    []string{"read", "export"},
@@ -147,7 +147,7 @@ func TestImpersonatedUser(t *testing.T) {
 			{
 				name: "impersonated without required scope",
 				user: &ImpersonatedUser{
-					AuthenticatedUser: &AuthenticatedUser{},
+					Caller: &Caller{},
 					ImpersonationContext: &ImpersonationContext{
 						ExpiresAt: time.Now().Add(1 * time.Hour),
 						Scopes:    []string{"read"},
@@ -169,7 +169,7 @@ func TestImpersonatedUser(t *testing.T) {
 func TestWithImpersonatedUser(t *testing.T) {
 	ctx := context.Background()
 	user := &ImpersonatedUser{
-		AuthenticatedUser: &AuthenticatedUser{
+		Caller: &Caller{
 			SubjectID:    "user123",
 			SubjectEmail: "user@example.com",
 		},
@@ -185,7 +185,7 @@ func TestWithImpersonatedUser(t *testing.T) {
 			SessionID:         ulids.New().String(),
 			Scopes:            []string{"read", "debug"},
 		},
-		OriginalUser: &AuthenticatedUser{
+		OriginalUser: &Caller{
 			SubjectID:    "support123",
 			SubjectEmail: "support@example.com",
 		},
@@ -220,7 +220,7 @@ func TestGetEffectiveUser(t *testing.T) {
 	tests := []struct {
 		name     string
 		setupCtx func() context.Context
-		wantUser *AuthenticatedUser
+		wantUser *Caller
 		wantOk   bool
 	}{
 		{
@@ -228,14 +228,14 @@ func TestGetEffectiveUser(t *testing.T) {
 			setupCtx: func() context.Context {
 				ctx := context.Background()
 				impUser := &ImpersonatedUser{
-					AuthenticatedUser: &AuthenticatedUser{
+					Caller: &Caller{
 						SubjectID:    "target123",
 						SubjectEmail: "target@example.com",
 					},
 					ImpersonationContext: &ImpersonationContext{
 						Type: SupportImpersonation,
 					},
-					OriginalUser: &AuthenticatedUser{
+					OriginalUser: &Caller{
 						SubjectID:    "support123",
 						SubjectEmail: "support@example.com",
 					},
@@ -243,7 +243,7 @@ func TestGetEffectiveUser(t *testing.T) {
 
 				return WithImpersonatedUser(ctx, impUser)
 			},
-			wantUser: &AuthenticatedUser{
+			wantUser: &Caller{
 				SubjectID:    "target123",
 				SubjectEmail: "target@example.com",
 			},
@@ -253,14 +253,14 @@ func TestGetEffectiveUser(t *testing.T) {
 			name: "regular authenticated user context",
 			setupCtx: func() context.Context {
 				ctx := context.Background()
-				user := &AuthenticatedUser{
+				user := &Caller{
 					SubjectID:    "user123",
 					SubjectEmail: "user@example.com",
 				}
 
-				return WithAuthenticatedUser(ctx, user)
+				return WithCaller(ctx, user)
 			},
-			wantUser: &AuthenticatedUser{
+			wantUser: &Caller{
 				SubjectID:    "user123",
 				SubjectEmail: "user@example.com",
 			},

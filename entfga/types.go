@@ -5,12 +5,25 @@ import (
 
 	"entgo.io/ent"
 	"github.com/theopenlane/entx"
+	"github.com/theopenlane/utils/contextx"
 )
 
 // DeleteTuplesFirstKey is a key for the context to indicate that the the tuples should be deleted first
 // this is useful for delete operations where the policy should be checked before the tuples are deleted
 // of if its part of a bulk delete operation and the tuples should be deleted first
-type DeleteTuplesFirstKey struct{}
+var DeleteTuplesFirstKey = contextx.NewKey[struct{}]()
+
+// WithDeleteTuplesFirst marks ctx to delete FGA tuples before the mutation delete executes.
+func WithDeleteTuplesFirst(ctx context.Context) context.Context {
+	return DeleteTuplesFirstKey.Set(ctx, struct{}{})
+}
+
+// DeleteTuplesFirstFromContext reports whether tuple-first deletion has been enabled in ctx.
+func DeleteTuplesFirstFromContext(ctx context.Context) bool {
+	_, ok := DeleteTuplesFirstKey.Get(ctx)
+
+	return ok
+}
 
 // Mutation interface that all generated Mutation types must implement
 type Mutation interface {

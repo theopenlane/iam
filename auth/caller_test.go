@@ -381,71 +381,28 @@ func TestMustCallerFromContextPanicsWhenAbsent(t *testing.T) {
 	MustCallerFromContext(context.Background())
 }
 
-// TestCallerFromAuthenticatedUserAllFields verifies that every field from an
-// AuthenticatedUser is copied to the resulting Caller and that IsSystemAdmin
-// is converted to CapSystemAdmin.
-func TestCallerFromAuthenticatedUserAllFields(t *testing.T) {
-	u := &AuthenticatedUser{
-		SubjectID:          "u1",
-		SubjectName:        "Alice",
-		SubjectEmail:       "alice@example.com",
-		OrganizationID:     "org-1",
-		OrganizationName:   "Acme",
-		OrganizationIDs:    []string{"org-1", "org-2"},
-		AuthenticationType: JWTAuthentication,
-		OrganizationRole:   MemberRole,
-		ActiveSubscription: true,
-		IsSystemAdmin:      true,
+// TestWithOriginalSystemAdminCallerRoundTrip verifies storing/retrieving the
+// original system admin caller works.
+func TestWithOriginalSystemAdminCallerRoundTrip(t *testing.T) {
+	original := &Caller{SubjectID: "admin-1", Capabilities: CapSystemAdmin}
+	ctx := WithOriginalSystemAdminCaller(context.Background(), original)
+
+	got, ok := OriginalSystemAdminCallerFromContext(ctx)
+	if !ok {
+		t.Fatal("expected original system admin caller to be present")
 	}
 
-	c := CallerFromAuthenticatedUser(u)
-
-	if c.SubjectID != u.SubjectID {
-		t.Errorf("SubjectID: want %s, got %s", u.SubjectID, c.SubjectID)
-	}
-
-	if c.SubjectName != u.SubjectName {
-		t.Errorf("SubjectName: want %s, got %s", u.SubjectName, c.SubjectName)
-	}
-
-	if c.SubjectEmail != u.SubjectEmail {
-		t.Errorf("SubjectEmail: want %s, got %s", u.SubjectEmail, c.SubjectEmail)
-	}
-
-	if c.OrganizationID != u.OrganizationID {
-		t.Errorf("OrganizationID: want %s, got %s", u.OrganizationID, c.OrganizationID)
-	}
-
-	if c.OrganizationName != u.OrganizationName {
-		t.Errorf("OrganizationName: want %s, got %s", u.OrganizationName, c.OrganizationName)
-	}
-
-	if len(c.OrganizationIDs) != len(u.OrganizationIDs) {
-		t.Errorf("OrganizationIDs length: want %d, got %d", len(u.OrganizationIDs), len(c.OrganizationIDs))
-	}
-
-	if c.AuthenticationType != u.AuthenticationType {
-		t.Errorf("AuthenticationType: want %s, got %s", u.AuthenticationType, c.AuthenticationType)
-	}
-
-	if c.OrganizationRole != u.OrganizationRole {
-		t.Errorf("OrganizationRole: want %s, got %s", u.OrganizationRole, c.OrganizationRole)
-	}
-
-	if c.ActiveSubscription != u.ActiveSubscription {
-		t.Errorf("ActiveSubscription: want %v, got %v", u.ActiveSubscription, c.ActiveSubscription)
-	}
-
-	if !c.Has(CapSystemAdmin) {
-		t.Error("CallerFromAuthenticatedUser must set CapSystemAdmin when IsSystemAdmin is true")
+	if got != original {
+		t.Error("OriginalSystemAdminCallerFromContext must return the same pointer that was stored")
 	}
 }
 
-// TestCallerFromAuthenticatedUserNil verifies that a nil AuthenticatedUser
-// input returns a nil Caller.
-func TestCallerFromAuthenticatedUserNil(t *testing.T) {
-	if got := CallerFromAuthenticatedUser(nil); got != nil {
-		t.Errorf("expected nil for nil input, got %v", got)
+// TestOriginalSystemAdminCallerFromContextAbsent verifies false is returned
+// when no original admin caller is stored.
+func TestOriginalSystemAdminCallerFromContextAbsent(t *testing.T) {
+	_, ok := OriginalSystemAdminCallerFromContext(context.Background())
+	if ok {
+		t.Error("expected ok=false when no original system admin caller is in context")
 	}
 }
 
