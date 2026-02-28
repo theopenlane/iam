@@ -48,6 +48,7 @@ func GetSubjectIDFromContext(ctx context.Context) (string, error) {
 // GetOrganizationIDFromContext returns the organization ID from context
 func GetOrganizationIDFromContext(ctx context.Context) (string, error) {
 	var orgID string
+
 	if caller, ok := CallerFromContext(ctx); ok && caller != nil {
 		id, orgOk := caller.ActiveOrg()
 		if !orgOk {
@@ -55,10 +56,6 @@ func GetOrganizationIDFromContext(ctx context.Context) (string, error) {
 		}
 
 		orgID = id
-	} else if anon, ok := ContextValue(ctx, AnonymousTrustCenterUserKey); ok {
-		orgID = anon.OrganizationID
-	} else if anon, ok := ContextValue(ctx, AnonymousQuestionnaireUserKey); ok {
-		orgID = anon.OrganizationID
 	} else {
 		return "", ErrNoAuthUser
 	}
@@ -80,10 +77,6 @@ func GetOrganizationIDsFromContext(ctx context.Context) ([]string, error) {
 	var orgIDs []string
 	if caller, ok := CallerFromContext(ctx); ok && caller != nil {
 		orgIDs = caller.OrgIDs()
-	} else if anon, ok := ContextValue(ctx, AnonymousTrustCenterUserKey); ok {
-		orgIDs = []string{anon.OrganizationID}
-	} else if anon, ok := ContextValue(ctx, AnonymousQuestionnaireUserKey); ok {
-		orgIDs = []string{anon.OrganizationID}
 	} else {
 		return []string{}, ErrNoAuthUser
 	}
@@ -133,17 +126,45 @@ func IsAPITokenAuthentication(ctx context.Context) bool {
 // SetOrganizationIDInAuthContext sets the organization ID in the auth context
 // this should only be used when creating a new organization and subsequent updates
 // need to happen in the context of the new organization
-func SetOrganizationIDInAuthContext(ctx context.Context, orgID string) error {
+func SetOrganizationIDInAuthContext(ctx context.Context, orgID string) (context.Context, error) {
 	caller, ok := CallerFromContext(ctx)
 	if !ok || caller == nil {
-		return ErrNoAuthUser
+		return ctx, ErrNoAuthUser
 	}
 
 	caller.OrganizationID = orgID
 
-	WithCaller(ctx, caller)
+	return WithCaller(ctx, caller), nil
+}
 
-	return nil
+// ResolveOrganizationForContext resolves and sets the active organization ID in the context.
+// If inputOrgID is nil, it falls back to the single authorized org (e.g., for API tokens with one org).
+// Returns ErrNoOrganizationID if no org can be resolved, or ErrUnauthorizedOrg if the
+// provided org is not in the caller's authorized list.
+func ResolveOrganizationForContext(ctx context.Context, inputOrgID *string) (context.Context, error) {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
+		return ctx, ErrNoAuthUser
+	}
+
+	if inputOrgID == nil {
+		orgIDs := caller.OrgIDs()
+		if len(orgIDs) != 1 || orgIDs[0] == "" {
+			return ctx, ErrNoOrganizationID
+		}
+
+		caller.OrganizationID = orgIDs[0]
+
+		return WithCaller(ctx, caller), nil
+	}
+
+	if !slices.Contains(caller.OrgIDs(), *inputOrgID) {
+		return ctx, ErrUnauthorizedOrg
+	}
+
+	caller.OrganizationID = *inputOrgID
+
+	return WithCaller(ctx, caller), nil
 }
 
 // AddOrganizationIDToContext appends an authorized organization ID to the context.
@@ -151,31 +172,15 @@ func SetOrganizationIDInAuthContext(ctx context.Context, orgID string) error {
 // determined by the claims or the token. This is only used in cases where the
 // a user is newly authorized to an organization and the organization ID is not
 // in the token claims
-func AddOrganizationIDToContext(ctx context.Context, orgID string) error {
+func AddOrganizationIDToContext(ctx context.Context, orgID string) (context.Context, error) {
 	caller, ok := CallerFromContext(ctx)
 	if !ok || caller == nil {
-		return ErrNoAuthUser
+		return ctx, ErrNoAuthUser
 	}
 
 	caller.OrganizationIDs = append(caller.OrganizationIDs, orgID)
 
-	WithCaller(ctx, caller)
-
-	return nil
-}
-
-// AddSubscriptionToContext appends a subscription to the context
-func AddSubscriptionToContext(ctx context.Context, subscription bool) error {
-	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
-		return ErrNoAuthUser
-	}
-
-	caller.ActiveSubscription = subscription
-
-	WithCaller(ctx, caller)
-
-	return nil
+	return WithCaller(ctx, caller), nil
 }
 
 // GetSubscriptionFromContext returns the active subscription from the context
@@ -186,24 +191,6 @@ func GetSubscriptionFromContext(ctx context.Context) bool {
 	}
 
 	return caller.ActiveSubscription
-}
-
-// SetSystemAdminInContext sets the system admin flag in the context
-func SetSystemAdminInContext(ctx context.Context, isAdmin bool) error {
-	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
-		return ErrNoAuthUser
-	}
-
-	if isAdmin {
-		caller.Capabilities |= CapSystemAdmin
-	} else {
-		caller.Capabilities &^= CapSystemAdmin
-	}
-
-	WithCaller(ctx, caller)
-
-	return nil
 }
 
 // IsSystemAdminFromContext checks if the user is a system admin
@@ -226,28 +213,4 @@ func HasFullOrgWriteAccessFromContext(ctx context.Context) bool {
 	}
 
 	return caller.OrganizationRole == OwnerRole || caller.OrganizationRole == SuperAdminRole
-}
-
-// GetRoleFromContext returns the organization role from the context
-func GetRoleFromContext(ctx context.Context) OrganizationRoleType {
-	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
-		return ""
-	}
-
-	return caller.OrganizationRole
-}
-
-// SetOrganizationRoleInContext sets the organization role in the context
-func SetOrganizationRoleInContext(ctx context.Context, role OrganizationRoleType) error {
-	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
-		return ErrNoAuthUser
-	}
-
-	caller.OrganizationRole = role
-
-	WithCaller(ctx, caller)
-
-	return nil
 }

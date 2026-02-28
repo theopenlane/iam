@@ -13,11 +13,11 @@ var CallerKey = contextx.NewKey[*Caller]()
 // request is temporarily switched to run as another user.
 var OriginalSystemAdminCallerKey = contextx.NewKey[*Caller]()
 
-// AnonymousQuestionnaireUserKey stores and retrieves the anonymous questionnaire caller details.
-var AnonymousQuestionnaireUserKey = contextx.NewKey[*AnonymousQuestionnaireUser]()
+// ActiveTrustCenterIDKey stores the trust center ID for the current anonymous trust center request.
+var ActiveTrustCenterIDKey = contextx.NewKey[string]()
 
-// AnonymousTrustCenterUserKey stores and retrieves the anonymous trust center caller details.
-var AnonymousTrustCenterUserKey = contextx.NewKey[*AnonymousTrustCenterUser]()
+// ActiveAssessmentIDKey stores the assessment ID for the current anonymous questionnaire request.
+var ActiveAssessmentIDKey = contextx.NewKey[string]()
 
 // AccessTokenKey stores and retrieves the request access token.
 var AccessTokenKey = contextx.NewKey[string]()
@@ -27,9 +27,6 @@ var RefreshTokenKey = contextx.NewKey[string]()
 
 // RequestIDKey stores and retrieves the request ID.
 var RequestIDKey = contextx.NewKey[string]()
-
-// ImpersonatedUserKey stores and retrieves impersonated user context.
-var ImpersonatedUserKey = contextx.NewKey[*ImpersonatedUser]()
 
 // WithCaller stores c in ctx and returns the updated context
 func WithCaller(ctx context.Context, c *Caller) context.Context {
@@ -55,4 +52,34 @@ func WithOriginalSystemAdminCaller(ctx context.Context, c *Caller) context.Conte
 // ctx when present.
 func OriginalSystemAdminCallerFromContext(ctx context.Context) (*Caller, bool) {
 	return OriginalSystemAdminCallerKey.Get(ctx)
+}
+
+// WithAccessToken stores the request access token in ctx.
+func WithAccessToken(ctx context.Context, token string) context.Context {
+	return AccessTokenKey.Set(ctx, token)
+}
+
+// AccessTokenFromContext returns the request access token from ctx when present.
+func AccessTokenFromContext(ctx context.Context) (string, bool) {
+	return AccessTokenKey.Get(ctx)
+}
+
+// WithRefreshToken stores the request refresh token in ctx.
+func WithRefreshToken(ctx context.Context, token string) context.Context {
+	return RefreshTokenKey.Set(ctx, token)
+}
+
+// RefreshTokenFromContext returns the request refresh token from ctx when present.
+func RefreshTokenFromContext(ctx context.Context) (string, bool) {
+	return RefreshTokenKey.Get(ctx)
+}
+
+// WithRequestID stores the request ID in ctx.
+func WithRequestID(ctx context.Context, requestID string) context.Context {
+	return RequestIDKey.Set(ctx, requestID)
+}
+
+// RequestIDFromContext returns the request ID from ctx when present.
+func RequestIDFromContext(ctx context.Context) (string, bool) {
+	return RequestIDKey.Get(ctx)
 }

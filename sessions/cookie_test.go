@@ -338,6 +338,55 @@ func TestSetCookie(t *testing.T) {
 	assert.Equal(t, config.SameSite, cookie.SameSite)
 }
 
+func TestSetCookies(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	config := sessions.CookieConfig{
+		Path:     "/",
+		MaxAge:   3600,
+		HTTPOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	}
+
+	sessions.SetCookies(recorder, config, map[string]string{
+		"first":  "one",
+		"second": "two",
+		"empty":  "",
+		"":       "missing-name",
+	})
+
+	cookieMap := map[string]*http.Cookie{}
+	for _, c := range recorder.Result().Cookies() {
+		cookieMap[c.Name] = c
+	}
+
+	assert.Len(t, cookieMap, 2)
+	assert.Equal(t, "one", cookieMap["first"].Value)
+	assert.Equal(t, "two", cookieMap["second"].Value)
+}
+
+func TestCopyCookiesFromRequest(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: "copy_me", Value: "copied"})
+	req.AddCookie(&http.Cookie{Name: "empty", Value: ""})
+
+	config := sessions.CookieConfig{
+		Path:     "/",
+		MaxAge:   3600,
+		HTTPOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	}
+
+	sessions.CopyCookiesFromRequest(req, recorder, config, "copy_me", "missing", "", "empty")
+
+	cookies := recorder.Result().Cookies()
+	assert.Len(t, cookies, 1)
+	assert.Equal(t, "copy_me", cookies[0].Name)
+	assert.Equal(t, "copied", cookies[0].Value)
+}
+
 func TestRemoveCookie(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	cookieName := "test-cookie"
@@ -359,6 +408,28 @@ func TestRemoveCookie(t *testing.T) {
 	assert.Equal(t, cookieName, cookie.Name)
 	assert.Equal(t, "", cookie.Value)
 	assert.Equal(t, -1, cookie.MaxAge)
+}
+
+func TestRemoveCookies(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	config := sessions.CookieConfig{
+		Path:     "/",
+		MaxAge:   3600,
+		HTTPOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	}
+
+	sessions.RemoveCookies(recorder, config, "first", "", "second")
+
+	cookieMap := map[string]*http.Cookie{}
+	for _, c := range recorder.Result().Cookies() {
+		cookieMap[c.Name] = c
+	}
+
+	assert.Len(t, cookieMap, 2)
+	assert.Equal(t, -1, cookieMap["first"].MaxAge)
+	assert.Equal(t, -1, cookieMap["second"].MaxAge)
 }
 
 func TestCookieConfigDefaults(t *testing.T) {

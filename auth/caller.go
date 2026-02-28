@@ -203,4 +203,3 @@ func NewSystemAdminCaller(subjectID, subjectName, subjectEmail string) *Caller {
 		Capabilities:       CapBypassOrgFilter | CapBypassFGA | CapBypassFeatureCheck | CapInternalOperation | CapSystemAdmin,
 	}
 }
-

@@ -165,12 +165,6 @@ func newOrganizationContextKey(e string) *map[string]any {
             return privacy.Skipf("not a graphql request, no context to check")
         }
 
-        caller, ok := auth.CallerFromContext(ctx)
-        if !ok || caller == nil {
-            log.Error().Msg("unable to get caller from context")
-            return privacy.Skipf("unable to get caller from context")
-        }
-
         {{ if hasCreateID $n.Annotations.Authz.IDField }}
         // get the input from the context
         gInput := gCtx.Args["input"]
@@ -214,7 +208,8 @@ func newOrganizationContextKey(e string) *map[string]any {
             return privacy.Allowf("nil request, bypassing auth check")
         }
 
-        if caller == nil {
+        caller, ok := auth.CallerFromContext(ctx)
+        if !ok || caller == nil {
             log.Error().Msg("unable to get caller from context")
             return privacy.Skipf("unable to get caller from context")
         }

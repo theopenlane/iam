@@ -3,7 +3,6 @@ package auth
 import (
 	"net/http"
 	"regexp"
-	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	echo "github.com/theopenlane/echox"
@@ -117,23 +116,12 @@ func SetAuthCookies(w http.ResponseWriter, accessToken, refreshToken string, c s
 // ClearAuthCookies is a helper function to clear authentication cookies on a echo
 // request to effectively logger out a user.
 func ClearAuthCookies(w http.ResponseWriter) {
-	sessions.RemoveCookie(w, AccessTokenCookie, *sessions.DefaultCookieConfig)
-	sessions.RemoveCookie(w, RefreshTokenCookie, *sessions.DefaultCookieConfig)
+	sessions.RemoveCookies(w, *sessions.DefaultCookieConfig, AccessTokenCookie, RefreshTokenCookie)
 }
 
 // CookieExpired checks to see if a cookie is expired
 func CookieExpired(cookie *http.Cookie) bool {
-	// ensure cookie is not expired
-	if !cookie.Expires.IsZero() && cookie.Expires.Before(time.Now()) {
-		return true
-	}
-
-	// negative max age means to expire immediately
-	if cookie.MaxAge < 0 {
-		return true
-	}
-
-	return false
+	return sessions.CookieExpired(cookie)
 }
 
 // GetImpersonationToken retrieves the impersonation token from the authorization header

@@ -109,7 +109,7 @@ func TestGetOrganizationIDsFromContext(t *testing.T) {
 
 	multiOrgValidCtx := auth.NewTestContextWithOrgID(ulids.New().String(), orgID1)
 
-	err := auth.AddOrganizationIDToContext(multiOrgValidCtx, orgID2)
+	multiOrgValidCtx, err := auth.AddOrganizationIDToContext(multiOrgValidCtx, orgID2)
 	assert.NoError(t, err)
 
 	invalidUserCtx := auth.NewTestContextWithOrgID(ulids.Null.String(), ulids.Null.String())
@@ -163,43 +163,6 @@ func TestGetOrganizationIDsFromContext(t *testing.T) {
 			if tc.numExpected > 1 {
 				assert.Contains(t, got, orgID2)
 			}
-		})
-	}
-}
-
-func TestGetSubscriptionFromContext(t *testing.T) {
-	validSubscription := true
-	invalidSubscription := false
-
-	validCtx := auth.NewTestContextWithValidUser(ulids.New().String())
-	if err := auth.AddSubscriptionToContext(validCtx, true); err != nil {
-		t.Fatal(err)
-	}
-
-	invalidCtx := auth.NewTestContextWithValidUser(ulids.Null.String())
-
-	testCases := []struct {
-		name   string
-		ctx    context.Context
-		expect bool
-	}{
-		{
-			name:   "happy path",
-			ctx:    invalidCtx,
-			expect: invalidSubscription,
-		},
-		{
-			name:   "MITB BABBYYYYY",
-			ctx:    validCtx,
-			expect: validSubscription,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run("Get "+tc.name, func(t *testing.T) {
-			got := auth.GetSubscriptionFromContext(tc.ctx)
-
-			assert.Equal(t, tc.expect, got)
 		})
 	}
 }

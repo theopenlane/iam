@@ -57,54 +57,22 @@ func (i *ImpersonationContext) HasScope(scope string) bool {
 	return false
 }
 
-// ImpersonatedUser extends Caller with impersonation information
-type ImpersonatedUser struct {
-	*Caller
-	// ImpersonationContext contains details about the active impersonation
-	ImpersonationContext *ImpersonationContext
-	// OriginalUser is the caller who initiated the impersonation (support staff, etc.)
-	OriginalUser *Caller
-}
-
-// IsImpersonated returns true if this user is being impersonated
-func (i *ImpersonatedUser) IsImpersonated() bool {
-	return i.ImpersonationContext != nil
-}
-
-// CanPerformAction checks if the current impersonation allows a specific action
-func (i *ImpersonatedUser) CanPerformAction(scope string) bool {
-	if !i.IsImpersonated() {
+// CanPerformAction checks whether this caller's impersonation context allows a specific action.
+// Non-impersonated callers are always allowed.
+func (c *Caller) CanPerformAction(scope string) bool {
+	if c == nil || c.Impersonation == nil {
 		return true // Not impersonated, normal user permissions apply
 	}
 
-	if i.ImpersonationContext.IsExpired() {
+	if c.Impersonation.IsExpired() {
 		return false // Impersonation has expired
 	}
 
-	return i.ImpersonationContext.HasScope(scope)
-}
-
-// WithImpersonatedUser sets an impersonated user in the context
-func WithImpersonatedUser(ctx context.Context, user *ImpersonatedUser) context.Context {
-	return ImpersonatedUserKey.Set(ctx, user)
-}
-
-// ImpersonatedUserFromContext retrieves an impersonated user from the context
-func ImpersonatedUserFromContext(ctx context.Context) (*ImpersonatedUser, bool) {
-	return ImpersonatedUserKey.Get(ctx)
-}
-
-// MustImpersonatedUserFromContext retrieves an impersonated user from the context or panics
-func MustImpersonatedUserFromContext(ctx context.Context) *ImpersonatedUser {
-	return ImpersonatedUserKey.MustGet(ctx)
+	return c.Impersonation.HasScope(scope)
 }
 
 // GetEffectiveUser returns the impersonated caller if present, otherwise the regular caller
 func GetEffectiveUser(ctx context.Context) (*Caller, bool) {
-	if impUser, ok := ImpersonatedUserFromContext(ctx); ok {
-		return impUser.Caller, true
-	}
-
 	return CallerFromContext(ctx)
 }
 
