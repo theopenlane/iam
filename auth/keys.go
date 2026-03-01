@@ -9,10 +9,6 @@ import (
 // CallerKey is the context key for storing and retrieving a *Caller
 var CallerKey = contextx.NewKey[*Caller]()
 
-// OriginalSystemAdminCallerKey stores the original system-admin caller when a
-// request is temporarily switched to run as another user.
-var OriginalSystemAdminCallerKey = contextx.NewKey[*Caller]()
-
 // ActiveTrustCenterIDKey stores the trust center ID for the current anonymous trust center request.
 var ActiveTrustCenterIDKey = contextx.NewKey[string]()
 
@@ -45,13 +41,32 @@ func MustCallerFromContext(ctx context.Context) *Caller {
 
 // WithOriginalSystemAdminCaller stores the original admin caller in ctx.
 func WithOriginalSystemAdminCaller(ctx context.Context, c *Caller) context.Context {
-	return OriginalSystemAdminCallerKey.Set(ctx, c)
+	if c == nil {
+		return ctx
+	}
+
+	current, ok := CallerFromContext(ctx)
+	if !ok || current == nil {
+		return WithCaller(ctx, &Caller{
+			OriginalSystemAdmin: c,
+		})
+	}
+
+	updated := *current
+	updated.OriginalSystemAdmin = c
+
+	return WithCaller(ctx, &updated)
 }
 
 // OriginalSystemAdminCallerFromContext returns the original admin caller from
 // ctx when present.
 func OriginalSystemAdminCallerFromContext(ctx context.Context) (*Caller, bool) {
-	return OriginalSystemAdminCallerKey.Get(ctx)
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil || caller.OriginalSystemAdmin == nil {
+		return nil, false
+	}
+
+	return caller.OriginalSystemAdmin, true
 }
 
 // WithAccessToken stores the request access token in ctx.

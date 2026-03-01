@@ -406,6 +406,33 @@ func TestOriginalSystemAdminCallerFromContextAbsent(t *testing.T) {
 	}
 }
 
+// TestWithOriginalSystemAdminCallerPreservesActiveCaller verifies attaching the
+// original admin caller does not replace the active caller identity.
+func TestWithOriginalSystemAdminCallerPreservesActiveCaller(t *testing.T) {
+	active := &Caller{SubjectID: "user-1"}
+	original := &Caller{SubjectID: "admin-1", Capabilities: CapSystemAdmin}
+
+	ctx := WithCaller(context.Background(), active)
+	ctx = WithOriginalSystemAdminCaller(ctx, original)
+
+	got, ok := CallerFromContext(ctx)
+	if !ok || got == nil {
+		t.Fatal("expected active caller to be present")
+	}
+
+	if got.SubjectID != "user-1" {
+		t.Fatalf("expected active caller subject user-1, got %s", got.SubjectID)
+	}
+
+	if !got.HasInLineage(CapSystemAdmin) {
+		t.Fatal("expected lineage to include system admin capability")
+	}
+
+	if got.Has(CapSystemAdmin) {
+		t.Fatal("expected active caller capabilities to remain unchanged")
+	}
+}
+
 // TestNewWebhookCaller verifies the org scope, required capabilities, and
 // explicitly absent capabilities for webhook callers.
 func TestNewWebhookCaller(t *testing.T) {

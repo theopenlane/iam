@@ -5,7 +5,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/theopenlane/utils/keygen"
+	"github.com/theopenlane/iam/auth"
 
 	"github.com/theopenlane/iam/sessions"
 )
@@ -21,7 +21,14 @@ func StateHandler(config sessions.CookieConfig, success http.Handler) http.Handl
 		if queryParams.Get("state") != "" {
 			ctx = WithState(ctx, queryParams.Get("state"))
 		} else {
-			val := keygen.GenerateRandomString(32) //nolint:mnd
+			val, err := auth.GenerateOAuthState(32) //nolint:mnd
+			if err != nil {
+				ctx = WithError(ctx, ErrFailedToGenerateToken)
+				DefaultFailureHandler.ServeHTTP(w, req.WithContext(ctx))
+
+				return
+			}
+
 			http.SetCookie(w, sessions.NewCookie(config.Name, val, &config))
 			ctx = WithState(ctx, val)
 		}

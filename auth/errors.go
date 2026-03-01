@@ -35,4 +35,6 @@ var (
 	ErrNoOrganizationID = errors.New("no organization ID found in context or input")
 	// ErrUnauthorizedOrg is returned when the provided organization ID is not in the caller's authorized list
 	ErrUnauthorizedOrg = errors.New("organization is not authorized for the current caller")
+	// ErrRandomStateGeneration is returned when random OAuth state generation fails
+	ErrRandomStateGeneration = errors.New("oauth state generation failed")
 )

@@ -143,7 +143,7 @@ func TestCallerCanPerformAction(t *testing.T) {
 	}
 }
 
-func TestGetEffectiveUser(t *testing.T) {
+func TestCallerFromContextWithImpersonation(t *testing.T) {
 	tests := []struct {
 		name     string
 		setupCtx func() context.Context
@@ -181,7 +181,7 @@ func TestGetEffectiveUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := tt.setupCtx()
-			user, ok := GetEffectiveUser(ctx)
+			user, ok := CallerFromContext(ctx)
 			assert.Equal(t, tt.wantOk, ok)
 
 			if tt.wantOk {

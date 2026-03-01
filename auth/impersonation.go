@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"context"
+	"slices"
 	"time"
 )
 
@@ -48,13 +48,9 @@ func (i *ImpersonationContext) IsExpired() bool {
 
 // HasScope checks if the impersonation session allows a specific scope
 func (i *ImpersonationContext) HasScope(scope string) bool {
-	for _, s := range i.Scopes {
-		if s == scope || s == "*" {
-			return true
-		}
-	}
-
-	return false
+	return slices.ContainsFunc(i.Scopes, func(s string) bool {
+		return s == scope || s == "*"
+	})
 }
 
 // CanPerformAction checks whether this caller's impersonation context allows a specific action.
@@ -69,11 +65,6 @@ func (c *Caller) CanPerformAction(scope string) bool {
 	}
 
 	return c.Impersonation.HasScope(scope)
-}
-
-// GetEffectiveUser returns the impersonated caller if present, otherwise the regular caller
-func GetEffectiveUser(ctx context.Context) (*Caller, bool) {
-	return CallerFromContext(ctx)
 }
 
 // ImpersonationAuditLog represents an audit log entry for impersonation events

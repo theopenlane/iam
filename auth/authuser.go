@@ -74,12 +74,13 @@ func GetOrganizationIDFromContext(ctx context.Context) (string, error) {
 
 // GetOrganizationIDsFromContext returns the organization IDs from context
 func GetOrganizationIDsFromContext(ctx context.Context) ([]string, error) {
-	var orgIDs []string
-	if caller, ok := CallerFromContext(ctx); ok && caller != nil {
-		orgIDs = caller.OrgIDs()
-	} else {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
 		return []string{}, ErrNoAuthUser
 	}
+
+	orgIDs := caller.OrgIDs()
+	valid := make([]string, 0, len(orgIDs))
 
 	for _, orgID := range orgIDs {
 		oID, err := ulids.Parse(orgID)
@@ -87,14 +88,12 @@ func GetOrganizationIDsFromContext(ctx context.Context) ([]string, error) {
 			return []string{}, err
 		}
 
-		if ulids.IsZero(oID) {
-			orgIDs = slices.DeleteFunc(orgIDs, func(s string) bool {
-				return s == orgID
-			})
+		if !ulids.IsZero(oID) {
+			valid = append(valid, orgID)
 		}
 	}
 
-	return orgIDs, nil
+	return valid, nil
 }
 
 // GetAuthTypeFromContext retrieves the authentication type from the context if it was set
@@ -212,5 +211,5 @@ func HasFullOrgWriteAccessFromContext(ctx context.Context) bool {
 		return false
 	}
 
-	return caller.OrganizationRole == OwnerRole || caller.OrganizationRole == SuperAdminRole
+	return caller.OrganizationRole.HasFullWriteAccess()
 }
