@@ -1,10 +1,8 @@
 package auth
 
 import (
-	"context"
+	"slices"
 	"time"
-
-	"github.com/theopenlane/utils/contextx"
 )
 
 // ImpersonationType represents the type of impersonation being performed
@@ -50,66 +48,23 @@ func (i *ImpersonationContext) IsExpired() bool {
 
 // HasScope checks if the impersonation session allows a specific scope
 func (i *ImpersonationContext) HasScope(scope string) bool {
-	for _, s := range i.Scopes {
-		if s == scope || s == "*" {
-			return true
-		}
-	}
-
-	return false
+	return slices.ContainsFunc(i.Scopes, func(s string) bool {
+		return s == scope || s == "*"
+	})
 }
 
-// ImpersonatedUser extends AuthenticatedUser with impersonation information
-type ImpersonatedUser struct {
-	*AuthenticatedUser
-	// ImpersonationContext contains details about the active impersonation
-	ImpersonationContext *ImpersonationContext
-	// OriginalUser is the user who initiated the impersonation (support staff, etc.)
-	OriginalUser *AuthenticatedUser
-}
-
-// IsImpersonated returns true if this user is being impersonated
-func (i *ImpersonatedUser) IsImpersonated() bool {
-	return i.ImpersonationContext != nil
-}
-
-// CanPerformAction checks if the current impersonation allows a specific action
-func (i *ImpersonatedUser) CanPerformAction(scope string) bool {
-	if !i.IsImpersonated() {
+// CanPerformAction checks whether this caller's impersonation context allows a specific action.
+// Non-impersonated callers are always allowed.
+func (c *Caller) CanPerformAction(scope string) bool {
+	if c == nil || c.Impersonation == nil {
 		return true // Not impersonated, normal user permissions apply
 	}
 
-	if i.ImpersonationContext.IsExpired() {
+	if c.Impersonation.IsExpired() {
 		return false // Impersonation has expired
 	}
 
-	return i.ImpersonationContext.HasScope(scope)
-}
-
-// WithImpersonatedUser sets an impersonated user in the context
-func WithImpersonatedUser(ctx context.Context, user *ImpersonatedUser) context.Context {
-	return contextx.With(ctx, user)
-}
-
-// ImpersonatedUserFromContext retrieves an impersonated user from the context
-func ImpersonatedUserFromContext(ctx context.Context) (*ImpersonatedUser, bool) {
-	return contextx.From[*ImpersonatedUser](ctx)
-}
-
-// MustImpersonatedUserFromContext retrieves an impersonated user from the context or panics
-func MustImpersonatedUserFromContext(ctx context.Context) *ImpersonatedUser {
-	return contextx.MustFrom[*ImpersonatedUser](ctx)
-}
-
-// GetEffectiveUser returns the impersonated user if present, otherwise the regular authenticated user
-func GetEffectiveUser(ctx context.Context) (*AuthenticatedUser, bool) {
-	// First check for impersonated user
-	if impUser, ok := ImpersonatedUserFromContext(ctx); ok {
-		return impUser.AuthenticatedUser, true
-	}
-
-	// Fall back to regular authenticated user
-	return AuthenticatedUserFromContext(ctx)
+	return c.Impersonation.HasScope(scope)
 }
 
 // ImpersonationAuditLog represents an audit log entry for impersonation events

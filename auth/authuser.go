@@ -15,39 +15,25 @@ const (
 	ServiceSubjectType = "service"
 )
 
-// GetAuthenticatedUserFromContext attempts to retrieve the authenticated user from the context
-// and will return an error if the user is not found
-func GetAuthenticatedUserFromContext(ctx context.Context) (*AuthenticatedUser, error) {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
-		return nil, ErrNoAuthUser
-	}
-
-	return au, nil
-}
-
 // GetAuthzSubjectType returns the subject type based on the authentication type
 func GetAuthzSubjectType(ctx context.Context) string {
-	switch GetAuthTypeFromContext(ctx) {
-	case JWTAuthentication, PATAuthentication:
-		return UserSubjectType
-	case APITokenAuthentication:
-		return ServiceSubjectType
-	default:
-		// if there is no authenticated user an empty string is returned
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
 		return ""
 	}
+
+	return caller.SubjectType()
 }
 
 // GetSubjectIDFromContext returns the actor subject from the context
 // In most cases this will be the user ID, but in the case of an API token it will be the token ID
 func GetSubjectIDFromContext(ctx context.Context) (string, error) {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
 		return "", ErrNoAuthUser
 	}
 
-	uid, err := ulids.Parse(au.SubjectID)
+	uid, err := ulids.Parse(caller.SubjectID)
 	if err != nil {
 		return "", err
 	}
@@ -56,23 +42,22 @@ func GetSubjectIDFromContext(ctx context.Context) (string, error) {
 		return "", ErrNoAuthUser
 	}
 
-	return au.SubjectID, nil
+	return caller.SubjectID, nil
 }
 
 // GetOrganizationIDFromContext returns the organization ID from context
 func GetOrganizationIDFromContext(ctx context.Context) (string, error) {
 	var orgID string
-	if anon, ok := AnonymousTrustCenterUserFromContext(ctx); ok {
-		orgID = anon.OrganizationID
-	} else if anon, ok := AnonymousQuestionnaireUserFromContext(ctx); ok {
-		orgID = anon.OrganizationID
-	} else {
-		au, ok := AuthenticatedUserFromContext(ctx)
-		if !ok || au == nil {
+
+	if caller, ok := CallerFromContext(ctx); ok && caller != nil {
+		id, orgOk := caller.ActiveOrg()
+		if !orgOk {
 			return "", ErrNoAuthUser
 		}
 
-		orgID = au.OrganizationID
+		orgID = id
+	} else {
+		return "", ErrNoAuthUser
 	}
 
 	oID, err := ulids.Parse(orgID)
@@ -87,57 +72,48 @@ func GetOrganizationIDFromContext(ctx context.Context) (string, error) {
 	return orgID, nil
 }
 
-// GetOrganizationIDFromContext returns the organization ID from context
+// GetOrganizationIDsFromContext returns the organization IDs from context
 func GetOrganizationIDsFromContext(ctx context.Context) ([]string, error) {
-	var orgIDs []string
-	if anon, ok := AnonymousTrustCenterUserFromContext(ctx); ok {
-		orgIDs = []string{anon.OrganizationID}
-	} else if anon, ok := AnonymousQuestionnaireUserFromContext(ctx); ok {
-		orgIDs = []string{anon.OrganizationID}
-	} else {
-		au, ok := AuthenticatedUserFromContext(ctx)
-		if !ok || au == nil {
-			return []string{}, ErrNoAuthUser
-		}
-
-		orgIDs = au.OrganizationIDs
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
+		return []string{}, ErrNoAuthUser
 	}
 
-	// validate the organization IDs
+	orgIDs := caller.OrgIDs()
+	valid := make([]string, 0, len(orgIDs))
+
 	for _, orgID := range orgIDs {
 		oID, err := ulids.Parse(orgID)
 		if err != nil {
 			return []string{}, err
 		}
 
-		if ulids.IsZero(oID) {
-			orgIDs = slices.DeleteFunc(orgIDs, func(s string) bool {
-				return s == orgID
-			})
+		if !ulids.IsZero(oID) {
+			valid = append(valid, orgID)
 		}
 	}
 
-	return orgIDs, nil
+	return valid, nil
 }
 
-// GetAuthTypeFromEchoContext retrieves the authentication type from the context if it was set
+// GetAuthTypeFromContext retrieves the authentication type from the context if it was set
 func GetAuthTypeFromContext(ctx context.Context) AuthenticationType {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
 		return ""
 	}
 
-	return au.AuthenticationType
+	return caller.AuthenticationType
 }
 
-// GetAuthTypeFromEchoContext retrieves the authentication type from the context
+// GetAuthTypeFromEchoContext retrieves the authentication type from the echo context
 func GetAuthTypeFromEchoContext(ctx echo.Context) AuthenticationType {
-	au, ok := AuthenticatedUserFromContext(ctx.Request().Context())
-	if !ok || au == nil {
+	caller, ok := CallerFromContext(ctx.Request().Context())
+	if !ok || caller == nil {
 		return ""
 	}
 
-	return au.AuthenticationType
+	return caller.AuthenticationType
 }
 
 // IsAPITokenAuthentication returns true if the authentication type is API token
@@ -149,17 +125,45 @@ func IsAPITokenAuthentication(ctx context.Context) bool {
 // SetOrganizationIDInAuthContext sets the organization ID in the auth context
 // this should only be used when creating a new organization and subsequent updates
 // need to happen in the context of the new organization
-func SetOrganizationIDInAuthContext(ctx context.Context, orgID string) error {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
-		return ErrNoAuthUser
+func SetOrganizationIDInAuthContext(ctx context.Context, orgID string) (context.Context, error) {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
+		return ctx, ErrNoAuthUser
 	}
 
-	au.OrganizationID = orgID
+	caller.OrganizationID = orgID
 
-	WithAuthenticatedUser(ctx, au)
+	return WithCaller(ctx, caller), nil
+}
 
-	return nil
+// ResolveOrganizationForContext resolves and sets the active organization ID in the context.
+// If inputOrgID is nil, it falls back to the single authorized org (e.g., for API tokens with one org).
+// Returns ErrNoOrganizationID if no org can be resolved, or ErrUnauthorizedOrg if the
+// provided org is not in the caller's authorized list.
+func ResolveOrganizationForContext(ctx context.Context, inputOrgID *string) (context.Context, error) {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
+		return ctx, ErrNoAuthUser
+	}
+
+	if inputOrgID == nil {
+		orgIDs := caller.OrgIDs()
+		if len(orgIDs) != 1 || orgIDs[0] == "" {
+			return ctx, ErrNoOrganizationID
+		}
+
+		caller.OrganizationID = orgIDs[0]
+
+		return WithCaller(ctx, caller), nil
+	}
+
+	if !slices.Contains(caller.OrgIDs(), *inputOrgID) {
+		return ctx, ErrUnauthorizedOrg
+	}
+
+	caller.OrganizationID = *inputOrgID
+
+	return WithCaller(ctx, caller), nil
 }
 
 // AddOrganizationIDToContext appends an authorized organization ID to the context.
@@ -167,104 +171,45 @@ func SetOrganizationIDInAuthContext(ctx context.Context, orgID string) error {
 // determined by the claims or the token. This is only used in cases where the
 // a user is newly authorized to an organization and the organization ID is not
 // in the token claims
-func AddOrganizationIDToContext(ctx context.Context, orgID string) error {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
-		return ErrNoAuthUser
+func AddOrganizationIDToContext(ctx context.Context, orgID string) (context.Context, error) {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
+		return ctx, ErrNoAuthUser
 	}
 
-	// append the organization ID to the list of organization IDs
-	au.OrganizationIDs = append(au.OrganizationIDs, orgID)
+	caller.OrganizationIDs = append(caller.OrganizationIDs, orgID)
 
-	WithAuthenticatedUser(ctx, au)
-
-	return nil
-}
-
-// AddSubscriptionToContext appends a subscription to the context
-func AddSubscriptionToContext(ctx context.Context, subscription bool) error {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
-		return ErrNoAuthUser
-	}
-
-	au.ActiveSubscription = subscription
-
-	WithAuthenticatedUser(ctx, au)
-
-	return nil
+	return WithCaller(ctx, caller), nil
 }
 
 // GetSubscriptionFromContext returns the active subscription from the context
 func GetSubscriptionFromContext(ctx context.Context) bool {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
 		return false
 	}
 
-	return au.ActiveSubscription
-}
-
-// SetSystemAdminInContext sets the system admin flag in the context
-func SetSystemAdminInContext(ctx context.Context, isAdmin bool) error {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
-		return ErrNoAuthUser
-	}
-
-	au.IsSystemAdmin = isAdmin
-
-	WithAuthenticatedUser(ctx, au)
-
-	return nil
+	return caller.ActiveSubscription
 }
 
 // IsSystemAdminFromContext checks if the user is a system admin
 func IsSystemAdminFromContext(ctx context.Context) bool {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
 		return false
 	}
 
-	return au.IsSystemAdmin
+	return caller.Has(CapSystemAdmin)
 }
 
 // HasFullOrgWriteAccessFromContext checks if the user has full write access to the organization
 // This is true for owners and super admins; admins will have limited write access depending on the resource
 // so authorization checks should be done at the resource level as needed
 func HasFullOrgWriteAccessFromContext(ctx context.Context) bool {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
 		return false
 	}
 
-	if au.OrganizationRole == OwnerRole || au.OrganizationRole == SuperAdminRole {
-		return true
-	}
-
-	return false
-}
-
-// GetRoleFromContext returns the organization role from the context
-func GetRoleFromContext(ctx context.Context) OrganizationRoleType {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
-		return ""
-	}
-
-	return au.OrganizationRole
-}
-
-// SetOrganizationRoleInContext sets the organization role in the context
-func SetOrganizationRoleInContext(ctx context.Context, role OrganizationRoleType) error {
-	au, ok := AuthenticatedUserFromContext(ctx)
-	if !ok || au == nil {
-		return ErrNoAuthUser
-	}
-
-	au.OrganizationRole = role
-
-	WithAuthenticatedUser(ctx, au)
-
-	return nil
+	return caller.OrganizationRole.HasFullWriteAccess()
 }

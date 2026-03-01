@@ -31,4 +31,10 @@ var (
 	ErrPasswordTooWeak = errors.New("password is too weak: use a combination of upper and lower case letters, numbers, and special characters")
 	// ErrCouldNotFetchSubscription is returned when the subscription could not be fetched
 	ErrCouldNotFetchSubscription = errors.New("could not fetch subscription")
+	// ErrNoOrganizationID is returned when no organization ID can be resolved from the context or input
+	ErrNoOrganizationID = errors.New("no organization ID found in context or input")
+	// ErrUnauthorizedOrg is returned when the provided organization ID is not in the caller's authorized list
+	ErrUnauthorizedOrg = errors.New("organization is not authorized for the current caller")
+	// ErrRandomStateGeneration is returned when random OAuth state generation fails
+	ErrRandomStateGeneration = errors.New("oauth state generation failed")
 )

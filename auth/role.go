@@ -35,6 +35,17 @@ func (ort OrganizationRoleType) IsValid() bool {
 	}
 }
 
+// HasFullWriteAccess reports whether this role grants full organization write access,
+// which is true for owners and super admins
+func (ort OrganizationRoleType) HasFullWriteAccess() bool {
+	switch ort {
+	case OwnerRole, SuperAdminRole:
+		return true
+	default:
+		return false
+	}
+}
+
 // ToOrganizationRoleType converts a string to an OrganizationRoleType
 func ToOrganizationRoleType(role string) (OrganizationRoleType, bool) {
 	// convert to lower snake case to match the constants

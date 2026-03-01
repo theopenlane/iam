@@ -18,14 +18,14 @@ func TestImpersonationContext(t *testing.T) {
 		{
 			name: "not expired",
 			ctx: &ImpersonationContext{
-				ExpiresAt: time.Now().Add(1 * time.Hour),
+				ExpiresAt: time.Now().Add(time.Hour),
 			},
 			want: false,
 		},
 		{
 			name: "expired",
 			ctx: &ImpersonationContext{
-				ExpiresAt: time.Now().Add(-1 * time.Hour),
+				ExpiresAt: time.Now().Add(-time.Hour),
 			},
 			want: true,
 		},
@@ -38,7 +38,7 @@ func TestImpersonationContext(t *testing.T) {
 	}
 }
 
-func TestImpersonationContext_HasScope(t *testing.T) {
+func TestImpersonationContextHasScope(t *testing.T) {
 	tests := []struct {
 		name  string
 		ctx   *ImpersonationContext
@@ -86,188 +86,92 @@ func TestImpersonationContext_HasScope(t *testing.T) {
 	}
 }
 
-func TestImpersonatedUser(t *testing.T) {
-	t.Run("IsImpersonated", func(t *testing.T) {
-		// Not impersonated
-		user := &ImpersonatedUser{
-			AuthenticatedUser: &AuthenticatedUser{
+func TestCallerCanPerformAction(t *testing.T) {
+	tests := []struct {
+		name   string
+		caller *Caller
+		action string
+		want   bool
+	}{
+		{
+			name: "not impersonated caller is always allowed",
+			caller: &Caller{
 				SubjectID: "user123",
 			},
-			ImpersonationContext: nil,
-		}
-		assert.False(t, user.IsImpersonated())
-
-		// Impersonated
-		user.ImpersonationContext = &ImpersonationContext{
-			Type: SupportImpersonation,
-		}
-		assert.True(t, user.IsImpersonated())
-	})
-
-	t.Run("CanPerformAction", func(t *testing.T) {
-		tests := []struct {
-			name   string
-			user   *ImpersonatedUser
-			action string
-			want   bool
-		}{
-			{
-				name: "not impersonated - always allowed",
-				user: &ImpersonatedUser{
-					AuthenticatedUser:    &AuthenticatedUser{},
-					ImpersonationContext: nil,
-				},
-				action: "anything",
-				want:   true,
-			},
-			{
-				name: "impersonated with expired context",
-				user: &ImpersonatedUser{
-					AuthenticatedUser: &AuthenticatedUser{},
-					ImpersonationContext: &ImpersonationContext{
-						ExpiresAt: time.Now().Add(-1 * time.Hour),
-						Scopes:    []string{"*"},
-					},
-				},
-				action: "read",
-				want:   false,
-			},
-			{
-				name: "impersonated with valid scope",
-				user: &ImpersonatedUser{
-					AuthenticatedUser: &AuthenticatedUser{},
-					ImpersonationContext: &ImpersonationContext{
-						ExpiresAt: time.Now().Add(1 * time.Hour),
-						Scopes:    []string{"read", "export"},
-					},
-				},
-				action: "export",
-				want:   true,
-			},
-			{
-				name: "impersonated without required scope",
-				user: &ImpersonatedUser{
-					AuthenticatedUser: &AuthenticatedUser{},
-					ImpersonationContext: &ImpersonationContext{
-						ExpiresAt: time.Now().Add(1 * time.Hour),
-						Scopes:    []string{"read"},
-					},
-				},
-				action: "write",
-				want:   false,
-			},
-		}
-
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				assert.Equal(t, tt.want, tt.user.CanPerformAction(tt.action))
-			})
-		}
-	})
-}
-
-func TestWithImpersonatedUser(t *testing.T) {
-	ctx := context.Background()
-	user := &ImpersonatedUser{
-		AuthenticatedUser: &AuthenticatedUser{
-			SubjectID:    "user123",
-			SubjectEmail: "user@example.com",
+			action: "anything",
+			want:   true,
 		},
-		ImpersonationContext: &ImpersonationContext{
-			Type:              SupportImpersonation,
-			ImpersonatorID:    "support123",
-			ImpersonatorEmail: "support@example.com",
-			TargetUserID:      "user123",
-			TargetUserEmail:   "user@example.com",
-			Reason:            "debugging issue",
-			StartedAt:         time.Now(),
-			ExpiresAt:         time.Now().Add(1 * time.Hour),
-			SessionID:         ulids.New().String(),
-			Scopes:            []string{"read", "debug"},
+		{
+			name: "expired impersonation denies",
+			caller: &Caller{
+				Impersonation: &ImpersonationContext{
+					ExpiresAt: time.Now().Add(-time.Hour),
+					Scopes:    []string{"*"},
+				},
+			},
+			action: "read",
+			want:   false,
 		},
-		OriginalUser: &AuthenticatedUser{
-			SubjectID:    "support123",
-			SubjectEmail: "support@example.com",
+		{
+			name: "valid impersonation scope allows",
+			caller: &Caller{
+				Impersonation: &ImpersonationContext{
+					ExpiresAt: time.Now().Add(time.Hour),
+					Scopes:    []string{"read", "export"},
+				},
+			},
+			action: "export",
+			want:   true,
+		},
+		{
+			name: "valid impersonation missing scope denies",
+			caller: &Caller{
+				Impersonation: &ImpersonationContext{
+					ExpiresAt: time.Now().Add(time.Hour),
+					Scopes:    []string{"read"},
+				},
+			},
+			action: "write",
+			want:   false,
 		},
 	}
 
-	// Set user in context
-	ctx = WithImpersonatedUser(ctx, user)
-
-	// Retrieve user from context
-	retrieved, ok := ImpersonatedUserFromContext(ctx)
-	assert.True(t, ok)
-	assert.Equal(t, user, retrieved)
-
-	// Test MustImpersonatedUserFromContext
-	assert.NotPanics(t, func() {
-		mustUser := MustImpersonatedUserFromContext(ctx)
-		assert.Equal(t, user, mustUser)
-	})
-
-	// Test with empty context
-	emptyCtx := context.Background()
-	_, ok = ImpersonatedUserFromContext(emptyCtx)
-	assert.False(t, ok)
-
-	// Test MustImpersonatedUserFromContext panics with empty context
-	assert.Panics(t, func() {
-		_ = MustImpersonatedUserFromContext(emptyCtx)
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, tt.caller.CanPerformAction(tt.action))
+		})
+	}
 }
 
-func TestGetEffectiveUser(t *testing.T) {
+func TestCallerFromContextWithImpersonation(t *testing.T) {
 	tests := []struct {
 		name     string
 		setupCtx func() context.Context
-		wantUser *AuthenticatedUser
+		wantUser *Caller
 		wantOk   bool
 	}{
 		{
-			name: "impersonated user context",
+			name: "caller in context",
 			setupCtx: func() context.Context {
 				ctx := context.Background()
-				impUser := &ImpersonatedUser{
-					AuthenticatedUser: &AuthenticatedUser{
-						SubjectID:    "target123",
-						SubjectEmail: "target@example.com",
-					},
-					ImpersonationContext: &ImpersonationContext{
+				caller := &Caller{
+					SubjectID:    "target123",
+					SubjectEmail: "target@example.com",
+					Impersonation: &ImpersonationContext{
 						Type: SupportImpersonation,
-					},
-					OriginalUser: &AuthenticatedUser{
-						SubjectID:    "support123",
-						SubjectEmail: "support@example.com",
 					},
 				}
 
-				return WithImpersonatedUser(ctx, impUser)
+				return WithCaller(ctx, caller)
 			},
-			wantUser: &AuthenticatedUser{
+			wantUser: &Caller{
 				SubjectID:    "target123",
 				SubjectEmail: "target@example.com",
 			},
 			wantOk: true,
 		},
 		{
-			name: "regular authenticated user context",
-			setupCtx: func() context.Context {
-				ctx := context.Background()
-				user := &AuthenticatedUser{
-					SubjectID:    "user123",
-					SubjectEmail: "user@example.com",
-				}
-
-				return WithAuthenticatedUser(ctx, user)
-			},
-			wantUser: &AuthenticatedUser{
-				SubjectID:    "user123",
-				SubjectEmail: "user@example.com",
-			},
-			wantOk: true,
-		},
-		{
-			name:     "no user in context",
+			name:     "no caller in context",
 			setupCtx: context.Background,
 			wantUser: nil,
 			wantOk:   false,
@@ -277,7 +181,7 @@ func TestGetEffectiveUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := tt.setupCtx()
-			user, ok := GetEffectiveUser(ctx)
+			user, ok := CallerFromContext(ctx)
 			assert.Equal(t, tt.wantOk, ok)
 
 			if tt.wantOk {
@@ -289,7 +193,6 @@ func TestGetEffectiveUser(t *testing.T) {
 }
 
 func TestImpersonationAuditLog(t *testing.T) {
-	// Test creating an audit log entry
 	auditLog := &ImpersonationAuditLog{
 		SessionID:         ulids.New().String(),
 		Type:              SupportImpersonation,
@@ -309,7 +212,6 @@ func TestImpersonationAuditLog(t *testing.T) {
 		},
 	}
 
-	// Verify all fields are set correctly
 	assert.NotEmpty(t, auditLog.SessionID)
 	assert.Equal(t, SupportImpersonation, auditLog.Type)
 	assert.Equal(t, "support123", auditLog.ImpersonatorID)

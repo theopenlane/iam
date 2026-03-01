@@ -148,6 +148,39 @@ func SetCookie(w http.ResponseWriter, value string, cookieName string, v CookieC
 	}
 }
 
+// SetCookies sets multiple cookies from a map of name/value pairs.
+// Empty names or values are ignored.
+func SetCookies(w http.ResponseWriter, v CookieConfig, values map[string]string) {
+	for cookieName, value := range values {
+		if cookieName == "" || value == "" {
+			continue
+		}
+
+		SetCookie(w, value, cookieName, v)
+	}
+}
+
+// CopyCookiesFromRequest copies selected cookies from the request into the response
+// using the provided cookie configuration.
+func CopyCookiesFromRequest(r *http.Request, w http.ResponseWriter, v CookieConfig, names ...string) {
+	if r == nil {
+		return
+	}
+
+	for _, cookieName := range names {
+		if cookieName == "" {
+			continue
+		}
+
+		cookie, err := GetCookie(r, cookieName)
+		if err != nil || cookie == nil || cookie.Value == "" {
+			continue
+		}
+
+		SetCookie(w, cookie.Value, cookieName, v)
+	}
+}
+
 // RemoveCookie function removes a cookie from the HTTP response
 func RemoveCookie(w http.ResponseWriter, cookieName string, v CookieConfig) {
 	// Create a cookie with MaxAge -1 to delete it
@@ -156,5 +189,16 @@ func RemoveCookie(w http.ResponseWriter, cookieName string, v CookieConfig) {
 	cookie := NewCookie(cookieName, "", &v)
 	if cookie != nil {
 		http.SetCookie(w, cookie)
+	}
+}
+
+// RemoveCookies removes multiple cookies from the HTTP response.
+func RemoveCookies(w http.ResponseWriter, v CookieConfig, names ...string) {
+	for _, cookieName := range names {
+		if cookieName == "" {
+			continue
+		}
+
+		RemoveCookie(w, cookieName, v)
 	}
 }

@@ -4,24 +4,22 @@ import (
 	"context"
 
 	"github.com/google/go-github/v83/github"
+	"github.com/theopenlane/utils/contextx"
 )
 
-// unexported key type prevents collisions
-type key int
-
-const (
-	userKey  key = iota
-	errorKey key = iota
+var (
+	userContextKey  = contextx.NewKey[*github.User]()
+	errorContextKey = contextx.NewKey[error]()
 )
 
 // WithUser returns a copy of context that stores the GitHub User
 func WithUser(ctx context.Context, user *github.User) context.Context {
-	return context.WithValue(ctx, userKey, user)
+	return userContextKey.Set(ctx, user)
 }
 
 // UserFromContext returns the GitHub User from the context
 func UserFromContext(ctx context.Context) (*github.User, error) {
-	user, ok := ctx.Value(userKey).(*github.User)
+	user, ok := userContextKey.Get(ctx)
 	if !ok {
 		return nil, ErrContextMissingGithubUser
 	}
@@ -31,13 +29,13 @@ func UserFromContext(ctx context.Context) (*github.User, error) {
 
 // WithError returns a copy of context that stores the given error value
 func WithError(ctx context.Context, err error) context.Context {
-	return context.WithValue(ctx, errorKey, err)
+	return errorContextKey.Set(ctx, err)
 }
 
 // ErrorFromContext returns the error value from the ctx or an error that the
 // context was missing an error value
 func ErrorFromContext(ctx context.Context) error {
-	err, ok := ctx.Value(errorKey).(error)
+	err, ok := errorContextKey.Get(ctx)
 	if !ok {
 		return ErrContextMissingErrorValue
 	}

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/theopenlane/utils/contextx"
 	"golang.org/x/oauth2"
 
 	"github.com/theopenlane/iam/sessions"
@@ -16,9 +15,9 @@ func TestNewContextWithToken(t *testing.T) {
 	token := &oauth2.Token{AccessToken: "test_token"}
 
 	ctx = sessions.ContextWithToken(ctx, token)
-	retrievedToken, ok := contextx.From[*oauth2.Token](ctx)
+	retrievedToken, err := sessions.OhAuthTokenFromContext(ctx)
 
-	assert.True(t, ok)
+	assert.NoError(t, err)
 	assert.Equal(t, token, retrievedToken)
 }
 
@@ -56,7 +55,7 @@ func TestNewContextWithUserID(t *testing.T) {
 	userID := sessions.UserID("test_user")
 
 	ctx = sessions.ContextWithUserID(ctx, userID)
-	retrievedUserID, ok := contextx.From[sessions.UserID](ctx)
+	retrievedUserID, ok := sessions.ContextUserIDFromContext(ctx)
 
 	assert.True(t, ok)
 	assert.Equal(t, userID, retrievedUserID)
@@ -67,7 +66,7 @@ func TestNewContextWithUserIDEmptyUserID(t *testing.T) {
 	userID := sessions.UserID("")
 
 	ctx = sessions.ContextWithUserID(ctx, userID)
-	retrievedUserID, ok := contextx.From[sessions.UserID](ctx)
+	retrievedUserID, ok := sessions.ContextUserIDFromContext(ctx)
 
 	assert.False(t, ok)
 	assert.Equal(t, sessions.UserID(""), retrievedUserID)

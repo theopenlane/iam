@@ -51,11 +51,32 @@ type Caller struct {
 	Capabilities Capability `json:"capabilities,omitempty"`
 	// Impersonation is set when this Caller is acting on behalf of another user
 	Impersonation *ImpersonationContext `json:"impersonation,omitempty"`
+	// OriginalSystemAdmin is set when a system admin is executing as another caller.
+	// This keeps caller lineage in one root identity tree instead of a parallel context key.
+	OriginalSystemAdmin *Caller `json:"original_system_admin,omitempty"`
 }
 
 // Has reports whether the Caller holds all of the specified capabilities
 func (c *Caller) Has(caps Capability) bool {
 	return c.Capabilities&caps == caps
+}
+
+// HasInLineage reports whether the Caller or its original system-admin lineage
+// holds all of the specified capabilities
+func (c *Caller) HasInLineage(caps Capability) bool {
+	if c == nil {
+		return false
+	}
+
+	if c.Has(caps) {
+		return true
+	}
+
+	if c.OriginalSystemAdmin == nil {
+		return false
+	}
+
+	return c.OriginalSystemAdmin.HasInLineage(caps)
 }
 
 // ActiveOrg returns OrganizationID if set, or the single entry in OrganizationIDs
@@ -90,9 +111,28 @@ func (c *Caller) CanAccessOrg(orgID string) bool {
 	return slices.Contains(c.OrgIDs(), orgID)
 }
 
+// SubjectType returns the FGA subject type for this caller based on the authentication type.
+// Returns UserSubjectType for JWT/PAT callers and ServiceSubjectType for API token callers.
+func (c *Caller) SubjectType() string {
+	switch c.AuthenticationType {
+	case JWTAuthentication, PATAuthentication:
+		return UserSubjectType
+	case APITokenAuthentication:
+		return ServiceSubjectType
+	default:
+		return ""
+	}
+}
+
 // IsImpersonated reports whether this Caller is acting on behalf of another user
 func (c *Caller) IsImpersonated() bool {
 	return c.Impersonation != nil
+}
+
+// IsAnonymous reports whether this Caller is an anonymous user (trust center visitor,
+// questionnaire respondent, etc.) with no standard authentication type
+func (c *Caller) IsAnonymous() bool {
+	return c.OrganizationRole == AnonymousRole
 }
 
 // WithCapabilities returns a copy of the Caller with the given capabilities added
@@ -129,40 +169,35 @@ func NewAcmeSolverCaller(orgID string) *Caller {
 	}
 }
 
-// NewTrustCenterBootstrapCaller returns a Caller for trust center initialization
-// before a subject identity is known. Bypasses org-filter and subscription checks.
-func NewTrustCenterBootstrapCaller(orgID string) *Caller {
+// newAnonymousCaller constructs an anonymous Caller (trust center, questionnaire, etc.)
+// with AnonymousRole and the standard anonymous capability set
+func newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail string) *Caller {
 	return &Caller{
+		SubjectID:        subjectID,
+		SubjectName:      subjectName,
+		SubjectEmail:     subjectEmail,
 		OrganizationID:   orgID,
 		OrganizationRole: AnonymousRole,
 		Capabilities:     CapBypassOrgFilter | CapBypassFGA | CapBypassSubscriptionCheck,
 	}
+}
+
+// NewTrustCenterBootstrapCaller returns a Caller for trust center initialization
+// before a subject identity is known. Bypasses org-filter and subscription checks.
+func NewTrustCenterBootstrapCaller(orgID string) *Caller {
+	return newAnonymousCaller(orgID, "", "", "")
 }
 
 // NewTrustCenterCaller returns a Caller for an anonymous trust center viewer
 // with a resolved identity. Bypasses org-filter, FGA, and subscription checks.
 func NewTrustCenterCaller(orgID, subjectID, subjectName, subjectEmail string) *Caller {
-	return &Caller{
-		SubjectID:        subjectID,
-		SubjectName:      subjectName,
-		SubjectEmail:     subjectEmail,
-		OrganizationID:   orgID,
-		OrganizationRole: AnonymousRole,
-		Capabilities:     CapBypassOrgFilter | CapBypassFGA | CapBypassSubscriptionCheck,
-	}
+	return newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail)
 }
 
 // NewQuestionnaireCaller returns a Caller for an anonymous questionnaire respondent.
 // Bypasses org-filter, FGA, and subscription checks.
 func NewQuestionnaireCaller(orgID, subjectID, subjectName, subjectEmail string) *Caller {
-	return &Caller{
-		SubjectID:        subjectID,
-		SubjectName:      subjectName,
-		SubjectEmail:     subjectEmail,
-		OrganizationID:   orgID,
-		OrganizationRole: AnonymousRole,
-		Capabilities:     CapBypassOrgFilter | CapBypassFGA | CapBypassSubscriptionCheck,
-	}
+	return newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail)
 }
 
 // NewKeystoreCaller returns a Caller for keystore operations.
@@ -182,31 +217,5 @@ func NewSystemAdminCaller(subjectID, subjectName, subjectEmail string) *Caller {
 		SubjectEmail:       subjectEmail,
 		AuthenticationType: JWTAuthentication,
 		Capabilities:       CapBypassOrgFilter | CapBypassFGA | CapBypassFeatureCheck | CapInternalOperation | CapSystemAdmin,
-	}
-}
-
-// CallerFromAuthenticatedUser converts an AuthenticatedUser to a Caller.
-// For use during migration — remove once all entry points produce Callers directly.
-func CallerFromAuthenticatedUser(u *AuthenticatedUser) *Caller {
-	if u == nil {
-		return nil
-	}
-
-	var caps Capability
-	if u.IsSystemAdmin {
-		caps |= CapSystemAdmin
-	}
-
-	return &Caller{
-		SubjectID:          u.SubjectID,
-		SubjectName:        u.SubjectName,
-		SubjectEmail:       u.SubjectEmail,
-		OrganizationID:     u.OrganizationID,
-		OrganizationName:   u.OrganizationName,
-		OrganizationIDs:    u.OrganizationIDs,
-		AuthenticationType: u.AuthenticationType,
-		OrganizationRole:   u.OrganizationRole,
-		ActiveSubscription: u.ActiveSubscription,
-		Capabilities:       caps,
 	}
 }

@@ -54,10 +54,10 @@ func newOrganizationContextKey(e string) *map[string]any {
             return privacy.Skipf("not a graphql request, no context to check")
         }
 
-        au, err := auth.GetAuthenticatedUserFromContext(ctx)
-        if err != nil {
-            log.Error().Err(err).Msg("unable to get authenticated user from context")
-            return privacy.Skipf("unable to get authenticated user from context")
+        caller, ok := auth.CallerFromContext(ctx)
+        if !ok || caller == nil {
+            log.Error().Msg("unable to get caller from context")
+            return privacy.Skipf("unable to get caller from context")
         }
 
         var objectID string
@@ -109,10 +109,10 @@ func newOrganizationContextKey(e string) *map[string]any {
             Relation: fgax.CanView,
             {{- end }}
             ObjectType:  "{{ $objectType | ToLower }}",
-            SubjectType: auth.GetAuthzSubjectType(ctx),
-            SubjectID: au.SubjectID,
+            SubjectType: caller.SubjectType(),
+            SubjectID: caller.SubjectID,
             ObjectID: objectID,
-            Context: newOrganizationContextKey(au.SubjectEmail),
+            Context: newOrganizationContextKey(caller.SubjectEmail),
         }
 
         access, err := q.Authz.CheckAccess(ctx, ac)
@@ -129,8 +129,12 @@ func newOrganizationContextKey(e string) *map[string]any {
         var objectID string
 
         {{ if $orgOwned }}
-        orgID, err := auth.GetOrganizationIDFromContext(ctx)
-        if orgID == ""  || err != nil {
+        caller, ok := auth.CallerFromContext(ctx)
+        orgID := ""
+        if ok && caller != nil {
+            orgID = caller.OrganizationID
+        }
+        if orgID == "" {
             // if we still don't have an object id, run the query and grab the object ID
             // from the result
             // this happens when using a personal access token since it is authorized for multiple orgs
@@ -204,19 +208,19 @@ func newOrganizationContextKey(e string) *map[string]any {
             return privacy.Allowf("nil request, bypassing auth check")
         }
 
-        au, err := auth.GetAuthenticatedUserFromContext(ctx)
-        if err != nil {
-            log.Error().Err(err).Msg("unable to get authenticated user from context")
-            return privacy.Skipf("unable to get authenticated user from context")
+        caller, ok := auth.CallerFromContext(ctx)
+        if !ok || caller == nil {
+            log.Error().Msg("unable to get caller from context")
+            return privacy.Skipf("unable to get caller from context")
         }
 
         ac := fgax.AccessCheck{
             Relation: fgax.CanEdit,
             ObjectType:  "{{ $objectType | ToLower }}",
             ObjectID: objectID,
-            SubjectType: auth.GetAuthzSubjectType(ctx),
-            SubjectID: au.SubjectID,
-            Context: newOrganizationContextKey(au.SubjectEmail),
+            SubjectType: caller.SubjectType(),
+            SubjectID: caller.SubjectID,
+            Context: newOrganizationContextKey(caller.SubjectEmail),
         }
 
         log.Debug().Interface("access_check", ac).Msg("checking relationship tuples")
@@ -247,19 +251,19 @@ func newOrganizationContextKey(e string) *map[string]any {
             return privacy.Allowf("nil request, bypassing auth check")
         }
 
-        au, err := auth.GetAuthenticatedUserFromContext(ctx)
-        if err != nil {
-            log.Error().Err(err).Msg("unable to get authenticated user from context")
-            return privacy.Skipf("unable to get authenticated user from context")
+        caller, ok := auth.CallerFromContext(ctx)
+        if !ok || caller == nil {
+            log.Error().Msg("unable to get caller from context")
+            return privacy.Skipf("unable to get caller from context")
         }
 
         ac := fgax.AccessCheck{
             Relation: fgax.CanDelete,
             ObjectType:  "{{ $objectType | ToLower }}",
             ObjectID: objectID,
-            SubjectType: auth.GetAuthzSubjectType(ctx),
-            SubjectID: au.SubjectID,
-            Context: newOrganizationContextKey(au.SubjectEmail),
+            SubjectType: caller.SubjectType(),
+            SubjectID: caller.SubjectID,
+            Context: newOrganizationContextKey(caller.SubjectEmail),
         }
 
         log.Debug().Interface("access_check", ac).Msg("checking relationship tuples")

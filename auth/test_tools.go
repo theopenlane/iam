@@ -2,133 +2,80 @@ package auth
 
 import (
 	"context"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/theopenlane/echox/middleware/echocontext"
 	"github.com/theopenlane/utils/contextx"
 	"github.com/theopenlane/utils/ulids"
-
-	"github.com/theopenlane/iam/tokens"
 )
 
-// newValidClaims returns claims with a fake subject for testing purposes ONLY
-func newValidClaims(subject string) *tokens.Claims {
-	iat := time.Now()
-	nbf := iat
-	exp := time.Now().Add(time.Hour)
+// CallerOption configures a Caller built for use in test contexts.
+type CallerOption func(*Caller)
 
-	claims := &tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   subject,
-			Issuer:    "test suite",
-			IssuedAt:  jwt.NewNumericDate(iat),
-			NotBefore: jwt.NewNumericDate(nbf),
-			ExpiresAt: jwt.NewNumericDate(exp),
-		},
-		UserID: subject,
-		OrgID:  "ulid_id_of_org",
+// WithOrganizationRole sets the OrganizationRole on the test Caller.
+func WithOrganizationRole(role OrganizationRoleType) CallerOption {
+	return func(c *Caller) {
+		c.OrganizationRole = role
+	}
+}
+
+// WithCapabilities adds the given capabilities to the test Caller.
+func WithCapabilities(caps Capability) CallerOption {
+	return func(c *Caller) {
+		c.Capabilities |= caps
+	}
+}
+
+// WithActiveSubscription sets the ActiveSubscription flag on the test Caller.
+func WithActiveSubscription(active bool) CallerOption {
+	return func(c *Caller) {
+		c.ActiveSubscription = active
+	}
+}
+
+// NewTestContextWithOrgID creates a context with the given subject and org ID for testing purposes only.
+// Optional CallerOption values are applied after the base Caller is constructed, allowing callers to
+// set OrganizationRole, Capabilities, ActiveSubscription, or any other Caller field.
+func NewTestContextWithOrgID(sub, orgID string, opts ...CallerOption) context.Context {
+	ec := echocontext.NewTestEchoContext()
+
+	caller := &Caller{
+		SubjectID:          sub,
+		OrganizationID:     orgID,
+		OrganizationIDs:    []string{orgID},
+		AuthenticationType: JWTAuthentication,
 	}
 
-	return claims
-}
-
-func NewTestContextWithValidUser(subject string) context.Context {
-	ec := echocontext.NewTestEchoContext()
-
-	claims := newValidClaims(subject)
-
-	SetAuthenticatedUserContext(ec, &AuthenticatedUser{
-		SubjectID:          claims.UserID,
-		OrganizationID:     claims.OrgID,
-		OrganizationIDs:    []string{claims.OrgID},
-		AuthenticationType: JWTAuthentication,
-	})
-
-	reqCtx := contextx.With(ec.Request().Context(), ec)
-
-	ec.SetRequest(ec.Request().WithContext(reqCtx))
-
-	return reqCtx
-}
-
-// newValidClaims returns claims with a fake orgID for testing purposes ONLY
-func newValidClaimsOrgID(sub, orgID string) *tokens.Claims {
-	iat := time.Now()
-	nbf := iat
-	exp := time.Now().Add(time.Hour)
-
-	claims := &tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   sub,
-			Issuer:    "test suite",
-			IssuedAt:  jwt.NewNumericDate(iat),
-			NotBefore: jwt.NewNumericDate(nbf),
-			ExpiresAt: jwt.NewNumericDate(exp),
-		},
-		UserID: sub,
-		OrgID:  orgID,
+	for _, opt := range opts {
+		opt(caller)
 	}
 
-	return claims
+	ctx := WithCaller(ec.Request().Context(), caller)
+	ctx = contextx.With(ctx, ec)
+
+	ec.SetRequest(ec.Request().WithContext(ctx))
+
+	return ctx
 }
 
-// NewTestContextWithOrgID creates a context with a fake orgID for testing purposes only (why all caps jeez keep it down)
-func NewTestContextWithOrgID(sub, orgID string) context.Context {
-	ec := echocontext.NewTestEchoContext()
-
-	claims := newValidClaimsOrgID(sub, orgID)
-
-	SetAuthenticatedUserContext(ec, &AuthenticatedUser{
-		SubjectID:          claims.UserID,
-		OrganizationID:     claims.OrgID,
-		OrganizationIDs:    []string{claims.OrgID},
-		AuthenticationType: JWTAuthentication,
-	})
-
-	reqCtx := contextx.With(ec.Request().Context(), ec)
-
-	ec.SetRequest(ec.Request().WithContext(reqCtx))
-
-	return reqCtx
+// NewTestContextWithValidUser creates a context with a fixed org placeholder for testing purposes only.
+// It is equivalent to NewTestContextWithOrgID(subject, "ulid_id_of_org", opts...).
+func NewTestContextWithValidUser(subject string, opts ...CallerOption) context.Context {
+	return NewTestContextWithOrgID(subject, "ulid_id_of_org", opts...)
 }
 
-// NewTestContextForSystemAdmin creates a context with a fake system admin user
-func NewTestContextForSystemAdmin(sub, orgID string) context.Context {
-	ec := echocontext.NewTestEchoContext()
-
-	claims := newValidClaimsOrgID(sub, orgID)
-
-	SetAuthenticatedUserContext(ec, &AuthenticatedUser{
-		SubjectID:          claims.UserID,
-		OrganizationID:     claims.OrgID,
-		OrganizationIDs:    []string{claims.OrgID},
-		AuthenticationType: JWTAuthentication,
-		IsSystemAdmin:      true,
-	})
-
-	reqCtx := contextx.With(ec.Request().Context(), ec)
-
-	ec.SetRequest(ec.Request().WithContext(reqCtx))
-
-	return reqCtx
+// NewTestContextForSystemAdmin creates a context with system admin capabilities set for testing purposes only.
+// Capabilities match NewSystemAdminCaller: CapBypassOrgFilter, CapBypassFGA, CapBypassFeatureCheck, CapInternalOperation, CapSystemAdmin.
+func NewTestContextForSystemAdmin(sub, orgID string, opts ...CallerOption) context.Context {
+	caps := CapBypassOrgFilter | CapBypassFGA | CapBypassFeatureCheck | CapInternalOperation | CapSystemAdmin
+	return NewTestContextWithOrgID(sub, orgID, append([]CallerOption{WithCapabilities(caps)}, opts...)...)
 }
 
-// NewTestContextWithSubscription creates a context with an active subscription for testing purposes only
-func NewTestContextWithSubscription(subscription bool) context.Context {
-	ec := echocontext.NewTestEchoContext()
-
-	claims := newValidClaimsOrgID(ulids.New().String(), ulids.New().String())
-
-	SetAuthenticatedUserContext(ec, &AuthenticatedUser{
-		SubjectID:          claims.UserID,
-		OrganizationID:     claims.OrgID,
-		OrganizationIDs:    []string{claims.OrgID},
-		AuthenticationType: JWTAuthentication,
-		ActiveSubscription: subscription,
-	})
-
-	reqCtx := contextx.With(ec.Request().Context(), ec)
-
-	return reqCtx
+// NewTestContextWithSubscription creates a context with random subject/org IDs and the given
+// ActiveSubscription value for testing purposes only.
+func NewTestContextWithSubscription(subscription bool, opts ...CallerOption) context.Context {
+	return NewTestContextWithOrgID(
+		ulids.New().String(),
+		ulids.New().String(),
+		append([]CallerOption{WithActiveSubscription(subscription)}, opts...)...,
+	)
 }
