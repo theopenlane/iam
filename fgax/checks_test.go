@@ -74,6 +74,7 @@ func TestCheckTuple(t *testing.T) {
 
 func TestCheckAccess(t *testing.T) {
 	validULID := ulids.New().String()
+
 	tests := []struct {
 		name        string
 		ac          AccessCheck
@@ -173,6 +174,7 @@ func TestCheckAccess(t *testing.T) {
 
 func TestListRelations(t *testing.T) {
 	validULID := ulids.New().String()
+
 	tests := []struct {
 		name        string
 		check       ListAccess
@@ -280,6 +282,7 @@ func TestListRelations(t *testing.T) {
 
 func TestBatchCheckTuples(t *testing.T) {
 	validULID := ulids.New().String()
+
 	tests := []struct {
 		name        string
 		checks      []ofgaclient.ClientBatchCheckItem
@@ -380,6 +383,7 @@ func TestBatchCheckTuples(t *testing.T) {
 
 func TestBatchCheckObjectAccess(t *testing.T) {
 	validULID := ulids.New().String()
+
 	tests := []struct {
 		name           string
 		checks         []AccessCheck
@@ -466,6 +470,7 @@ func TestBatchCheckObjectAccess(t *testing.T) {
 
 func TestValidateAccessCheck(t *testing.T) {
 	validULID := ulids.New().String()
+
 	tests := []struct {
 		name    string
 		ac      AccessCheck
@@ -575,6 +580,7 @@ func TestValidateAccessCheck(t *testing.T) {
 
 func TestValidateListAccess(t *testing.T) {
 	validULID := ulids.New().String()
+
 	tests := []struct {
 		name    string
 		la      ListAccess

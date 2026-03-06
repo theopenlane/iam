@@ -353,10 +353,10 @@ func (c *Client) CheckSystemAdminRole(ctx context.Context, userID string, opts .
 }
 
 func validateID(id string) error {
-	switch {
-	case id == "*":
+	switch id {
+	case "*":
 		return nil
-	case id == "":
+	case "":
 		return ErrInvalidAccessCheck
 	default:
 		// ensure ID is a valid ULID

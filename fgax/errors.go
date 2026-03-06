@@ -75,6 +75,7 @@ func newWritingTuplesError(user, relation, object, operation string, err error) 
 
 func getCheckErrorType(err openfga.CheckError) string {
 	errorType := "unknown"
+
 	switch {
 	case err.HasInputError():
 		errorType = "input_error"
