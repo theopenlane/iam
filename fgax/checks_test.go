@@ -2,6 +2,7 @@ package fgax
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"testing"
 
@@ -45,8 +46,9 @@ func TestCheckTuple(t *testing.T) {
 			mc := NewMockFGAClient(c)
 
 			// mock response for input
+			user := fmt.Sprintf("user:%s", ulids.New().String())
 			body := ofgaclient.ClientCheckRequest{
-				User:     "user:ulid-of-member",
+				User:     user,
 				Relation: tc.relation,
 				Object:   tc.object,
 			}
@@ -71,6 +73,8 @@ func TestCheckTuple(t *testing.T) {
 }
 
 func TestCheckAccess(t *testing.T) {
+	validULID := ulids.New().String()
+
 	tests := []struct {
 		name        string
 		ac          AccessCheck
@@ -81,9 +85,9 @@ func TestCheckAccess(t *testing.T) {
 			name: "happy path, valid access",
 			ac: AccessCheck{
 				ObjectType: "organization",
-				ObjectID:   "ulid-of-org",
+				ObjectID:   validULID,
 				Relation:   "member",
-				SubjectID:  "ulid-of-member",
+				SubjectID:  validULID,
 			},
 			expectedRes: true,
 			wantErr:     false,
@@ -92,10 +96,10 @@ func TestCheckAccess(t *testing.T) {
 			name: "happy path, valid access with context",
 			ac: AccessCheck{
 				ObjectType:  "organization",
-				ObjectID:    "ulid-of-org",
+				ObjectID:    validULID,
 				SubjectType: "service",
 				Relation:    "member",
-				SubjectID:   "ulid-of-token",
+				SubjectID:   validULID,
 				Context:     &map[string]any{"service": "github"},
 			},
 			expectedRes: true,
@@ -104,9 +108,9 @@ func TestCheckAccess(t *testing.T) {
 		{
 			name: "missing object type",
 			ac: AccessCheck{
-				ObjectID:  "ulid-of-org",
+				ObjectID:  validULID,
 				Relation:  "member",
-				SubjectID: "ulid-of-member",
+				SubjectID: validULID,
 			},
 			expectedRes: false,
 			wantErr:     true,
@@ -115,8 +119,8 @@ func TestCheckAccess(t *testing.T) {
 			name: "missing relation",
 			ac: AccessCheck{
 				ObjectType: "organization",
-				ObjectID:   "ulid-of-org",
-				SubjectID:  "ulid-of-member",
+				ObjectID:   validULID,
+				SubjectID:  validULID,
 			},
 			expectedRes: false,
 			wantErr:     true,
@@ -125,8 +129,8 @@ func TestCheckAccess(t *testing.T) {
 			name: "missing object type",
 			ac: AccessCheck{
 				Relation:  "member",
-				ObjectID:  "ulid-of-org",
-				SubjectID: "ulid-of-member",
+				ObjectID:  validULID,
+				SubjectID: validULID,
 			},
 			expectedRes: false,
 			wantErr:     true,
@@ -136,7 +140,7 @@ func TestCheckAccess(t *testing.T) {
 			ac: AccessCheck{
 				Relation:   "member",
 				ObjectType: "organization",
-				ObjectID:   "ulid-of-org",
+				ObjectID:   validULID,
 			},
 			expectedRes: false,
 			wantErr:     true,
@@ -169,6 +173,8 @@ func TestCheckAccess(t *testing.T) {
 }
 
 func TestListRelations(t *testing.T) {
+	validULID := ulids.New().String()
+
 	tests := []struct {
 		name        string
 		check       ListAccess
@@ -179,9 +185,9 @@ func TestListRelations(t *testing.T) {
 			name: "happy path",
 			check: ListAccess{
 				ObjectType: "organization",
-				ObjectID:   "ulid-of-org",
+				ObjectID:   validULID,
 				Relations:  []string{"can_delete", "can_view", "can_read"},
-				SubjectID:  "ulid-of-member",
+				SubjectID:  validULID,
 			},
 			expectedRes: []string{"can_view", "can_read"},
 			wantErr:     false,
@@ -190,8 +196,8 @@ func TestListRelations(t *testing.T) {
 			name: "happy path, no relations provided",
 			check: ListAccess{
 				ObjectType: "organization",
-				ObjectID:   "ulid-of-org",
-				SubjectID:  "ulid-of-member",
+				ObjectID:   validULID,
+				SubjectID:  validULID,
 			},
 			expectedRes: []string{"can_view", "can_read"},
 			wantErr:     false,
@@ -200,9 +206,9 @@ func TestListRelations(t *testing.T) {
 			name: "happy path with context",
 			check: ListAccess{
 				ObjectType: "organization",
-				ObjectID:   "ulid-of-org",
+				ObjectID:   validULID,
 				Relations:  []string{"can_delete", "can_view", "can_read"},
-				SubjectID:  "ulid-of-member",
+				SubjectID:  validULID,
 				Context:    &map[string]any{"role": "admin"},
 			},
 			expectedRes: []string{"can_view", "can_read"},
@@ -211,9 +217,9 @@ func TestListRelations(t *testing.T) {
 		{
 			name: "missing object type",
 			check: ListAccess{
-				ObjectID:  "ulid-of-org",
+				ObjectID:  validULID,
 				Relations: []string{"can_delete", "can_view", "can_read"},
-				SubjectID: "ulid-of-member",
+				SubjectID: validULID,
 			},
 			wantErr: true,
 		},
@@ -222,7 +228,7 @@ func TestListRelations(t *testing.T) {
 			check: ListAccess{
 				ObjectType: "organization",
 				Relations:  []string{"can_delete", "can_view", "can_read"},
-				SubjectID:  "ulid-of-member",
+				SubjectID:  validULID,
 			},
 			wantErr: true,
 		},
@@ -230,7 +236,7 @@ func TestListRelations(t *testing.T) {
 			name: "missing subject id",
 			check: ListAccess{
 				ObjectType: "organization",
-				ObjectID:   "ulid-of-org",
+				ObjectID:   validULID,
 				Relations:  []string{"can_delete", "can_view", "can_read"},
 			},
 			wantErr: true,
@@ -275,6 +281,8 @@ func TestListRelations(t *testing.T) {
 }
 
 func TestBatchCheckTuples(t *testing.T) {
+	validULID := ulids.New().String()
+
 	tests := []struct {
 		name        string
 		checks      []ofgaclient.ClientBatchCheckItem
@@ -285,21 +293,21 @@ func TestBatchCheckTuples(t *testing.T) {
 			name: "happy path",
 			checks: []ofgaclient.ClientBatchCheckItem{
 				{
-					User:          "user:ulid-of-member",
+					User:          "user:" + validULID,
 					Relation:      "can_edit",
-					Object:        "organization:ulid-of-org",
+					Object:        "organization:" + validULID,
 					CorrelationId: ulids.New().String(),
 				},
 				{
-					User:          "user:ulid-of-member",
+					User:          "user:" + validULID,
 					Relation:      "can_view",
-					Object:        "organization:ulid-of-org",
+					Object:        "organization:" + validULID,
 					CorrelationId: ulids.New().String(),
 				},
 				{
-					User:          "user:ulid-of-member",
+					User:          "user:" + validULID,
 					Relation:      "can_delete",
-					Object:        "organization:ulid-of-org",
+					Object:        "organization:" + validULID,
 					CorrelationId: ulids.New().String(),
 				},
 			},
@@ -310,23 +318,23 @@ func TestBatchCheckTuples(t *testing.T) {
 			name: "happy path with context",
 			checks: []ofgaclient.ClientBatchCheckItem{
 				{
-					User:          "user:ulid-of-member",
+					User:          "user:" + validULID,
 					Relation:      "can_edit",
-					Object:        "organization:ulid-of-org",
+					Object:        "organization:" + validULID,
 					CorrelationId: ulids.New().String(),
 					Context:       &map[string]any{"role": "admin"},
 				},
 				{
-					User:          "user:ulid-of-member",
+					User:          "user:" + validULID,
 					Relation:      "can_view",
-					Object:        "organization:ulid-of-org",
+					Object:        "organization:" + validULID,
 					CorrelationId: ulids.New().String(),
 					Context:       &map[string]any{"role": "admin"},
 				},
 				{
-					User:          "user:ulid-of-member",
+					User:          "user:" + validULID,
 					Relation:      "can_delete",
-					Object:        "organization:ulid-of-org",
+					Object:        "organization:" + validULID,
 					CorrelationId: ulids.New().String(),
 					Context:       &map[string]any{"role": "admin"},
 				},
@@ -374,6 +382,8 @@ func TestBatchCheckTuples(t *testing.T) {
 }
 
 func TestBatchCheckObjectAccess(t *testing.T) {
+	validULID := ulids.New().String()
+
 	tests := []struct {
 		name           string
 		checks         []AccessCheck
@@ -386,19 +396,19 @@ func TestBatchCheckObjectAccess(t *testing.T) {
 			checks: []AccessCheck{
 				{
 					ObjectType: "organization",
-					ObjectID:   "ulid-of-org-1",
+					ObjectID:   validULID,
 					Relation:   "member",
-					SubjectID:  "ulid-of-member",
+					SubjectID:  validULID,
 				},
 				{
 					ObjectType: "organization",
-					ObjectID:   "ulid-of-org-2",
+					ObjectID:   validULID,
 					Relation:   "member",
-					SubjectID:  "ulid-of-member",
+					SubjectID:  validULID,
 				},
 			},
-			checkedObjects: []string{"organization:ulid-of-org-1", "organization:ulid-of-org-2"},
-			expectedRes:    []string{"organization:ulid-of-org-1"},
+			checkedObjects: []string{validULID, validULID},
+			expectedRes:    []string{"organization:" + validULID},
 			wantErr:        false,
 		},
 		{
@@ -406,15 +416,15 @@ func TestBatchCheckObjectAccess(t *testing.T) {
 			checks: []AccessCheck{
 				{
 					ObjectType: "organization",
-					ObjectID:   "ulid-of-org-1",
+					ObjectID:   validULID,
 					Relation:   "member",
-					SubjectID:  "ulid-of-member",
+					SubjectID:  validULID,
 				},
 				{
 					ObjectType: "",
-					ObjectID:   "ulid-of-org-2",
+					ObjectID:   validULID,
 					Relation:   "member",
-					SubjectID:  "ulid-of-member",
+					SubjectID:  validULID,
 				},
 			},
 			expectedRes: nil,
@@ -449,6 +459,209 @@ func TestBatchCheckObjectAccess(t *testing.T) {
 
 			if tc.wantErr {
 				assert.Error(t, err)
+
+				return
+			}
+
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestValidateAccessCheck(t *testing.T) {
+	validULID := ulids.New().String()
+
+	tests := []struct {
+		name    string
+		ac      AccessCheck
+		wantErr bool
+		errRes  string
+	}{
+		{
+			name: "valid access check",
+			ac: AccessCheck{
+				ObjectType: "organization",
+				ObjectID:   validULID,
+				Relation:   "member",
+				SubjectID:  validULID,
+			},
+			wantErr: false,
+			errRes:  "",
+		},
+		{
+			name: "valid access check, wildcard tuple",
+			ac: AccessCheck{
+				ObjectType: "organization",
+				ObjectID:   Wildcard,
+				Relation:   "member",
+				SubjectID:  Wildcard,
+			},
+			wantErr: false,
+			errRes:  "",
+		},
+		{
+			name: "missing object type",
+			ac: AccessCheck{
+				ObjectID:  validULID,
+				Relation:  "member",
+				SubjectID: validULID,
+			},
+			wantErr: true,
+			errRes:  ErrInvalidAccessCheck.Error(),
+		},
+		{
+			name: "missing relation",
+			ac: AccessCheck{
+				ObjectType: "organization",
+				ObjectID:   validULID,
+				SubjectID:  validULID,
+			},
+			wantErr: true,
+			errRes:  ErrInvalidAccessCheck.Error(),
+		},
+		{
+			name: "missing object id",
+			ac: AccessCheck{
+				ObjectType: "organization",
+				Relation:   "member",
+				SubjectID:  validULID,
+			},
+			wantErr: true,
+			errRes:  ErrInvalidAccessCheck.Error(),
+		},
+		{
+			name: "missing subject id",
+			ac: AccessCheck{
+				ObjectType: "organization",
+				ObjectID:   validULID,
+				Relation:   "member",
+			},
+			wantErr: true,
+			errRes:  ErrInvalidAccessCheck.Error(),
+		},
+		{
+			name: "invalid subject id",
+			ac: AccessCheck{
+				ObjectType: "organization",
+				ObjectID:   validULID,
+				Relation:   "member",
+				SubjectID:  "invalid-ulid",
+			},
+			wantErr: true,
+			errRes:  ErrInvalidIDInAccessCheck.Error(),
+		},
+		{
+			name: "invalid object id",
+			ac: AccessCheck{
+				ObjectType: "organization",
+				ObjectID:   "invalid-ulid",
+				Relation:   "member",
+				SubjectID:  validULID,
+			},
+			wantErr: true,
+			errRes:  ErrInvalidIDInAccessCheck.Error(),
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateAccessCheck(tc.ac)
+
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.ErrorContains(t, err, tc.errRes)
+
+				return
+			}
+
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestValidateListAccess(t *testing.T) {
+	validULID := ulids.New().String()
+
+	tests := []struct {
+		name    string
+		la      ListAccess
+		wantErr bool
+		errRes  string
+	}{
+		{
+			name: "valid list access",
+			la: ListAccess{
+				ObjectType: "organization",
+				ObjectID:   validULID,
+				SubjectID:  validULID,
+			},
+			wantErr: false,
+			errRes:  "",
+		},
+		{
+			name: "valid list access, wildcard tuple",
+			la: ListAccess{
+				ObjectType: "organization",
+				ObjectID:   Wildcard,
+				SubjectID:  Wildcard,
+			},
+			wantErr: false,
+			errRes:  "",
+		},
+		{
+			name: "missing object type",
+			la: ListAccess{
+				ObjectID:  validULID,
+				SubjectID: validULID,
+			},
+			wantErr: true,
+			errRes:  ErrInvalidAccessCheck.Error(),
+		},
+		{
+			name: "missing object id",
+			la: ListAccess{
+				ObjectType: "organization",
+				SubjectID:  validULID,
+			},
+			wantErr: true,
+			errRes:  ErrInvalidAccessCheck.Error(),
+		},
+		{
+			name: "missing subject id",
+			la: ListAccess{
+				ObjectType: "organization",
+				ObjectID:   validULID,
+			},
+			wantErr: true,
+			errRes:  ErrInvalidAccessCheck.Error(),
+		},
+		{
+			name: "invalid subject id",
+			la: ListAccess{
+				ObjectType: "organization",
+				ObjectID:   validULID,
+				SubjectID:  "invalid-ulid",
+			},
+			wantErr: true,
+			errRes:  ErrInvalidIDInAccessCheck.Error(),
+		},
+		{
+			name: "invalid object id",
+			la: ListAccess{
+				ObjectType: "organization",
+				ObjectID:   "invalid-ulid",
+				SubjectID:  validULID,
+			},
+			wantErr: true,
+			errRes:  ErrInvalidIDInAccessCheck.Error(),
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateListAccess(tc.la)
+
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.ErrorContains(t, err, tc.errRes)
 
 				return
 			}

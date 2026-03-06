@@ -86,7 +86,8 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 	for id, result := range *results.Result {
 		if result.HasError() {
 			err := result.GetError()
-			log.Error().Str("error", err.GetMessage()).Interface("accessCheck", id).Msg("error checking access")
+
+			log.Error().Str("error", err.GetMessage()).Interface("accessCheck", id).Str("type", getCheckErrorType(err)).Msg("error checking access")
 
 			continue
 		}
@@ -351,18 +352,34 @@ func (c *Client) CheckSystemAdminRole(ctx context.Context, userID string, opts .
 	return c.CheckAccess(ctx, ac, opts...)
 }
 
+func validateID(id string) error {
+	switch id {
+	case "*":
+		return nil
+	case "":
+		return ErrInvalidAccessCheck
+	default:
+		// ensure ID is a valid ULID
+		if _, err := ulids.Parse(id); err != nil {
+			return ErrInvalidIDInAccessCheck
+		}
+	}
+
+	return nil
+}
+
 // validateAccessCheck checks if the AccessCheck struct is valid
 func validateAccessCheck(ac AccessCheck) error {
-	if ac.SubjectID == "" {
-		return ErrInvalidAccessCheck
+	if err := validateID(ac.SubjectID); err != nil {
+		return err
 	}
 
 	if ac.ObjectType == "" {
 		return ErrInvalidAccessCheck
 	}
 
-	if ac.ObjectID == "" {
-		return ErrInvalidAccessCheck
+	if err := validateID(ac.ObjectID); err != nil {
+		return err
 	}
 
 	if ac.Relation == "" {
@@ -374,16 +391,16 @@ func validateAccessCheck(ac AccessCheck) error {
 
 // validateListAccess checks if the ListAccess struct is valid
 func validateListAccess(ac ListAccess) error {
-	if ac.SubjectID == "" {
-		return ErrInvalidAccessCheck
+	if err := validateID(ac.SubjectID); err != nil {
+		return err
 	}
 
 	if ac.ObjectType == "" {
 		return ErrInvalidAccessCheck
 	}
 
-	if ac.ObjectID == "" {
-		return ErrInvalidAccessCheck
+	if err := validateID(ac.ObjectID); err != nil {
+		return err
 	}
 
 	return nil
