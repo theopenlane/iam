@@ -3,6 +3,8 @@ package fgax
 import (
 	"errors"
 	"fmt"
+
+	openfga "github.com/openfga/go-sdk"
 )
 
 var (
@@ -14,6 +16,9 @@ var (
 
 	// ErrInvalidAccessCheck is returned when a field required to check a tuple is empty
 	ErrInvalidAccessCheck = errors.New("unable to check tuple, missing required field")
+
+	// ErrInvalidIDInAccessCheck is returned when the subject ID in an access check is not a valid ULID
+	ErrInvalidIDInAccessCheck = errors.New("unable to check tuple, ID field is not valid")
 
 	// ErrMissingObject is returned when a object is empty in a tuple creation
 	ErrMissingObject = errors.New("unable to create tuple, missing object")
@@ -66,4 +71,16 @@ func newWritingTuplesError(user, relation, object, operation string, err error) 
 		Operation:     operation,
 		ErrorResponse: err,
 	}
+}
+
+func getCheckErrorType(err openfga.CheckError) string {
+	errorType := "unknown"
+	switch {
+	case err.HasInputError():
+		errorType = "input_error"
+	case err.HasInternalError():
+		errorType = "internal_error"
+	}
+
+	return errorType
 }
