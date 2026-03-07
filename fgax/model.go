@@ -3,16 +3,79 @@ package fgax
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
+	"path"
 
+	"github.com/hashicorp/go-multierror"
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
-	language "github.com/openfga/language/pkg/go/transformer"
+	"github.com/openfga/language/pkg/go/transformer"
 	typesystem "github.com/openfga/openfga/pkg/typesystem"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/encoding/protojson"
 )
+
+func (c *Client) CreateModelFromModule(ctx context.Context, fn string) (string, error) {
+	model, err := getModelFromModuleFile(fn)
+	if err != nil {
+		return "", err
+	}
+
+	return c.CreateModelFromDSL(ctx, model)
+}
+
+func getModelFromModuleFile(fn string) ([]byte, error) {
+	modFileContents, err := os.ReadFile(fn)
+	if err != nil {
+		return nil, err
+	}
+
+	parsedModFile, err := transformer.TransformModFile(string(modFileContents))
+	if err != nil {
+		return nil, err
+	}
+
+	moduleFiles := []transformer.ModuleFile{}
+	fileReadErrors := multierror.Error{}
+	directory := path.Dir(fn)
+
+	for _, fileName := range parsedModFile.Contents.Value {
+		filePath := path.Join(directory, fileName.Value)
+
+		fileContents, err := os.ReadFile(filePath)
+		if err != nil {
+			fileReadErrors = *multierror.Append(
+				&fileReadErrors,
+				fmt.Errorf("failed to read module file %s due to %w", fileName.Value, err),
+			)
+
+			continue
+		}
+
+		moduleFiles = append(moduleFiles, transformer.ModuleFile{
+			Name:     fileName.Value,
+			Contents: string(fileContents),
+		})
+	}
+
+	if len(fileReadErrors.Errors) != 0 {
+		return nil, &fileReadErrors
+	}
+
+	parsedAuthModel, err := transformer.TransformModuleFilesToModel(moduleFiles, parsedModFile.Schema.Value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to transform module to model due to %w", err)
+	}
+
+	bytes, err := protojson.Marshal(parsedAuthModel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to transform due to %w", err)
+	}
+
+	return bytes, nil
+}
 
 // CreateModelFromFile creates a new fine grained authorization model and returns the model ID
 func (c *Client) CreateModelFromFile(ctx context.Context, fn string, forceCreate bool) (string, error) {
@@ -74,7 +137,7 @@ func (c *Client) CreateModel(ctx context.Context, model ofgaclient.ClientWriteAu
 
 // dslToJSON converts fga model to JSON
 func dslToJSON(dslString []byte) ([]byte, error) {
-	parsedAuthModel, err := language.TransformDSLToProto(string(dslString))
+	parsedAuthModel, err := transformer.TransformDSLToProto(string(dslString))
 	if err != nil {
 		return []byte{}, errors.Wrap(err, ErrFailedToTransformModel.Error())
 	}

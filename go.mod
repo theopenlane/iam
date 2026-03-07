@@ -13,6 +13,7 @@ require (
 	github.com/google/go-github/v83 v83.0.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/gqlgo/gqlgenc v0.33.1
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/lestrrat-go/httprc/v3 v3.0.4
 	github.com/lestrrat-go/jwx/v3 v3.0.13
 	github.com/oklog/ulid/v2 v2.1.1
@@ -101,7 +102,6 @@ require (
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl/v2 v2.24.0 // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect

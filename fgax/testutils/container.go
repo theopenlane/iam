@@ -21,6 +21,8 @@ type OpenFGATestFixture struct {
 	openFGAVersion string
 	// modelFile is the path to the model file
 	modelFile string
+	// moduleFile is the path to the module file
+	moduleFile string
 	// storeName of the FGA Store, defaults to a random name if not provided
 	storeName string
 	// tf is the openFGA test fixture
@@ -41,6 +43,12 @@ type OpenFGATestFixture struct {
 func WithModelFile(modelFile string) Option {
 	return func(c *OpenFGATestFixture) {
 		c.modelFile = modelFile
+	}
+}
+
+func WithModuleFile(moduleFile string) Option {
+	return func(c *OpenFGATestFixture) {
+		c.moduleFile = moduleFile
 	}
 }
 
@@ -139,9 +147,10 @@ func (o *OpenFGATestFixture) NewFgaClient(ctx context.Context) (*fgax.Client, er
 	}
 
 	fgaConfig := fgax.Config{
-		StoreName: o.storeName,
-		HostURL:   host,
-		ModelFile: o.modelFile,
+		StoreName:  o.storeName,
+		HostURL:    host,
+		ModelFile:  o.modelFile,
+		ModuleFile: o.moduleFile,
 	}
 
 	c, err := fgax.CreateFGAClientWithStore(ctx, fgaConfig)
