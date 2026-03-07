@@ -17,30 +17,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-// CreateModelFromModule creates a new fine grained authorization model from the module file and returns the model ID
-func (c *Client) CreateModelFromModule(ctx context.Context, fn string, forceCreate bool) (string, error) {
-	existingModelID, err := c.checkForExistingModel(ctx, forceCreate)
-	if err != nil {
-		return "", err
-	}
-
-	if existingModelID != "" {
-		return existingModelID, nil
-	}
-
-	modelBytes, err := getModelFromModuleFile(fn)
-	if err != nil {
-		return "", err
-	}
-
-	var body ofgaclient.ClientWriteAuthorizationModelRequest
-	if err := json.Unmarshal(modelBytes, &body); err != nil {
-		return "", err
-	}
-
-	return c.CreateModel(ctx, body)
-}
-
 // CreateModelFromFile creates a new fine grained authorization model and returns the model ID
 func (c *Client) CreateModelFromFile(ctx context.Context, fn string, forceCreate bool) (string, error) {
 	existingModelID, err := c.checkForExistingModel(ctx, forceCreate)
@@ -71,6 +47,30 @@ func (c *Client) CreateModelFromDSL(ctx context.Context, dsl []byte) (string, er
 
 	var body ofgaclient.ClientWriteAuthorizationModelRequest
 	if err := json.Unmarshal(dslJSON, &body); err != nil {
+		return "", err
+	}
+
+	return c.CreateModel(ctx, body)
+}
+
+// CreateModelFromModule creates a new fine grained authorization model from the module file and returns the model ID
+func (c *Client) CreateModelFromModule(ctx context.Context, fn string, forceCreate bool) (string, error) {
+	existingModelID, err := c.checkForExistingModel(ctx, forceCreate)
+	if err != nil {
+		return "", err
+	}
+
+	if existingModelID != "" {
+		return existingModelID, nil
+	}
+
+	modelBytes, err := getModelFromModuleFile(fn)
+	if err != nil {
+		return "", err
+	}
+
+	var body ofgaclient.ClientWriteAuthorizationModelRequest
+	if err := json.Unmarshal(modelBytes, &body); err != nil {
 		return "", err
 	}
 
