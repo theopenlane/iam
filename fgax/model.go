@@ -28,12 +28,17 @@ func (c *Client) CreateModelFromModule(ctx context.Context, fn string, forceCrea
 		return existingModelID, nil
 	}
 
-	model, err := getModelFromModuleFile(fn)
+	modelBytes, err := getModelFromModuleFile(fn)
 	if err != nil {
 		return "", err
 	}
 
-	return c.CreateModelFromDSL(ctx, model)
+	var body ofgaclient.ClientWriteAuthorizationModelRequest
+	if err := json.Unmarshal(modelBytes, &body); err != nil {
+		return "", err
+	}
+
+	return c.CreateModel(ctx, body)
 }
 
 // CreateModelFromFile creates a new fine grained authorization model and returns the model ID
@@ -151,12 +156,12 @@ func getModelFromModuleFile(fn string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to transform module to model due to %w", err)
 	}
 
-	bytes, err := protojson.Marshal(parsedAuthModel)
+	modelBytes, err := protojson.Marshal(parsedAuthModel)
 	if err != nil {
-		return nil, fmt.Errorf("failed to transform due to %w", err)
+		return nil, err
 	}
 
-	return bytes, nil
+	return modelBytes, nil
 }
 
 // dslToJSON converts fga model to JSON
