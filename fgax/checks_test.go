@@ -545,7 +545,7 @@ func TestValidateAccessCheck(t *testing.T) {
 				ObjectType: "organization",
 				ObjectID:   validULID,
 				Relation:   "member",
-				SubjectID:  "invalid-ulid",
+				SubjectID:  "invalid ulid",
 			},
 			wantErr: true,
 			errRes:  ErrInvalidIDInAccessCheck.Error(),
@@ -554,7 +554,7 @@ func TestValidateAccessCheck(t *testing.T) {
 			name: "invalid object id",
 			ac: AccessCheck{
 				ObjectType: "organization",
-				ObjectID:   "invalid-ulid",
+				ObjectID:   "invalid ulid",
 				Relation:   "member",
 				SubjectID:  validULID,
 			},
@@ -639,7 +639,7 @@ func TestValidateListAccess(t *testing.T) {
 			la: ListAccess{
 				ObjectType: "organization",
 				ObjectID:   validULID,
-				SubjectID:  "invalid-ulid",
+				SubjectID:  "invalid ulid",
 			},
 			wantErr: true,
 			errRes:  ErrInvalidIDInAccessCheck.Error(),
@@ -648,7 +648,7 @@ func TestValidateListAccess(t *testing.T) {
 			name: "invalid object id",
 			la: ListAccess{
 				ObjectType: "organization",
-				ObjectID:   "invalid-ulid",
+				ObjectID:   "invalid ulid",
 				SubjectID:  validULID,
 			},
 			wantErr: true,

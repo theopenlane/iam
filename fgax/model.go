@@ -3,11 +3,14 @@ package fgax
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
+	"path"
 
+	"github.com/hashicorp/go-multierror"
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
-	language "github.com/openfga/language/pkg/go/transformer"
+	"github.com/openfga/language/pkg/go/transformer"
 	typesystem "github.com/openfga/openfga/pkg/typesystem"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -16,21 +19,13 @@ import (
 
 // CreateModelFromFile creates a new fine grained authorization model and returns the model ID
 func (c *Client) CreateModelFromFile(ctx context.Context, fn string, forceCreate bool) (string, error) {
-	options := ofgaclient.ClientReadAuthorizationModelsOptions{}
-
-	models, err := c.Ofga.ReadAuthorizationModels(context.Background()).Options(options).Execute()
+	existingModelID, err := c.checkForExistingModel(ctx, forceCreate)
 	if err != nil {
 		return "", err
 	}
 
-	// Only create a new test model if one does not exist and we aren't forcing a new model to be created
-	if !forceCreate {
-		if len(models.AuthorizationModels) > 0 {
-			modelID := models.GetAuthorizationModels()[0].Id
-			log.Info().Str("model_id", modelID).Msg("fga model exists")
-
-			return modelID, nil
-		}
+	if existingModelID != "" {
+		return existingModelID, nil
 	}
 
 	// Create new model
@@ -58,6 +53,30 @@ func (c *Client) CreateModelFromDSL(ctx context.Context, dsl []byte) (string, er
 	return c.CreateModel(ctx, body)
 }
 
+// CreateModelFromModule creates a new fine grained authorization model from the module file and returns the model ID
+func (c *Client) CreateModelFromModule(ctx context.Context, fn string, forceCreate bool) (string, error) {
+	existingModelID, err := c.checkForExistingModel(ctx, forceCreate)
+	if err != nil {
+		return "", err
+	}
+
+	if existingModelID != "" {
+		return existingModelID, nil
+	}
+
+	modelBytes, err := getModelFromModuleFile(fn)
+	if err != nil {
+		return "", err
+	}
+
+	var body ofgaclient.ClientWriteAuthorizationModelRequest
+	if err := json.Unmarshal(modelBytes, &body); err != nil {
+		return "", err
+	}
+
+	return c.CreateModel(ctx, body)
+}
+
 // CreateModel creates a new authorization model and returns the new model ID
 func (c *Client) CreateModel(ctx context.Context, model ofgaclient.ClientWriteAuthorizationModelRequest) (string, error) {
 	resp, err := c.Ofga.WriteAuthorizationModel(ctx).Body(model).Execute()
@@ -72,9 +91,82 @@ func (c *Client) CreateModel(ctx context.Context, model ofgaclient.ClientWriteAu
 	return modelID, nil
 }
 
+func (c *Client) checkForExistingModel(ctx context.Context, forceCreate bool) (string, error) {
+	options := ofgaclient.ClientReadAuthorizationModelsOptions{}
+
+	models, err := c.Ofga.ReadAuthorizationModels(ctx).Options(options).Execute()
+	if err != nil {
+		return "", err
+	}
+
+	// Only create a new test model if one does not exist and we aren't forcing a new model to be created
+	if !forceCreate {
+		if len(models.AuthorizationModels) > 0 {
+			modelID := models.GetAuthorizationModels()[0].Id
+			log.Info().Str("model_id", modelID).Msg("fga model exists")
+
+			return modelID, nil
+		}
+	}
+
+	return "", nil
+}
+
+// getModelFromModuleFile reads the module file and transforms it to the model byte in order to create the model with the DSL
+func getModelFromModuleFile(fn string) ([]byte, error) {
+	modFileContents, err := os.ReadFile(fn)
+	if err != nil {
+		return nil, err
+	}
+
+	parsedModFile, err := transformer.TransformModFile(string(modFileContents))
+	if err != nil {
+		return nil, err
+	}
+
+	moduleFiles := []transformer.ModuleFile{}
+	fileReadErrors := multierror.Error{}
+	directory := path.Dir(fn)
+
+	for _, fileName := range parsedModFile.Contents.Value {
+		filePath := path.Join(directory, fileName.Value)
+
+		fileContents, err := os.ReadFile(filePath)
+		if err != nil {
+			fileReadErrors = *multierror.Append(
+				&fileReadErrors,
+				fmt.Errorf("failed to read module file %s due to %w", fileName.Value, err),
+			)
+
+			continue
+		}
+
+		moduleFiles = append(moduleFiles, transformer.ModuleFile{
+			Name:     fileName.Value,
+			Contents: string(fileContents),
+		})
+	}
+
+	if len(fileReadErrors.Errors) != 0 {
+		return nil, &fileReadErrors
+	}
+
+	parsedAuthModel, err := transformer.TransformModuleFilesToModel(moduleFiles, parsedModFile.Schema.Value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to transform module to model due to %w", err)
+	}
+
+	modelBytes, err := protojson.Marshal(parsedAuthModel)
+	if err != nil {
+		return nil, err
+	}
+
+	return modelBytes, nil
+}
+
 // dslToJSON converts fga model to JSON
 func dslToJSON(dslString []byte) ([]byte, error) {
-	parsedAuthModel, err := language.TransformDSLToProto(string(dslString))
+	parsedAuthModel, err := transformer.TransformDSLToProto(string(dslString))
 	if err != nil {
 		return []byte{}, errors.Wrap(err, ErrFailedToTransformModel.Error())
 	}

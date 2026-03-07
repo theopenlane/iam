@@ -16,7 +16,7 @@ import (
 
 const benchmarkModelDSL = `
 model
-  schema 1.1
+  schema 1.2
 
 type user
 
