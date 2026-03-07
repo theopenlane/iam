@@ -2,6 +2,8 @@ package fgax
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"strings"
 
 	ofgaclient "github.com/openfga/go-sdk/client"
@@ -352,6 +354,10 @@ func (c *Client) CheckSystemAdminRole(ctx context.Context, userID string, opts .
 	return c.CheckAccess(ctx, ac, opts...)
 }
 
+var (
+	idRegex = regexp.MustCompile(`^[^\s]{2,256}$`)
+)
+
 func validateID(id string) error {
 	switch id {
 	case "*":
@@ -360,8 +366,8 @@ func validateID(id string) error {
 		return ErrInvalidAccessCheck
 	default:
 		// ensure ID is a valid ULID
-		if _, err := ulids.Parse(id); err != nil {
-			return ErrInvalidIDInAccessCheck
+		if !idRegex.MatchString(id) {
+			return fmt.Errorf("id (%s) is invalid: %w", id, ErrInvalidIDInAccessCheck)
 		}
 	}
 

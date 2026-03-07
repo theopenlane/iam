@@ -1,6 +1,8 @@
 package tokens
 
-import "context"
+import (
+	"context"
+)
 
 type MockValidator struct {
 	OnVerify            func(string) (*Claims, error)
