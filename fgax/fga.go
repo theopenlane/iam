@@ -198,20 +198,15 @@ func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
 
 		// Create model if one does not already exist
 		if c.ModuleFile != "" {
-			modelID, err := fgaClient.CreateModelFromModule(ctx, c.ModuleFile)
+			c.ModelID, err = fgaClient.CreateModelFromModule(ctx, c.ModuleFile, c.CreateNewModel)
 			if err != nil {
 				return nil, err
 			}
-
-			// Set ModelID in the config
-			c.ModelID = modelID
 		} else {
-			modelID, err := fgaClient.CreateModelFromFile(ctx, c.ModelFile, c.CreateNewModel)
+			c.ModelID, err = fgaClient.CreateModelFromFile(ctx, c.ModelFile, c.CreateNewModel)
 			if err != nil {
 				return nil, err
 			}
-			// Set ModelID in the config
-			c.ModelID = modelID
 		}
 	}
 

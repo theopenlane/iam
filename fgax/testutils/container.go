@@ -46,6 +46,7 @@ func WithModelFile(modelFile string) Option {
 	}
 }
 
+// WithModuleFile sets the module file path for the openFGA client, this will take priority over the model file if provided
 func WithModuleFile(moduleFile string) Option {
 	return func(c *OpenFGATestFixture) {
 		c.moduleFile = moduleFile

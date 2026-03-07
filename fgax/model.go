@@ -17,7 +17,17 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-func (c *Client) CreateModelFromModule(ctx context.Context, fn string) (string, error) {
+// CreateModelFromModule creates a new fine grained authorization model from the module file and returns the model ID
+func (c *Client) CreateModelFromModule(ctx context.Context, fn string, forceCreate bool) (string, error) {
+	existingModelID, err := c.checkForExistingModel(ctx, forceCreate)
+	if err != nil {
+		return "", err
+	}
+
+	if existingModelID != "" {
+		return existingModelID, nil
+	}
+
 	model, err := getModelFromModuleFile(fn)
 	if err != nil {
 		return "", err
@@ -26,6 +36,78 @@ func (c *Client) CreateModelFromModule(ctx context.Context, fn string) (string, 
 	return c.CreateModelFromDSL(ctx, model)
 }
 
+// CreateModelFromFile creates a new fine grained authorization model and returns the model ID
+func (c *Client) CreateModelFromFile(ctx context.Context, fn string, forceCreate bool) (string, error) {
+	existingModelID, err := c.checkForExistingModel(ctx, forceCreate)
+	if err != nil {
+		return "", err
+	}
+
+	if existingModelID != "" {
+		return existingModelID, nil
+	}
+
+	// Create new model
+	dsl, err := os.ReadFile(fn)
+	if err != nil {
+		return "", err
+	}
+
+	return c.CreateModelFromDSL(ctx, dsl)
+}
+
+// CreateModelFromDSL creates a new fine grained authorization model from the DSL and returns the model ID
+func (c *Client) CreateModelFromDSL(ctx context.Context, dsl []byte) (string, error) {
+	// convert to json
+	dslJSON, err := dslToJSON(dsl)
+	if err != nil {
+		return "", err
+	}
+
+	var body ofgaclient.ClientWriteAuthorizationModelRequest
+	if err := json.Unmarshal(dslJSON, &body); err != nil {
+		return "", err
+	}
+
+	return c.CreateModel(ctx, body)
+}
+
+// CreateModel creates a new authorization model and returns the new model ID
+func (c *Client) CreateModel(ctx context.Context, model ofgaclient.ClientWriteAuthorizationModelRequest) (string, error) {
+	resp, err := c.Ofga.WriteAuthorizationModel(ctx).Body(model).Execute()
+	if err != nil {
+		return "", err
+	}
+
+	modelID := resp.GetAuthorizationModelId()
+
+	log.Info().Str("model_id", modelID).Msg("fga model created")
+
+	return modelID, nil
+}
+
+func (c *Client) checkForExistingModel(ctx context.Context, forceCreate bool) (string, error) {
+	options := ofgaclient.ClientReadAuthorizationModelsOptions{}
+
+	models, err := c.Ofga.ReadAuthorizationModels(ctx).Options(options).Execute()
+	if err != nil {
+		return "", err
+	}
+
+	// Only create a new test model if one does not exist and we aren't forcing a new model to be created
+	if !forceCreate {
+		if len(models.AuthorizationModels) > 0 {
+			modelID := models.GetAuthorizationModels()[0].Id
+			log.Info().Str("model_id", modelID).Msg("fga model exists")
+
+			return modelID, nil
+		}
+	}
+
+	return "", nil
+}
+
+// getModelFromModuleFile reads the module file and transforms it to the model byte in order to create the model with the DSL
 func getModelFromModuleFile(fn string) ([]byte, error) {
 	modFileContents, err := os.ReadFile(fn)
 	if err != nil {
@@ -75,64 +157,6 @@ func getModelFromModuleFile(fn string) ([]byte, error) {
 	}
 
 	return bytes, nil
-}
-
-// CreateModelFromFile creates a new fine grained authorization model and returns the model ID
-func (c *Client) CreateModelFromFile(ctx context.Context, fn string, forceCreate bool) (string, error) {
-	options := ofgaclient.ClientReadAuthorizationModelsOptions{}
-
-	models, err := c.Ofga.ReadAuthorizationModels(context.Background()).Options(options).Execute()
-	if err != nil {
-		return "", err
-	}
-
-	// Only create a new test model if one does not exist and we aren't forcing a new model to be created
-	if !forceCreate {
-		if len(models.AuthorizationModels) > 0 {
-			modelID := models.GetAuthorizationModels()[0].Id
-			log.Info().Str("model_id", modelID).Msg("fga model exists")
-
-			return modelID, nil
-		}
-	}
-
-	// Create new model
-	dsl, err := os.ReadFile(fn)
-	if err != nil {
-		return "", err
-	}
-
-	return c.CreateModelFromDSL(ctx, dsl)
-}
-
-// CreateModelFromDSL creates a new fine grained authorization model from the DSL and returns the model ID
-func (c *Client) CreateModelFromDSL(ctx context.Context, dsl []byte) (string, error) {
-	// convert to json
-	dslJSON, err := dslToJSON(dsl)
-	if err != nil {
-		return "", err
-	}
-
-	var body ofgaclient.ClientWriteAuthorizationModelRequest
-	if err := json.Unmarshal(dslJSON, &body); err != nil {
-		return "", err
-	}
-
-	return c.CreateModel(ctx, body)
-}
-
-// CreateModel creates a new authorization model and returns the new model ID
-func (c *Client) CreateModel(ctx context.Context, model ofgaclient.ClientWriteAuthorizationModelRequest) (string, error) {
-	resp, err := c.Ofga.WriteAuthorizationModel(ctx).Body(model).Execute()
-	if err != nil {
-		return "", err
-	}
-
-	modelID := resp.GetAuthorizationModelId()
-
-	log.Info().Str("model_id", modelID).Msg("fga model created")
-
-	return modelID, nil
 }
 
 // dslToJSON converts fga model to JSON
