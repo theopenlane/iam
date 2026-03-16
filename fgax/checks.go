@@ -8,6 +8,7 @@ import (
 
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/rs/zerolog/log"
+	"github.com/theopenlane/iam/auth"
 	"github.com/theopenlane/utils/ulids"
 )
 
@@ -71,6 +72,13 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 		}
 
 		checkRequests = append(checkRequests, *check)
+	}
+
+	for _, check := range checkRequests {
+		parentContextualTuple := getParentContextualTuple(ctx, check.Object)
+		if parentContextualTuple != nil {
+			check.ContextualTuples = append(check.ContextualTuples, *parentContextualTuple)
+		}
 	}
 
 	results, err := c.Ofga.BatchCheck(ctx).Body(
@@ -283,6 +291,11 @@ func (c *Client) CheckGroupAccess(ctx context.Context, ac AccessCheck, opts ...R
 func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckRequest, opts ...RequestOption) (bool, error) {
 	options := getCheckOptions(opts...)
 
+	parentContextualTuple := getParentContextualTuple(ctx, check.Object)
+	if parentContextualTuple != nil {
+		check.ContextualTuples = append(check.ContextualTuples, *parentContextualTuple)
+	}
+
 	data, err := c.Ofga.Check(ctx).Body(check).
 		Options(options).Execute()
 	if err != nil {
@@ -294,6 +307,39 @@ func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckReq
 	return *data.Allowed, nil
 }
 
+// parentContextSkipperKinds is a set of object kinds that should not have parent contextual tuples added for them. This is used to prevent adding parent contextual tuples for organizations and users, which are the top level entities in our authorization model and do not have parent contexts.
+var parentContextSkipperKinds = map[string]struct{}{
+	"organization": {},
+	"user":         {},
+}
+
+// getParentContextualTuple returns a parent context tuple if the organization ID is available in the context. User in the check will always be the `organization:ulid-of-organization`
+func getParentContextualTuple(ctx context.Context, object string) *ofgaclient.ClientTupleKey {
+	// get the organization ID from the context, if available, to add as a parent context tuple for scoping and filters in the authorization model
+	orgID, _ := auth.GetOrganizationIDFromContext(ctx) //nolint:errcheck
+
+	entity, err := ParseEntity(object)
+	if err != nil {
+		log.Error().Err(err).Str("object", object).Msg("error parsing object for contextual tuple, unable to add parent contextual tuple")
+
+		return nil
+	}
+
+	if orgID == "" {
+		return nil
+	}
+
+	if _, ok := parentContextSkipperKinds[strings.ToLower(entity.Kind.String())]; ok {
+		return nil
+	}
+
+	return &ofgaclient.ClientTupleKey{
+		User:     fmt.Sprintf("%s:%s", organizationObject, orgID),
+		Relation: ParentContextRelation,
+		Object:   object,
+	}
+}
+
 // compatibility wrappers for older callers/tests
 func (c *Client) checkTupleMinimizeLatency(ctx context.Context, check ofgaclient.ClientCheckRequest) (bool, error) {
 	return c.checkTuple(ctx, check)
@@ -301,6 +347,13 @@ func (c *Client) checkTupleMinimizeLatency(ctx context.Context, check ofgaclient
 
 // batchCheckTuples checks the openFGA store for provided relationship tuples and returns the allowed relations
 func (c *Client) batchCheckTuples(ctx context.Context, checks []ofgaclient.ClientBatchCheckItem, opts ...RequestOption) ([]string, error) {
+	for _, check := range checks {
+		parentContextualTuple := getParentContextualTuple(ctx, check.Object)
+		if parentContextualTuple != nil {
+			check.ContextualTuples = append(check.ContextualTuples, *parentContextualTuple)
+		}
+	}
+
 	res, err := c.Ofga.BatchCheck(ctx).Body(
 		ofgaclient.ClientBatchCheckRequest{
 			Checks: checks,
