@@ -8,8 +8,9 @@ import (
 
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/rs/zerolog/log"
-	"github.com/theopenlane/iam/auth"
 	"github.com/theopenlane/utils/ulids"
+
+	"github.com/theopenlane/iam/auth"
 )
 
 const (
@@ -74,10 +75,10 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 		checkRequests = append(checkRequests, *check)
 	}
 
-	for _, check := range checkRequests {
+	for i, check := range checkRequests {
 		parentContextualTuple := getParentContextualTuple(ctx, check.Object)
 		if parentContextualTuple != nil {
-			check.ContextualTuples = append(check.ContextualTuples, *parentContextualTuple)
+			checkRequests[i].ContextualTuples = append(checkRequests[i].ContextualTuples, *parentContextualTuple)
 		}
 	}
 
@@ -347,10 +348,10 @@ func (c *Client) checkTupleMinimizeLatency(ctx context.Context, check ofgaclient
 
 // batchCheckTuples checks the openFGA store for provided relationship tuples and returns the allowed relations
 func (c *Client) batchCheckTuples(ctx context.Context, checks []ofgaclient.ClientBatchCheckItem, opts ...RequestOption) ([]string, error) {
-	for _, check := range checks {
+	for i, check := range checks {
 		parentContextualTuple := getParentContextualTuple(ctx, check.Object)
 		if parentContextualTuple != nil {
-			check.ContextualTuples = append(check.ContextualTuples, *parentContextualTuple)
+			checks[i].ContextualTuples = append(checks[i].ContextualTuples, *parentContextualTuple)
 		}
 	}
 
