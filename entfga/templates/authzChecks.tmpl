@@ -126,7 +126,7 @@ func newOrganizationContextKey(e string) *map[string]any {
 
     {{ if $n.Annotations.EntGQL | hasMutationInputSet }}
     func (m *{{ $mutator }}) CheckAccessForEdit(ctx context.Context) error {
-        var objectID string
+        var ids []string
 
         {{ if $orgOwned }}
         caller, ok := auth.CallerFromContext(ctx)
@@ -155,7 +155,9 @@ func newOrganizationContextKey(e string) *map[string]any {
             }
         }
 
-        objectID = orgID
+        if orgID != "" {
+            ids = append(ids, orgID)
+        }
         {{ else }}
 
         gCtx := graphql.GetFieldContext(ctx)
@@ -173,22 +175,26 @@ func newOrganizationContextKey(e string) *map[string]any {
         input, ok := gInput.(Create{{ $name }}Input)
         if ok {
             {{- if $nillable }}
-            objectID = *input.{{ $idField }}
+            ids = append(ids, *input.{{ $idField }})
             {{ else }}
-            objectID = input.{{ $idField }}
+            ids = append(ids, input.{{ $idField }})
             {{ end }}
         }
         {{- end }}
 
         // check the id from the args
-        if objectID == "" {
-            objectID, _ = gCtx.Args["{{ $idField | ToLower }}"].(string)
+        if len(ids) == 0 {
+            if id, ok := gCtx.Args["{{ $idField | ToLower }}"].(string); ok {
+                ids = append(ids, id)
+            } else if bulkIDs, ok := gCtx.Args["ids"].([]string); ok {
+                ids = bulkIDs
+            }
         }
 
         {{- if ne $idField "ID" }}
         // if this is still empty, we need to query the object to get the object id
         // this happens on join tables where we have the join ID (for updates and deletes)
-        if objectID == "" {
+        if len(ids) == 0 {
             id, ok := gCtx.Args["id"].(string)
             if ok {
                 // allow this query to run
@@ -197,15 +203,15 @@ func newOrganizationContextKey(e string) *map[string]any {
                 if err != nil {
                     return privacy.Skipf("nil request, skipping auth check")
                 }
-                objectID = ob.{{ $idField }}
+                ids = append(ids, ob.{{ $idField }})
             }
         }
         {{- end }}
         {{- end }}
 
         // request is for a list objects, will get filtered in interceptors
-        if objectID == ""  {
-            return privacy.Allowf("nil request, bypassing auth check")
+        if len(ids) == 0 {
+            return privacy.Skipf("nil request, bypassing auth check")
         }
 
         caller, ok := auth.CallerFromContext(ctx)
@@ -214,26 +220,28 @@ func newOrganizationContextKey(e string) *map[string]any {
             return privacy.Skipf("unable to get caller from context")
         }
 
-        ac := fgax.AccessCheck{
-            Relation: fgax.CanEdit,
-            ObjectType:  "{{ $objectType | ToLower }}",
-            ObjectID: objectID,
-            SubjectType: caller.SubjectType(),
-            SubjectID: caller.SubjectID,
-            Context: newOrganizationContextKey(caller.SubjectEmail),
+        checks := make([]fgax.AccessCheck, 0, len(ids))
+        for _, objectID := range ids {
+            checks = append(checks, fgax.AccessCheck{
+                Relation: fgax.CanEdit,
+                ObjectType:  "{{ $objectType | ToLower }}",
+                ObjectID: objectID,
+                SubjectType: caller.SubjectType(),
+                SubjectID: caller.SubjectID,
+                Context: newOrganizationContextKey(caller.SubjectEmail),
+            })
         }
 
-        log.Debug().Interface("access_check", ac).Msg("checking relationship tuples")
+        log.Debug().Interface("access_checks", checks).Msg("batch checking relationship tuples")
 
-        access, err := m.Authz.CheckAccess(ctx, ac)
-        if err == nil && access {
-            return privacy.Allow
+        allowedIDs, err := m.Authz.BatchCheckObjectAccess(ctx, checks)
+        if err != nil || len(allowedIDs) != len(ids) {
+            log.Error().Err(err).Int("allowed", len(allowedIDs)).Int("requested", len(ids)).Msg("access denied")
+
+            return ErrPermissionDenied
         }
 
-        log.Error().Interface("access_check", ac).Bool("access_result", access).Msg("access denied")
-
-        // return error if the action is not allowed
-        return ErrPermissionDenied
+        return privacy.Allow
     }
 
     func (m *{{ $mutator }}) CheckAccessForDelete(ctx context.Context) error {
@@ -264,24 +272,25 @@ func newOrganizationContextKey(e string) *map[string]any {
             return privacy.Skipf("unable to get caller from context")
         }
 
+        checks := make([]fgax.AccessCheck, 0, len(ids))
         for _, objectID := range ids {
-            ac := fgax.AccessCheck{
+            checks = append(checks, fgax.AccessCheck{
                 Relation: fgax.CanDelete,
                 ObjectType:  "{{ $objectType | ToLower }}",
                 ObjectID: objectID,
                 SubjectType: caller.SubjectType(),
                 SubjectID: caller.SubjectID,
                 Context: newOrganizationContextKey(caller.SubjectEmail),
-            }
+            })
+        }
 
-            log.Debug().Interface("access_check", ac).Msg("checking relationship tuples")
+        log.Debug().Interface("access_checks", checks).Msg("batch checking relationship tuples")
 
-            access, err := m.Authz.CheckAccess(ctx, ac)
-            if err != nil || !access {
-                log.Error().Interface("access_check", ac).Bool("access_result", access).Msg("access denied")
+        allowedIDs, err := m.Authz.BatchCheckObjectAccess(ctx, checks)
+        if err != nil || len(allowedIDs) != len(ids) {
+            log.Error().Err(err).Int("allowed", len(allowedIDs)).Int("requested", len(ids)).Msg("access denied")
 
-                return ErrPermissionDenied
-            }
+            return ErrPermissionDenied
         }
 
         return privacy.Allow
