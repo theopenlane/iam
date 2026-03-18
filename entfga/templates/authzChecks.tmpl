@@ -244,11 +244,18 @@ func newOrganizationContextKey(e string) *map[string]any {
             return privacy.Skipf("not a graphql request, no context to check")
         }
 
-        objectID, ok := gCtx.Args["id"].(string)
-        if !ok {
+        var ids []string
+
+        if id, ok := gCtx.Args["id"].(string); ok {
+            ids = append(ids, id)
+        } else if bulkIDs, ok := gCtx.Args["ids"].([]string); ok {
+            ids = bulkIDs
+        }
+
+        if len(ids) == 0 {
             log.Info().Msg("no id found in args, skipping auth check, will be filtered in hooks")
 
-            return privacy.Allowf("nil request, bypassing auth check")
+            return privacy.Skipf("no id found in args")
         }
 
         caller, ok := auth.CallerFromContext(ctx)
@@ -257,26 +264,27 @@ func newOrganizationContextKey(e string) *map[string]any {
             return privacy.Skipf("unable to get caller from context")
         }
 
-        ac := fgax.AccessCheck{
-            Relation: fgax.CanDelete,
-            ObjectType:  "{{ $objectType | ToLower }}",
-            ObjectID: objectID,
-            SubjectType: caller.SubjectType(),
-            SubjectID: caller.SubjectID,
-            Context: newOrganizationContextKey(caller.SubjectEmail),
+        for _, objectID := range ids {
+            ac := fgax.AccessCheck{
+                Relation: fgax.CanDelete,
+                ObjectType:  "{{ $objectType | ToLower }}",
+                ObjectID: objectID,
+                SubjectType: caller.SubjectType(),
+                SubjectID: caller.SubjectID,
+                Context: newOrganizationContextKey(caller.SubjectEmail),
+            }
+
+            log.Debug().Interface("access_check", ac).Msg("checking relationship tuples")
+
+            access, err := m.Authz.CheckAccess(ctx, ac)
+            if err != nil || !access {
+                log.Error().Interface("access_check", ac).Bool("access_result", access).Msg("access denied")
+
+                return ErrPermissionDenied
+            }
         }
 
-        log.Debug().Interface("access_check", ac).Msg("checking relationship tuples")
-
-        access, err := m.Authz.CheckAccess(ctx, ac)
-        if err == nil && access {
-            return privacy.Allow
-        }
-
-        log.Error().Interface("access_check", ac).Bool("access_result", access).Msg("access denied")
-
-        // return error if the action is not allowed
-        return ErrPermissionDenied
+        return privacy.Allow
     }
     {{- end }}
     {{- end }}
