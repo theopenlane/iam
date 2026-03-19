@@ -28,6 +28,17 @@ type URLToken interface {
 	SetNonce([]byte)
 }
 
+// signingInfoProvider represents a token that can provide signing information for signing and verifying
+type signingInfoProvider interface {
+	signingInfo() *SigningInfo
+}
+
+// managedURLToken represents a token that can be signed, verified, and provides signing information
+type managedURLToken interface {
+	URLToken
+	signingInfoProvider
+}
+
 // Ensure our token types implement URLToken
 var (
 	_ URLToken = (*VerificationToken)(nil)
@@ -47,11 +58,7 @@ func NewVerificationToken(email string) (token *VerificationToken, err error) {
 		Email: email,
 	}
 
-	if token.SigningInfo, err = NewSigningInfo(time.Hour * 24 * expirationDays); err != nil {
-		return nil, err
-	}
-
-	return token, nil
+	return initializeURLToken(token, time.Hour*24*expirationDays)
 }
 
 // VerificationToken packages an email address with random data and an expiration
@@ -65,7 +72,7 @@ type VerificationToken struct {
 // users as part of a URL. The returned secret should be stored in the database so that
 // the string can be recomputed when verifying a user provided token.
 func (t *VerificationToken) Sign() (string, []byte, error) {
-	return t.SignToken(t)
+	return signURLToken(t)
 }
 
 // Validate checks that the token has required fields
@@ -77,18 +84,9 @@ func (t *VerificationToken) Validate() error {
 	return nil
 }
 
-// SetNonce sets the nonce for verification
-func (t *VerificationToken) SetNonce(nonce []byte) {
-	t.Nonce = nonce
-}
-
 // Verify checks that a token was signed with the secret and is not expired
 func (t *VerificationToken) Verify(signature string, secret []byte) error {
-	if err := t.Validate(); err != nil {
-		return err
-	}
-
-	return t.VerifyToken(t, signature, secret)
+	return verifyURLToken(t, signature, secret)
 }
 
 // NewResetToken creates a token struct from a user ID that expires in 15 minutes
@@ -101,11 +99,7 @@ func NewResetToken(id ulid.ULID) (token *ResetToken, err error) {
 		UserID: id,
 	}
 
-	if token.SigningInfo, err = NewSigningInfo(time.Minute * resetTokenExpirationMinutes); err != nil {
-		return nil, err
-	}
-
-	return token, nil
+	return initializeURLToken(token, time.Minute*resetTokenExpirationMinutes)
 }
 
 // ResetToken packages a user ID with random data and an expiration time so that it can
@@ -119,7 +113,7 @@ type ResetToken struct {
 // users as part of a URL. The returned secret should be stored in the database so that
 // the string can be recomputed when verifying a user provided token
 func (t *ResetToken) Sign() (string, []byte, error) {
-	return t.SignToken(t)
+	return signURLToken(t)
 }
 
 // Validate checks that the token has required fields
@@ -131,18 +125,9 @@ func (t *ResetToken) Validate() error {
 	return nil
 }
 
-// SetNonce sets the nonce for verification
-func (t *ResetToken) SetNonce(nonce []byte) {
-	t.Nonce = nonce
-}
-
 // Verify checks that a token was signed with the secret and is not expired
 func (t *ResetToken) Verify(signature string, secret []byte) error {
-	if err := t.Validate(); err != nil {
-		return err
-	}
-
-	return t.VerifyToken(t, signature, secret)
+	return verifyURLToken(t, signature, secret)
 }
 
 // NewSigningInfo creates new signing info with a time expiration
@@ -169,8 +154,45 @@ type SigningInfo struct {
 	Nonce     []byte    `msgpack:"nonce"`
 }
 
+// signingInfo returns the signing info for the token
+func (d *SigningInfo) signingInfo() *SigningInfo {
+	return d
+}
+
+// SetNonce sets the nonce used to reconstruct and verify a token signature.
+func (d *SigningInfo) SetNonce(nonce []byte) {
+	d.Nonce = nonce
+}
+
+// IsExpired checks if the token is expired based on the current time and the expiration time in the signing info
 func (d SigningInfo) IsExpired() bool {
 	return d.ExpiresAt.Before(time.Now())
+}
+
+// initializeURLToken initializes the signing info for a token and returns the token ready to be signed
+func initializeURLToken[T managedURLToken](token T, expires time.Duration) (T, error) {
+	signingInfo, err := NewSigningInfo(expires)
+	if err != nil {
+		return token, err
+	}
+
+	*token.signingInfo() = signingInfo
+
+	return token, nil
+}
+
+// signURLToken marshals and signs any token that embeds SigningInfo
+func signURLToken[T managedURLToken](token T) (string, []byte, error) {
+	return token.signingInfo().SignToken(token)
+}
+
+// verifyURLToken provides common verification logic for all token types
+func verifyURLToken[T managedURLToken](token T, signature string, secret []byte) error {
+	if err := token.Validate(); err != nil {
+		return err
+	}
+
+	return token.signingInfo().VerifyToken(token, signature, secret)
 }
 
 // SignToken marshals and signs any token that embeds SigningInfo
@@ -264,11 +286,7 @@ func NewOrgInvitationToken(email string, orgID ulid.ULID) (token *OrgInviteToken
 		OrgID: orgID,
 	}
 
-	if token.SigningInfo, err = NewSigningInfo(time.Hour * 24 * inviteExpirationDays); err != nil {
-		return nil, err
-	}
-
-	return token, nil
+	return initializeURLToken(token, time.Hour*24*inviteExpirationDays)
 }
 
 // OrgInviteToken packages an email address with random data and an expiration
@@ -283,7 +301,7 @@ type OrgInviteToken struct {
 // users as part of a URL. The returned secret should be stored in the database so that
 // the string can be recomputed when verifying a user provided token.
 func (t *OrgInviteToken) Sign() (string, []byte, error) {
-	return t.SignToken(t)
+	return signURLToken(t)
 }
 
 // Validate checks that the token has required fields
@@ -299,18 +317,9 @@ func (t *OrgInviteToken) Validate() error {
 	return nil
 }
 
-// SetNonce sets the nonce for verification
-func (t *OrgInviteToken) SetNonce(nonce []byte) {
-	t.Nonce = nonce
-}
-
 // Verify checks that a token was signed with the secret and is not expired
 func (t *OrgInviteToken) Verify(signature string, secret []byte) error {
-	if err := t.Validate(); err != nil {
-		return err
-	}
-
-	return t.VerifyToken(t, signature, secret)
+	return verifyURLToken(t, signature, secret)
 }
 
 // DownloadToken encodes the metadata required to authorize a proxied download.
@@ -346,17 +355,13 @@ func NewDownloadToken(objectURI string, opts ...DownloadTokenOption) (*DownloadT
 		}
 	}
 
-	signing, err := NewSigningInfo(cfg.expiresIn)
-	if err != nil {
-		return nil, err
+	token := &DownloadToken{
+		ObjectURI: objectURI,
+		UserID:    cfg.userID,
+		OrgID:     cfg.orgID,
 	}
 
-	return &DownloadToken{
-		ObjectURI:   objectURI,
-		UserID:      cfg.userID,
-		OrgID:       cfg.orgID,
-		SigningInfo: signing,
-	}, nil
+	return initializeURLToken(token, cfg.expiresIn)
 }
 
 // WithDownloadTokenUserID associates the token with a user identifier.
@@ -382,7 +387,7 @@ func WithDownloadTokenExpiresIn(duration time.Duration) DownloadTokenOption {
 
 // Sign returns a URL-safe signature and secret for the token.
 func (t *DownloadToken) Sign() (string, []byte, error) {
-	return t.SignToken(t)
+	return signURLToken(t)
 }
 
 // Validate ensures the token contains the expected metadata.
@@ -394,16 +399,7 @@ func (t *DownloadToken) Validate() error {
 	return nil
 }
 
-// SetNonce updates the signing nonce prior to verification.
-func (t *DownloadToken) SetNonce(nonce []byte) {
-	t.Nonce = nonce
-}
-
 // Verify checks that the signature and secret are valid for the token.
 func (t *DownloadToken) Verify(signature string, secret []byte) error {
-	if err := t.Validate(); err != nil {
-		return err
-	}
-
-	return t.VerifyToken(t, signature, secret)
+	return verifyURLToken(t, signature, secret)
 }
