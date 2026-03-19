@@ -319,14 +319,14 @@ func getParentContextualTuple(ctx context.Context, object string) *ofgaclient.Cl
 	// get the organization ID from the context, if available, to add as a parent context tuple for scoping and filters in the authorization model
 	orgID, _ := auth.GetOrganizationIDFromContext(ctx) //nolint:errcheck
 
+	if orgID == "" {
+		return nil
+	}
+
 	entity, err := ParseEntity(object)
 	if err != nil {
 		log.Error().Err(err).Str("object", object).Msg("error parsing object for contextual tuple, unable to add parent contextual tuple")
 
-		return nil
-	}
-
-	if orgID == "" {
 		return nil
 	}
 
