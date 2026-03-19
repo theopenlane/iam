@@ -30,6 +30,27 @@ func newOrganizationContextKey(e string) *map[string]any {
 
 {{- $nodes := .Graph.Nodes }}
 
+// selfAccessTypes is the set of object types that use object FGA access checks
+// this is auto-generated from entfga schema annotations. This is useful for bulk 
+// operations so we know what schemas we can operate fga batch checks on
+var selfAccessTypes = map[string]bool{
+{{- range $n := $nodes }}
+    {{- if $n.Annotations.Authz }}
+    {{- $defaultOT := extractDefaultObjectType $n.Name }}
+    {{- $objectType := or (extractObjectType $n.Annotations.Authz.ObjectType) $defaultOT }}
+    {{- $orgOwned := extractOrgOwnedField $n.Annotations.Authz.OrgOwnedField }}
+    {{- if and (eq $objectType $defaultOT) (not $orgOwned) }}
+    "{{ $defaultOT | ToLower }}": true,
+    {{- end }}
+    {{- end }}
+{{- end }}
+}
+
+// IsSelfAccessType returns true if the object type uses per-object FGA access checks
+func IsSelfAccessType(objectType string) bool {
+    return selfAccessTypes[objectType]
+}
+
 {{- range $n := $nodes }}
     {{- $name := $n.Name }}
     {{- $defaultObjectType := extractDefaultObjectType $n.Name }}
