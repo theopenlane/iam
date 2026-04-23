@@ -3,7 +3,7 @@ module github.com/theopenlane/iam
 go 1.25.7
 
 require (
-	entgo.io/ent v0.14.6-0.20260317212542-e0ba79d911cc
+	entgo.io/ent v0.14.6
 	github.com/99designs/gqlgen v0.17.88
 	github.com/alicebob/miniredis/v2 v2.37.0
 	github.com/brianvoe/gofakeit/v7 v7.14.1
@@ -23,14 +23,14 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.5.0
 	github.com/redis/go-redis/v9 v9.18.0
-	github.com/rs/zerolog v1.35.0
+	github.com/rs/zerolog v1.35.1
 	github.com/samber/lo v1.53.0
 	github.com/stoewer/go-strcase v1.3.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.41.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.41.0
 	github.com/theopenlane/echox v0.3.0
-	github.com/theopenlane/entx v0.24.0
+	github.com/theopenlane/entx v0.25.1
 	github.com/theopenlane/utils v0.7.0
 	github.com/urfave/cli/v3 v3.8.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
@@ -51,7 +51,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
-	github.com/XSAM/otelsql v0.41.0 // indirect
+	github.com/XSAM/otelsql v0.42.0 // indirect
 	github.com/Yiling-J/theine-go v0.6.2 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
