@@ -4,7 +4,7 @@ go 1.25.7
 
 require (
 	entgo.io/ent v0.14.6
-	github.com/99designs/gqlgen v0.17.88
+	github.com/99designs/gqlgen v0.17.89
 	github.com/alicebob/miniredis/v2 v2.37.0
 	github.com/brianvoe/gofakeit/v7 v7.14.1
 	github.com/docker/docker v28.5.2+incompatible
@@ -19,7 +19,7 @@ require (
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/openfga/go-sdk v0.8.0
 	github.com/openfga/language/pkg/go v0.2.1
-	github.com/openfga/openfga v1.14.1
+	github.com/openfga/openfga v1.14.2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.5.0
 	github.com/redis/go-redis/v9 v9.18.0
