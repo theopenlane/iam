@@ -192,7 +192,7 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 				}
 
 				// refresh and save session cookie
-				ctx, err := config.CreateAndStoreSession(c.Request().Context(), c.Response().Writer, sessionID)
+				ctx, err := config.CreateAndStoreSession(c.Request().Context(), c.Response().Writer, userID)
 				if err != nil {
 					log.Error().Err(err).Msg("unable to create and store new session")
 
