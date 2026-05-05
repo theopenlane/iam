@@ -72,7 +72,7 @@ func TestCallbackHandler(t *testing.T) {
        "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA",
        "example_parameter":"example_value"
      }`
-	expectedToken := &oauth2.Token{
+	expectedToken := &oauth2.Token{ //nolint:gosec // used in tests only, not real credentials
 		AccessToken:  "2YotnFZFEjr1zCsicMWpAA",
 		TokenType:    "example",
 		RefreshToken: "tGzv3JOkF0XG5Qx2TlKWIA",

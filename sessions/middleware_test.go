@@ -1,6 +1,7 @@
 package sessions_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -53,7 +54,7 @@ func TestNewSessionConfig_WithOptions(t *testing.T) {
 
 	// Test that skipper function is set
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -79,7 +80,7 @@ func TestWithSkipperFunc(t *testing.T) {
 	config := sessions.NewSessionConfig(cs, sessions.WithSkipperFunc(skipper))
 
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -100,7 +101,7 @@ func TestWithBeforeFunc(t *testing.T) {
 	config := sessions.NewSessionConfig(cs, sessions.WithBeforeFunc(before))
 
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -151,7 +152,7 @@ func TestLoadAndSaveWithConfig_Skipped(t *testing.T) {
 		return c.String(http.StatusOK, "ok")
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -183,7 +184,7 @@ func TestLoadAndSaveWithConfig_MissingSession(t *testing.T) {
 		return c.String(http.StatusOK, "ok")
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -211,7 +212,7 @@ func TestLoadAndSaveWithConfig_DefaultSkipper(t *testing.T) {
 		return c.String(http.StatusOK, "ok")
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 

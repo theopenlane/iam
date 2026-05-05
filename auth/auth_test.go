@@ -44,7 +44,7 @@ func TestGetAccessToken(t *testing.T) {
 			name:        "happy path from cookie",
 			headerKey:   "",
 			headerValue: "",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:  auth.AccessTokenCookie,
 				Value: testAccessToken,
 			},
@@ -56,7 +56,7 @@ func TestGetAccessToken(t *testing.T) {
 			name:        "happy path cookie and header set",
 			headerKey:   auth.Authorization,
 			headerValue: fmt.Sprintf(bear, testAccessToken),
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:  auth.AccessTokenCookie,
 				Value: "access_token_from_cookie", // to confirm we get the one from the header, this will be a different value
 			},
@@ -92,7 +92,7 @@ func TestGetAccessToken(t *testing.T) {
 			name:        "cookie set, but no access token cookie",
 			headerKey:   "",
 			headerValue: "",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:  "not_an_access_token",
 				Value: testAccessToken,
 			},
@@ -151,7 +151,7 @@ func TestGetRefreshToken(t *testing.T) {
 
 		{
 			name: "happy path from cookie",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:  auth.RefreshTokenCookie,
 				Value: testRefreshToken,
 			},
@@ -167,7 +167,7 @@ func TestGetRefreshToken(t *testing.T) {
 		},
 		{
 			name: "cookie present, but no refresh cookie",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:  "another_cookie",
 				Value: testRefreshToken,
 			},
@@ -272,7 +272,7 @@ func TestCookieExpired(t *testing.T) {
 	}{
 		{
 			name: "expired cookie based on expires",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:    auth.AccessTokenCookie,
 				Value:   "access_token_from_cookie",
 				Expires: time.Now().Add(-1 * time.Minute),
@@ -281,7 +281,7 @@ func TestCookieExpired(t *testing.T) {
 		},
 		{
 			name: "expired cookie based on max age",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:   auth.AccessTokenCookie,
 				Value:  "access_token_from_cookie",
 				MaxAge: -1,
@@ -290,7 +290,7 @@ func TestCookieExpired(t *testing.T) {
 		},
 		{
 			name: "not expired",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:   auth.AccessTokenCookie,
 				Value:  "access_token_from_cookie",
 				MaxAge: 3600,
@@ -299,7 +299,7 @@ func TestCookieExpired(t *testing.T) {
 		},
 		{
 			name: "not expired",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:    auth.AccessTokenCookie,
 				Value:   "access_token_from_cookie",
 				Expires: time.Now().Add(10 * time.Minute),
