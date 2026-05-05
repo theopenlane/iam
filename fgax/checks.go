@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/rs/zerolog/log"
 	"github.com/theopenlane/utils/ulids"
@@ -17,7 +18,6 @@ const (
 	// subject types
 	defaultSubject = userSubject
 	userSubject    = "user"
-	serviceSubject = "service"
 
 	// object types
 	organizationObject = "organization"
@@ -39,6 +39,8 @@ type AccessCheck struct {
 	Relation string
 	// Context is the context of the request used for conditional relationships
 	Context *map[string]any
+	// ContextualTuples are tuples that are contextual to the request and should be included in the decision process, but are not stored in OpenFGA
+	ContextualTuples []ofgaclient.ClientTupleKey
 }
 
 // ListAccess is a struct to hold the information needed to list all relations
@@ -75,13 +77,6 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 		checkRequests = append(checkRequests, *check)
 	}
 
-	for i, check := range checkRequests {
-		parentContextualTuple := getParentContextualTuple(ctx, check.Object)
-		if parentContextualTuple != nil {
-			checkRequests[i].ContextualTuples = append(checkRequests[i].ContextualTuples, *parentContextualTuple)
-		}
-	}
-
 	results, err := c.Ofga.BatchCheck(ctx).Body(
 		ofgaclient.ClientBatchCheckRequest{
 			Checks: checkRequests,
@@ -103,23 +98,25 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 			continue
 		}
 
+		// get id from the correlation ID
+		check, ok := getCheckItemByCorrelationID(id, checkRequests)
+		if !ok {
+			log.Error().Str("correlationID", id).Msg("correlation ID not found in checks")
+
+			continue
+		}
+
+		obj, err := ParseEntity(check.Object)
+		if err != nil {
+			log.Error().Err(err).Str("object", check.Object).Msg("error parsing object")
+
+			return nil, err
+		}
+
 		if result.GetAllowed() {
-			// get id from the correlation ID
-			check, ok := getCheckItemByCorrelationID(id, checkRequests)
-			if !ok {
-				log.Error().Str("correlationID", id).Msg("correlation ID not found in checks")
-
-				continue
-			}
-
-			obj, err := ParseEntity(check.Object)
-			if err != nil {
-				log.Error().Err(err).Str("object", check.Object).Msg("error parsing object")
-
-				return nil, err
-			}
-
 			allowedObjects = append(allowedObjects, obj.Identifier)
+		} else {
+			log.Error().Str("object", obj.Identifier).Interface("accessCheck", check).Msg("user does not have access to the object for the provided check")
 		}
 	}
 
@@ -292,9 +289,11 @@ func (c *Client) CheckGroupAccess(ctx context.Context, ac AccessCheck, opts ...R
 func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckRequest, opts ...RequestOption) (bool, error) {
 	options := getCheckOptions(opts...)
 
-	parentContextualTuple := getParentContextualTuple(ctx, check.Object)
-	if parentContextualTuple != nil {
-		check.ContextualTuples = append(check.ContextualTuples, *parentContextualTuple)
+	if !hasParentContextualTuple(check) {
+		parentContextualTuple := getParentContextualTuple(ctx, check.Object)
+		if parentContextualTuple != nil {
+			check.ContextualTuples = append(check.ContextualTuples, *parentContextualTuple)
+		}
 	}
 
 	data, err := c.Ofga.Check(ctx).Body(check).
@@ -312,6 +311,25 @@ func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckReq
 var parentContextSkipperKinds = map[string]struct{}{
 	"organization": {},
 	"user":         {},
+}
+
+func hasParentContextualTuple[T ofgaclient.ClientBatchCheckItem | ofgaclient.ClientCheckRequest](check T) bool {
+	tuples := []ofgaclient.ClientContextualTupleKey{}
+
+	switch req := any(check).(type) {
+	case ofgaclient.ClientCheckRequest:
+		tuples = req.ContextualTuples
+	case ofgaclient.ClientBatchCheckItem:
+		tuples = req.ContextualTuples
+	}
+
+	for _, tuple := range tuples {
+		if tuple.Relation == ParentContextRelation {
+			return true
+		}
+	}
+
+	return false
 }
 
 // getParentContextualTuple returns a parent context tuple if the organization ID is available in the context. User in the check will always be the `organization:ulid-of-organization`
@@ -334,8 +352,34 @@ func getParentContextualTuple(ctx context.Context, object string) *ofgaclient.Cl
 		return nil
 	}
 
-	return &ofgaclient.ClientTupleKey{
+	tk := &ofgaclient.ClientTupleKey{
 		User:     fmt.Sprintf("%s:%s", organizationObject, orgID),
+		Relation: ParentContextRelation,
+		Object:   object,
+	}
+
+	// group has a condition for public groups
+	if entity.Kind == "group" {
+		relationCondition := openfga.NewRelationshipConditionWithDefaults()
+		relationCondition.SetName("public_group")
+		relationCondition.SetContext(map[string]any{
+			"public": false,
+		})
+
+		tk.SetCondition(*relationCondition)
+	}
+
+	// system does not have parent context
+	if entity.Kind == "system" {
+		return nil
+	}
+
+	return tk
+}
+
+func ParentContextTuple(organizationID, object string) ofgaclient.ClientTupleKey {
+	return ofgaclient.ClientTupleKey{
+		User:     fmt.Sprintf("%s:%s", organizationObject, organizationID),
 		Relation: ParentContextRelation,
 		Object:   object,
 	}
@@ -349,9 +393,14 @@ func (c *Client) checkTupleMinimizeLatency(ctx context.Context, check ofgaclient
 // batchCheckTuples checks the openFGA store for provided relationship tuples and returns the allowed relations
 func (c *Client) batchCheckTuples(ctx context.Context, checks []ofgaclient.ClientBatchCheckItem, opts ...RequestOption) ([]string, error) {
 	for i, check := range checks {
-		parentContextualTuple := getParentContextualTuple(ctx, check.Object)
-		if parentContextualTuple != nil {
-			checks[i].ContextualTuples = append(checks[i].ContextualTuples, *parentContextualTuple)
+		ctxTuples := getContextualTuples(opts...)
+		if len(ctxTuples) > 0 {
+			checks[i].ContextualTuples = append(checks[i].ContextualTuples, ctxTuples...)
+		} else if !hasParentContextualTuple(check) {
+			parentContextualTuple := getParentContextualTuple(ctx, check.Object)
+			if parentContextualTuple != nil {
+				checks[i].ContextualTuples = append(checks[i].ContextualTuples, *parentContextualTuple)
+			}
 		}
 	}
 

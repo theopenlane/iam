@@ -80,7 +80,7 @@ func NewCookie(name, value string, config *CookieConfig) *http.Cookie {
 		return nil
 	}
 
-	cookie := &http.Cookie{
+	cookie := &http.Cookie{ //nolint:gosec
 		Name:     cookieName,
 		Value:    value,
 		Path:     config.Path,

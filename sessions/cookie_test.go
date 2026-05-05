@@ -1,6 +1,7 @@
 package sessions_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -188,8 +189,8 @@ func TestGetCookie(t *testing.T) {
 			name:       "cookie exists",
 			cookieName: "test-cookie",
 			cookies: []*http.Cookie{
-				{Name: "test-cookie", Value: "test-value"},
-				{Name: "other-cookie", Value: "other-value"},
+				{Name: "test-cookie", Value: "test-value"},   //nolint:gosec
+				{Name: "other-cookie", Value: "other-value"}, //nolint:gosec
 			},
 			expectErr: false,
 		},
@@ -197,7 +198,7 @@ func TestGetCookie(t *testing.T) {
 			name:       "cookie does not exist",
 			cookieName: "missing-cookie",
 			cookies: []*http.Cookie{
-				{Name: "test-cookie", Value: "test-value"},
+				{Name: "test-cookie", Value: "test-value"}, //nolint:gosec
 			},
 			expectErr: true,
 		},
@@ -205,7 +206,7 @@ func TestGetCookie(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
 			for _, cookie := range tc.cookies {
 				req.AddCookie(cookie)
 			}
@@ -234,7 +235,7 @@ func TestCookieExpired(t *testing.T) {
 	}{
 		{
 			name: "not expired - future expires",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:    "test",
 				Expires: now.Add(time.Hour),
 				MaxAge:  3600,
@@ -243,7 +244,7 @@ func TestCookieExpired(t *testing.T) {
 		},
 		{
 			name: "expired - past expires",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:    "test",
 				Expires: now.Add(-time.Hour),
 				MaxAge:  3600,
@@ -252,7 +253,7 @@ func TestCookieExpired(t *testing.T) {
 		},
 		{
 			name: "expired - negative MaxAge",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:   "test",
 				MaxAge: -1,
 			},
@@ -260,7 +261,7 @@ func TestCookieExpired(t *testing.T) {
 		},
 		{
 			name: "not expired - no expires set and positive MaxAge",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:   "test",
 				MaxAge: 3600,
 			},
@@ -268,7 +269,7 @@ func TestCookieExpired(t *testing.T) {
 		},
 		{
 			name: "not expired - zero expires and zero MaxAge",
-			cookie: &http.Cookie{
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:   "test",
 				MaxAge: 0,
 			},
@@ -367,9 +368,9 @@ func TestSetCookies(t *testing.T) {
 
 func TestCopyCookiesFromRequest(t *testing.T) {
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.AddCookie(&http.Cookie{Name: "copy_me", Value: "copied"})
-	req.AddCookie(&http.Cookie{Name: "empty", Value: ""})
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: "copy_me", Value: "copied"}) //nolint:gosec
+	req.AddCookie(&http.Cookie{Name: "empty", Value: ""})         //nolint:gosec
 
 	config := sessions.CookieConfig{
 		Path:     "/",
