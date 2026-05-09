@@ -262,7 +262,7 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 				assert.Equal(t, validOpts.Scopes, claims.Scopes)
 			},
 		},
-		{
+		{ //nolint:gosec // obv not a valid token
 			name:    "malformed token",
 			token:   "not.a.valid.token",
 			wantErr: true,

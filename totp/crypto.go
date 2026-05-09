@@ -33,7 +33,7 @@ func BytesFromSample(length int, samples ...string) ([]byte, error) {
 	}
 
 	for i, b := range bytes {
-		bytes[i] = sample[b%byte(len(sample))]
+		bytes[i] = sample[int(b)%len(sample)]
 	}
 
 	return bytes, nil
