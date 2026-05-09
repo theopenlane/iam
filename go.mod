@@ -1,6 +1,6 @@
 module github.com/theopenlane/iam
 
-go 1.26.2
+go 1.26.3
 
 require (
 	entgo.io/ent v0.14.6
@@ -30,7 +30,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.42.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.42.0
 	github.com/theopenlane/echox v0.3.0
-	github.com/theopenlane/entx v0.27.1
+	github.com/theopenlane/entx v0.28.0
 	github.com/theopenlane/utils v0.7.0
 	github.com/urfave/cli/v3 v3.8.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
