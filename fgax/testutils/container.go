@@ -175,10 +175,13 @@ func (o *OpenFGATestFixture) NewFgaClient(ctx context.Context) (*fgax.Client, er
 	}
 
 	fgaConfig := fgax.Config{
-		StoreName:  o.storeName,
-		HostURL:    host,
-		ModelFile:  o.modelFile,
-		ModuleFile: o.moduleFile,
+		StoreName:               o.storeName,
+		HostURL:                 host,
+		ModelFile:               o.modelFile,
+		ModuleFile:              o.moduleFile,
+		DisableParentContext:    o.disableParentContext,
+		ParentContextSkipKinds: o.parentSkipKinds,
+		ParentContextConditions: o.parentContextConditions,
 	}
 
 	c, err := fgax.CreateFGAClientWithStore(ctx, fgaConfig)
