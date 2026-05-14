@@ -38,6 +38,8 @@ type RequestOptions struct {
 	MaxBatchWriteSize int32
 	// MaxParallelRequests holds the maximum number of parallel requests for batch operations
 	MaxParallelRequests int32
+	// ContextualTuples holds tuples that are contextual to the request and should be included in the decision process, but are not stored in OpenFGA
+	ContextualTuples []ofgaclient.ClientTupleKey
 }
 
 // RequestOption is a functional option for RequestOptions
@@ -91,6 +93,13 @@ func WithMaxBatchWriteSize(size int32) RequestOption {
 func WithMaxParallelRequests(count int32) RequestOption {
 	return func(ro *RequestOptions) {
 		ro.MaxParallelRequests = count
+	}
+}
+
+// WithContextualTuples sets contextual tuples for the request that are not stored in OpenFGA but should be included in the decision process
+func WithContextualTuples(tuples []ofgaclient.ClientTupleKey) RequestOption {
+	return func(ro *RequestOptions) {
+		ro.ContextualTuples = tuples
 	}
 }
 
@@ -189,4 +198,9 @@ func getWriteOptions(opts ...RequestOption) ofgaclient.ClientWriteOptions {
 	// write options do not support a consistency field in the SDK
 
 	return o
+}
+
+func getContextualTuples(opts ...RequestOption) []ofgaclient.ClientTupleKey {
+	ro := getRequestOptions(opts...)
+	return ro.ContextualTuples
 }

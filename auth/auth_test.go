@@ -44,7 +44,7 @@ func TestGetAccessToken(t *testing.T) {
 			name:        "happy path from cookie",
 			headerKey:   "",
 			headerValue: "",
-			cookie: &http.Cookie{ //nolint:gosec //nolint:gosec
+			cookie: &http.Cookie{ //nolint:gosec
 				Name:  auth.AccessTokenCookie,
 				Value: testAccessToken,
 			},

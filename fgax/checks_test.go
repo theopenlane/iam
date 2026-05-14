@@ -12,6 +12,7 @@ import (
 
 	"github.com/theopenlane/utils/ulids"
 
+	"github.com/theopenlane/iam/auth"
 	mock_fga "github.com/theopenlane/iam/fgax/internal/mockery"
 )
 
@@ -667,6 +668,61 @@ func TestValidateListAccess(t *testing.T) {
 			}
 
 			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestGetParentContextualTuple(t *testing.T) {
+	validULID := ulids.New().String()
+
+	contextWithOrg := auth.NewTestContextWithOrgID(ulids.New().String(), validULID)
+
+	tests := []struct {
+		name             string
+		context          context.Context
+		object           string
+		expectedTupleKey *ofgaclient.ClientTupleKey
+	}{
+		{
+			name:             "no organization in context",
+			context:          context.Background(),
+			object:           "program:" + validULID,
+			expectedTupleKey: nil,
+		},
+		{
+			name:             "organization object",
+			context:          contextWithOrg,
+			object:           "organization:" + validULID,
+			expectedTupleKey: nil,
+		},
+		{
+			name:             "user object",
+			context:          contextWithOrg,
+			object:           "user:" + validULID,
+			expectedTupleKey: nil,
+		},
+		{
+			name:    "organization in context",
+			context: contextWithOrg,
+			object:  "program:" + validULID,
+			expectedTupleKey: &ofgaclient.ClientTupleKey{
+				User:     "organization:" + validULID,
+				Relation: ParentContextRelation,
+				Object:   "program:" + validULID,
+			},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ct := getParentContextualTuple(tc.context, tc.object)
+
+			if tc.expectedTupleKey == nil {
+				assert.Nil(t, ct)
+				return
+			}
+
+			assert.NotNil(t, ct)
+			assert.Equal(t, tc.expectedTupleKey, ct)
 		})
 	}
 }
