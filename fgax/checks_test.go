@@ -712,9 +712,17 @@ func TestGetParentContextualTuple(t *testing.T) {
 			},
 		},
 	}
+	c := &Client{
+		ParentContextSkipKinds: map[string]struct{}{
+			"organization": {},
+			"user":         {},
+			"system":       {},
+		},
+	}
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ct := getParentContextualTuple(tc.context, tc.object)
+			ct := c.getParentContextualTuple(tc.context, tc.object)
 
 			if tc.expectedTupleKey == nil {
 				assert.Nil(t, ct)

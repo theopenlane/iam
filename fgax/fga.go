@@ -2,6 +2,7 @@ package fgax
 
 import (
 	"context"
+	"strings"
 
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
@@ -17,6 +18,12 @@ type Client struct {
 	Config ofgaclient.ClientConfiguration
 	// MaxBatchWriteSize is the maximum number of writes per batch in a transaction, default 100
 	MaxBatchWriteSize int
+	// ParentContextConditions maps entity kind names to the relationship condition applied on parent context tuples
+	ParentContextConditions map[string]openfga.RelationshipCondition
+	// ParentContextSkipKinds is an additional set of entity kind names that should not have parent context tuples added
+	ParentContextSkipKinds map[string]struct{}
+	// DisableParentContext disables the automatic addition of parent context tuples entirely
+	DisableParentContext bool
 }
 
 // Config configures the openFGA setup
@@ -41,6 +48,22 @@ type Config struct {
 	Credentials Credentials `json:"credentials" koanf:"credentials" jsonschema:"description=credentials for the openFGA client"`
 	// MaxBatchWriteSize is the maximum number of writes per batch in a transaction, default 100
 	MaxBatchWriteSize int `json:"maxbatchwritesize" koanf:"maxbatchwritesize" jsonschema:"description=maximum number of writes per batch in a transaction, defaults to 100" default:"100"`
+	// DisableParentContext disables the automatic addition of parent context tuples entirely
+	DisableParentContext bool `json:"disableparentcontext" koanf:"disableparentcontext" jsonschema:"description=disables the automatic addition of parent context tuples" default:"false"`
+	// ParentContextSkipKinds is a list of entity kind names that should not have parent context tuples added
+	ParentContextSkipKinds []string `json:"parentcontextskipkinds" koanf:"parentcontextskipkinds" jsonschema:"description=entity kind names that should not have parent context tuples added"`
+	// ParentContextConditions defines relationship conditions to apply on parent context tuples per entity kind
+	ParentContextConditions []ParentContextConditionConfig `json:"parentcontextconditions" koanf:"parentcontextconditions" jsonschema:"description=relationship conditions to apply on parent context tuples per entity kind"`
+}
+
+// ParentContextConditionConfig defines a relationship condition to apply on the parent context tuple for a given entity kind
+type ParentContextConditionConfig struct {
+	// Kind is the entity kind name the condition applies to
+	Kind string `json:"kind" koanf:"kind" jsonschema:"description=entity kind name the condition applies to"`
+	// Name is the condition name defined in the authorization model
+	Name string `json:"name" koanf:"name" jsonschema:"description=condition name defined in the authorization model"`
+	// Context is the condition context parameters
+	Context map[string]any `json:"context" koanf:"context" jsonschema:"description=condition context parameters"`
 }
 
 // Credentials for the openFGA client
@@ -136,6 +159,40 @@ func WithClientCredentials(clientID, clientSecret, aud, issuer, scopes string) O
 	}
 }
 
+// WithDisableParentContext disables the automatic addition of parent context tuples for all checks
+func WithDisableParentContext() Option {
+	return func(c *Client) {
+		c.DisableParentContext = true
+	}
+}
+
+// WithParentContextSkipKind adds an entity kind that should not have a parent context tuple added
+func WithParentContextSkipKind(kind ...string) Option {
+	return func(c *Client) {
+		if c.ParentContextSkipKinds == nil {
+			c.ParentContextSkipKinds = map[string]struct{}{}
+		}
+
+		for _, k := range kind {
+			c.ParentContextSkipKinds[strings.ToLower(k)] = struct{}{}
+		}
+	}
+}
+
+// WithParentContextCondition registers a relationship condition to be applied on the parent context tuple for the given entity kind
+func WithParentContextCondition(kind, conditionName string, conditionContext map[string]any) Option {
+	return func(c *Client) {
+		if c.ParentContextConditions == nil {
+			c.ParentContextConditions = map[string]openfga.RelationshipCondition{}
+		}
+
+		cond := openfga.NewRelationshipConditionWithDefaults()
+		cond.SetName(conditionName)
+		cond.SetContext(conditionContext)
+		c.ParentContextConditions[kind] = *cond
+	}
+}
+
 // WithToken sets the client credentials
 func WithToken(token string) Option {
 	return func(c *Client) {
@@ -214,6 +271,18 @@ func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
 	opts = append(opts,
 		WithAuthorizationModelID(c.ModelID),
 	)
+
+	if c.DisableParentContext {
+		opts = append(opts, WithDisableParentContext())
+	}
+
+	if len(c.ParentContextSkipKinds) > 0 {
+		opts = append(opts, WithParentContextSkipKind(c.ParentContextSkipKinds...))
+	}
+
+	for _, cond := range c.ParentContextConditions {
+		opts = append(opts, WithParentContextCondition(cond.Kind, cond.Name, cond.Context))
+	}
 
 	// create fga client with store ID
 	client, err := NewClient(

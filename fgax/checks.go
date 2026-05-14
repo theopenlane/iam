@@ -7,7 +7,6 @@ import (
 	"slices"
 	"strings"
 
-	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/rs/zerolog/log"
 	"github.com/theopenlane/utils/ulids"
@@ -294,7 +293,7 @@ func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckReq
 	options := getCheckOptions(opts...)
 
 	if !hasParentContextualTuple(check) {
-		parentContextualTuple := getParentContextualTuple(ctx, check.Object)
+		parentContextualTuple := c.getParentContextualTuple(ctx, check.Object)
 		if parentContextualTuple != nil {
 			check.ContextualTuples = append(check.ContextualTuples, *parentContextualTuple)
 		}
@@ -309,12 +308,6 @@ func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckReq
 	}
 
 	return *data.Allowed, nil
-}
-
-// parentContextSkipperKinds is a set of object kinds that should not have parent contextual tuples added for them. This is used to prevent adding parent contextual tuples for organizations and users, which are the top level entities in our authorization model and do not have parent contexts.
-var parentContextSkipperKinds = map[string]struct{}{
-	"organization": {},
-	"user":         {},
 }
 
 func hasParentContextualTuple[T ofgaclient.ClientBatchCheckItem | ofgaclient.ClientCheckRequest](check T) bool {
@@ -333,7 +326,11 @@ func hasParentContextualTuple[T ofgaclient.ClientBatchCheckItem | ofgaclient.Cli
 }
 
 // getParentContextualTuple returns a parent context tuple if the organization ID is available in the context. User in the check will always be the `organization:ulid-of-organization`
-func getParentContextualTuple(ctx context.Context, object string) *ofgaclient.ClientTupleKey {
+func (c *Client) getParentContextualTuple(ctx context.Context, object string) *ofgaclient.ClientTupleKey {
+	if c.DisableParentContext {
+		return nil
+	}
+
 	// get the organization ID from the context, if available, to add as a parent context tuple for scoping and filters in the authorization model
 	orgID, _ := auth.GetOrganizationIDFromContext(ctx) //nolint:errcheck
 
@@ -346,7 +343,8 @@ func getParentContextualTuple(ctx context.Context, object string) *ofgaclient.Cl
 		return nil
 	}
 
-	if _, ok := parentContextSkipperKinds[strings.ToLower(entity.Kind.String())]; ok {
+	kind := strings.ToLower(entity.Kind.String())
+	if _, ok := c.ParentContextSkipKinds[kind]; ok {
 		return nil
 	}
 
@@ -356,18 +354,8 @@ func getParentContextualTuple(ctx context.Context, object string) *ofgaclient.Cl
 		Object:   object,
 	}
 
-	switch entity.Kind {
-	case "group":
-		// group has a condition for public groups
-		relationCondition := openfga.NewRelationshipConditionWithDefaults()
-		relationCondition.SetName("public_group")
-		relationCondition.SetContext(map[string]any{
-			"public": false,
-		})
-
-		tk.SetCondition(*relationCondition)
-	case "system":
-		return nil
+	if cond, ok := c.ParentContextConditions[kind]; ok {
+		tk.SetCondition(cond)
 	}
 
 	return tk
@@ -393,7 +381,7 @@ func (c *Client) batchCheckTuples(ctx context.Context, checks []ofgaclient.Clien
 		if len(ctxTuples) > 0 {
 			checks[i].ContextualTuples = append(checks[i].ContextualTuples, ctxTuples...)
 		} else if !hasParentContextualTuple(check) {
-			parentContextualTuple := getParentContextualTuple(ctx, check.Object)
+			parentContextualTuple := c.getParentContextualTuple(ctx, check.Object)
 			if parentContextualTuple != nil {
 				checks[i].ContextualTuples = append(checks[i].ContextualTuples, *parentContextualTuple)
 			}
