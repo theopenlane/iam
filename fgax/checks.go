@@ -310,6 +310,8 @@ func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckReq
 	return *data.Allowed, nil
 }
 
+// hasParentContextualTuple determine if the request has an existing parent_context relation and returns true if so
+// this is used to prevent overwriting existing parent_context tuples on a request
 func hasParentContextualTuple[T ofgaclient.ClientBatchCheckItem | ofgaclient.ClientCheckRequest](check T) bool {
 	tuples := []ofgaclient.ClientContextualTupleKey{}
 
@@ -361,6 +363,7 @@ func (c *Client) getParentContextualTuple(ctx context.Context, object string) *o
 	return tk
 }
 
+// ParentContextTuple creates a tuple with the organization object and id using the parent_context relation
 func ParentContextTuple(organizationID, object string) ofgaclient.ClientTupleKey {
 	return ofgaclient.ClientTupleKey{
 		User:     fmt.Sprintf("%s:%s", organizationObject, organizationID),

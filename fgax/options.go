@@ -200,6 +200,7 @@ func getWriteOptions(opts ...RequestOption) ofgaclient.ClientWriteOptions {
 	return o
 }
 
+// getContextualTuples returns the contextual tuples on a request option
 func getContextualTuples(opts ...RequestOption) []ofgaclient.ClientTupleKey {
 	ro := getRequestOptions(opts...)
 	return ro.ContextualTuples
