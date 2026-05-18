@@ -5,7 +5,7 @@ go 1.26.2
 require (
 	entgo.io/ent v0.14.6
 	github.com/99designs/gqlgen v0.17.90
-	github.com/alicebob/miniredis/v2 v2.37.0
+	github.com/alicebob/miniredis/v2 v2.38.0
 	github.com/brianvoe/gofakeit/v7 v7.15.0
 	github.com/go-webauthn/webauthn v0.17.2
 	github.com/golang-jwt/jwt/v5 v5.3.1
