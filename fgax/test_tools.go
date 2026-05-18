@@ -18,6 +18,11 @@ func NewMockFGAClient(c *mock_fga.MockSdkClient) *Client {
 		},
 		Ofga:              c,
 		MaxBatchWriteSize: defaultMaxWriteBatchSize,
+		ParentContextSkipKinds: map[string]struct{}{
+			"organization": {},
+			"user":         {},
+			"system":       {},
+		},
 	}
 
 	return &client

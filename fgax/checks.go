@@ -4,18 +4,20 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 
 	ofgaclient "github.com/openfga/go-sdk/client"
 	"github.com/rs/zerolog/log"
 	"github.com/theopenlane/utils/ulids"
+
+	"github.com/theopenlane/iam/auth"
 )
 
 const (
 	// subject types
 	defaultSubject = userSubject
 	userSubject    = "user"
-	serviceSubject = "service"
 
 	// object types
 	organizationObject = "organization"
@@ -37,6 +39,8 @@ type AccessCheck struct {
 	Relation string
 	// Context is the context of the request used for conditional relationships
 	Context *map[string]any
+	// ContextualTuples are tuples that are contextual to the request and should be included in the decision process, but are not stored in OpenFGA
+	ContextualTuples []ofgaclient.ClientTupleKey
 }
 
 // ListAccess is a struct to hold the information needed to list all relations
@@ -70,6 +74,11 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 			return nil, err
 		}
 
+		ctxTuples := getContextualTuples(opts...)
+		if len(ctxTuples) > 0 {
+			check.ContextualTuples = append(check.ContextualTuples, ctxTuples...)
+		}
+
 		checkRequests = append(checkRequests, *check)
 	}
 
@@ -94,22 +103,22 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 			continue
 		}
 
+		// get id from the correlation ID
+		check, ok := getCheckItemByCorrelationID(id, checkRequests)
+		if !ok {
+			log.Error().Str("correlationID", id).Msg("correlation ID not found in checks")
+
+			continue
+		}
+
+		obj, err := ParseEntity(check.Object)
+		if err != nil {
+			log.Error().Err(err).Str("object", check.Object).Msg("error parsing object")
+
+			return nil, err
+		}
+
 		if result.GetAllowed() {
-			// get id from the correlation ID
-			check, ok := getCheckItemByCorrelationID(id, checkRequests)
-			if !ok {
-				log.Error().Str("correlationID", id).Msg("correlation ID not found in checks")
-
-				continue
-			}
-
-			obj, err := ParseEntity(check.Object)
-			if err != nil {
-				log.Error().Err(err).Str("object", check.Object).Msg("error parsing object")
-
-				return nil, err
-			}
-
 			allowedObjects = append(allowedObjects, obj.Identifier)
 		}
 	}
@@ -283,6 +292,13 @@ func (c *Client) CheckGroupAccess(ctx context.Context, ac AccessCheck, opts ...R
 func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckRequest, opts ...RequestOption) (bool, error) {
 	options := getCheckOptions(opts...)
 
+	if !hasParentContextualTuple(check) {
+		parentContextualTuple := c.getParentContextualTuple(ctx, check.Object)
+		if parentContextualTuple != nil {
+			check.ContextualTuples = append(check.ContextualTuples, *parentContextualTuple)
+		}
+	}
+
 	data, err := c.Ofga.Check(ctx).Body(check).
 		Options(options).Execute()
 	if err != nil {
@@ -294,6 +310,68 @@ func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckReq
 	return *data.Allowed, nil
 }
 
+// hasParentContextualTuple determine if the request has an existing parent_context relation and returns true if so
+// this is used to prevent overwriting existing parent_context tuples on a request
+func hasParentContextualTuple[T ofgaclient.ClientBatchCheckItem | ofgaclient.ClientCheckRequest](check T) bool {
+	tuples := []ofgaclient.ClientContextualTupleKey{}
+
+	switch req := any(check).(type) {
+	case ofgaclient.ClientCheckRequest:
+		tuples = req.ContextualTuples
+	case ofgaclient.ClientBatchCheckItem:
+		tuples = req.ContextualTuples
+	}
+
+	return slices.ContainsFunc(tuples, func(t ofgaclient.ClientTupleKey) bool {
+		return t.Relation == ParentContextRelation
+	})
+}
+
+// getParentContextualTuple returns a parent context tuple if the organization ID is available in the context. User in the check will always be the `organization:ulid-of-organization`
+func (c *Client) getParentContextualTuple(ctx context.Context, object string) *ofgaclient.ClientTupleKey {
+	if c.DisableParentContext {
+		return nil
+	}
+
+	// get the organization ID from the context, if available, to add as a parent context tuple for scoping and filters in the authorization model
+	orgID, _ := auth.GetOrganizationIDFromContext(ctx) //nolint:errcheck
+
+	if orgID == "" {
+		return nil
+	}
+
+	entity, err := ParseEntity(object)
+	if err != nil {
+		return nil
+	}
+
+	kind := strings.ToLower(entity.Kind.String())
+	if _, ok := c.ParentContextSkipKinds[kind]; ok {
+		return nil
+	}
+
+	tk := &ofgaclient.ClientTupleKey{
+		User:     fmt.Sprintf("%s:%s", organizationObject, orgID),
+		Relation: ParentContextRelation,
+		Object:   object,
+	}
+
+	if cond, ok := c.ParentContextConditions[kind]; ok {
+		tk.SetCondition(cond)
+	}
+
+	return tk
+}
+
+// ParentContextTuple creates a tuple with the organization object and id using the parent_context relation
+func ParentContextTuple(organizationID, object string) ofgaclient.ClientTupleKey {
+	return ofgaclient.ClientTupleKey{
+		User:     fmt.Sprintf("%s:%s", organizationObject, organizationID),
+		Relation: ParentContextRelation,
+		Object:   object,
+	}
+}
+
 // compatibility wrappers for older callers/tests
 func (c *Client) checkTupleMinimizeLatency(ctx context.Context, check ofgaclient.ClientCheckRequest) (bool, error) {
 	return c.checkTuple(ctx, check)
@@ -301,6 +379,18 @@ func (c *Client) checkTupleMinimizeLatency(ctx context.Context, check ofgaclient
 
 // batchCheckTuples checks the openFGA store for provided relationship tuples and returns the allowed relations
 func (c *Client) batchCheckTuples(ctx context.Context, checks []ofgaclient.ClientBatchCheckItem, opts ...RequestOption) ([]string, error) {
+	for i, check := range checks {
+		ctxTuples := getContextualTuples(opts...)
+		if len(ctxTuples) > 0 {
+			checks[i].ContextualTuples = append(checks[i].ContextualTuples, ctxTuples...)
+		} else if !hasParentContextualTuple(check) {
+			parentContextualTuple := c.getParentContextualTuple(ctx, check.Object)
+			if parentContextualTuple != nil {
+				checks[i].ContextualTuples = append(checks[i].ContextualTuples, *parentContextualTuple)
+			}
+		}
+	}
+
 	res, err := c.Ofga.BatchCheck(ctx).Body(
 		ofgaclient.ClientBatchCheckRequest{
 			Checks: checks,

@@ -37,6 +37,12 @@ type OpenFGATestFixture struct {
 	cpu int64
 	// envVars is a map of environment variables to set in the container
 	envVars map[string]string
+	// disableParentContext will disable adding the parent context to fga checks
+	disableParentContext bool
+	// parentSkipKinds are the entity kinds that should skip adding the parent context tuple
+	parentSkipKinds []string
+	// parentContextConditions are entity kinds and and conditions to set on the parent context tuple
+	parentContextConditions []fgax.ParentContextConditionConfig
 }
 
 // WithModelFile sets the model file path for the openFGA client
@@ -102,6 +108,27 @@ func WithEnvVars(envVars map[string]string) Option {
 	}
 }
 
+// WithDisableParentContext disable the parent context entirely
+func WithDisableParentContext() Option {
+	return func(c *OpenFGATestFixture) {
+		c.disableParentContext = true
+	}
+}
+
+// WithSkipParentContextKinds sets the entity kinds on the options
+func WithSkipParentContextKinds(kinds ...string) Option {
+	return func(c *OpenFGATestFixture) {
+		c.parentSkipKinds = kinds
+	}
+}
+
+// WithParentSkipConditions sets the conditions on the options
+func WithParentSkipConditions(conditions ...fgax.ParentContextConditionConfig) Option {
+	return func(c *OpenFGATestFixture) {
+		c.parentContextConditions = conditions
+	}
+}
+
 // NewFGATestcontainer creates a new test container with the provided context and options
 func NewFGATestcontainer(ctx context.Context, opts ...Option) *OpenFGATestFixture {
 	// setup the default config
@@ -148,10 +175,13 @@ func (o *OpenFGATestFixture) NewFgaClient(ctx context.Context) (*fgax.Client, er
 	}
 
 	fgaConfig := fgax.Config{
-		StoreName:  o.storeName,
-		HostURL:    host,
-		ModelFile:  o.modelFile,
-		ModuleFile: o.moduleFile,
+		StoreName:               o.storeName,
+		HostURL:                 host,
+		ModelFile:               o.modelFile,
+		ModuleFile:              o.moduleFile,
+		DisableParentContext:    o.disableParentContext,
+		ParentContextSkipKinds: o.parentSkipKinds,
+		ParentContextConditions: o.parentContextConditions,
 	}
 
 	c, err := fgax.CreateFGAClientWithStore(ctx, fgaConfig)

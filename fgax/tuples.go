@@ -45,6 +45,8 @@ const (
 	BlockedRelation = "blocked"
 	// ViewerRelation is the relation to assign viewers to an entity
 	ViewerRelation = "viewer"
+	// ParentContextRelation is the relation for parents of an entity that are only used for contextual checks, this is used for organization context
+	ParentContextRelation = "parent_context"
 
 	// AssigneeRelation is the relation for assignee of an entity
 	AssigneeRelation = "assignee"
