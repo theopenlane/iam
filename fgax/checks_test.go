@@ -718,6 +718,7 @@ func TestGetParentContextualTuple(t *testing.T) {
 			"user":         {},
 			"system":       {},
 		},
+		EnableParentContext: true,
 	}
 
 	for _, tc := range tests {
