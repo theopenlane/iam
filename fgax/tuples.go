@@ -29,6 +29,8 @@ const (
 	AuditorRelation = "auditor"
 	// CollaboratorRelation is the relation for collaborators of an entity
 	CollaboratorRelation = "collaborator"
+	// FullAccessRelation is the relation for owners and super_admins that have access to everything by default
+	FullAccessRelation = "full_access"
 
 	// Wildcard allows for public access (any subject)
 	// see: https://openfga.dev/docs/modeling/public-access
@@ -45,7 +47,7 @@ const (
 	BlockedRelation = "blocked"
 	// ViewerRelation is the relation to assign viewers to an entity
 	ViewerRelation = "viewer"
-	// ParentContextRelation is the relation for parents of an entity that are only used for contextual checks, this is used for organization context
+	// ParentContextRelation is the relation for parents of an entity that are only used for parent organization context
 	ParentContextRelation = "parent_context"
 
 	// AssigneeRelation is the relation for assignee of an entity

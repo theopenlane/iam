@@ -180,7 +180,7 @@ func (o *OpenFGATestFixture) NewFgaClient(ctx context.Context) (*fgax.Client, er
 		ModelFile:               o.modelFile,
 		ModuleFile:              o.moduleFile,
 		DisableParentContext:    o.disableParentContext,
-		ParentContextSkipKinds: o.parentSkipKinds,
+		ParentContextSkipKinds:  o.parentSkipKinds,
 		ParentContextConditions: o.parentContextConditions,
 	}
 
