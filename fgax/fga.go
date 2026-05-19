@@ -22,8 +22,8 @@ type Client struct {
 	ParentContextConditions map[string]openfga.RelationshipCondition
 	// ParentContextSkipKinds is an additional set of entity kind names that should not have parent context tuples added
 	ParentContextSkipKinds map[string]struct{}
-	// DisableParentContext disables the automatic addition of parent context tuples entirely
-	DisableParentContext bool
+	// EnableParentContext disables the automatic addition of parent context tuples entirely
+	EnableParentContext bool
 }
 
 // Config configures the openFGA setup
@@ -48,8 +48,8 @@ type Config struct {
 	Credentials Credentials `json:"credentials" koanf:"credentials" jsonschema:"description=credentials for the openFGA client"`
 	// MaxBatchWriteSize is the maximum number of writes per batch in a transaction, default 100
 	MaxBatchWriteSize int `json:"maxbatchwritesize" koanf:"maxbatchwritesize" jsonschema:"description=maximum number of writes per batch in a transaction, defaults to 100" default:"100"`
-	// DisableParentContext disables the automatic addition of parent context tuples entirely
-	DisableParentContext bool `json:"disableparentcontext" koanf:"disableparentcontext" jsonschema:"description=disables the automatic addition of parent context tuples" default:"true"`
+	// EnabledParentContext disables the automatic addition of parent context tuples entirely
+	EnabledParentContext bool `json:"enableparentcontext" koanf:"enableparentcontext" jsonschema:"description=disables the automatic addition of parent context tuples"`
 	// ParentContextSkipKinds is a list of entity kind names that should not have parent context tuples added
 	ParentContextSkipKinds []string `json:"parentcontextskipkinds" koanf:"parentcontextskipkinds" jsonschema:"description=entity kind names that should not have parent context tuples added"`
 	// ParentContextConditions defines relationship conditions to apply on parent context tuples per entity kind
@@ -162,7 +162,7 @@ func WithClientCredentials(clientID, clientSecret, aud, issuer, scopes string) O
 // WithParentContext enables the automatic addition of parent context tuples for all checks
 func WithParentContext() Option {
 	return func(c *Client) {
-		c.DisableParentContext = false
+		c.EnableParentContext = true
 	}
 }
 
@@ -272,7 +272,7 @@ func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
 		WithAuthorizationModelID(c.ModelID),
 	)
 
-	if c.DisableParentContext {
+	if c.EnabledParentContext {
 		opts = append(opts, WithParentContext())
 	}
 

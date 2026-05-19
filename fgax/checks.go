@@ -338,7 +338,7 @@ func hasParentContextualTuple[T ofgaclient.ClientBatchCheckItem | ofgaclient.Cli
 
 // getParentContextualTuple returns a parent context tuple if the organization ID is available in the context. User in the check will always be the `organization:ulid-of-organization`
 func (c *Client) getParentContextualTuple(ctx context.Context, object string) *ofgaclient.ClientTupleKey {
-	if c.DisableParentContext {
+	if !c.EnableParentContext {
 		return nil
 	}
 

@@ -37,8 +37,8 @@ type OpenFGATestFixture struct {
 	cpu int64
 	// envVars is a map of environment variables to set in the container
 	envVars map[string]string
-	// disableParentContext will disable adding the parent context to fga checks
-	disableParentContext bool
+	// enableParentContext will disable adding the parent context to fga checks
+	enableParentContext bool
 	// parentSkipKinds are the entity kinds that should skip adding the parent context tuple
 	parentSkipKinds []string
 	// parentContextConditions are entity kinds and and conditions to set on the parent context tuple
@@ -111,7 +111,7 @@ func WithEnvVars(envVars map[string]string) Option {
 // WithParentContext enables the parent context entirely
 func WithParentContext() Option {
 	return func(c *OpenFGATestFixture) {
-		c.disableParentContext = false
+		c.enableParentContext = true
 	}
 }
 
@@ -179,7 +179,7 @@ func (o *OpenFGATestFixture) NewFgaClient(ctx context.Context) (*fgax.Client, er
 		HostURL:                 host,
 		ModelFile:               o.modelFile,
 		ModuleFile:              o.moduleFile,
-		DisableParentContext:    o.disableParentContext,
+		EnabledParentContext:    o.enableParentContext,
 		ParentContextSkipKinds:  o.parentSkipKinds,
 		ParentContextConditions: o.parentContextConditions,
 	}
