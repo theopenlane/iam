@@ -3,9 +3,8 @@ package github
 import (
 	"context"
 	"net/http"
-	"net/url"
 
-	"github.com/google/go-github/v84/github"
+	"github.com/google/go-github/v87/github"
 	"golang.org/x/oauth2"
 
 	oauth2Login "github.com/theopenlane/iam/providers/oauth2"
@@ -31,15 +30,7 @@ func LoginHandler(config *oauth2.Config, failure http.Handler) http.Handler {
 
 // CallbackHandler adds the GitHub access token and User to the ctx
 func CallbackHandler(config *oauth2.Config, success, failure http.Handler) http.Handler {
-	success = githubHandler(config, &ClientConfig{IsEnterprise: false, IsMock: false}, success, failure)
-
-	return oauth2Login.CallbackHandler(config, success, failure)
-}
-
-// EnterpriseCallbackHandler handles GitHub Enterprise redirection URI requests
-// and adds the GitHub access token and User to the ctx
-func EnterpriseCallbackHandler(config *oauth2.Config, success, failure http.Handler) http.Handler {
-	success = githubHandler(config, &ClientConfig{IsEnterprise: true, IsMock: false}, success, failure)
+	success = githubHandler(config, &ClientConfig{}, success, failure)
 
 	return oauth2Login.CallbackHandler(config, success, failure)
 }
@@ -111,11 +102,9 @@ func validateResponse(user *github.User, resp *github.Response, err error) error
 	return nil
 }
 
-func getGithubClient(ctx context.Context, clientConfig *ClientConfig, config *oauth2.Config, token *oauth2.Token) (githubClient Client, err error) {
-	// create httClient with provided token
+func getGithubClient(ctx context.Context, clientConfig *ClientConfig, config *oauth2.Config, token *oauth2.Token) (Client, error) {
 	httpClient := config.Client(ctx, token)
 
-	// setup client
 	var g Interface
 
 	g = &Creator{}
@@ -123,35 +112,9 @@ func getGithubClient(ctx context.Context, clientConfig *ClientConfig, config *oa
 		g = &MockInterface{}
 	}
 
-	// Set params for enterprise Github client
-	if clientConfig.IsEnterprise {
-		clientConfig, err = enterpriseGithubClientFromAuthURL(config.Endpoint.AuthURL, clientConfig)
-		if err != nil {
-			return
-		}
-	}
-
-	// Set config on client
 	g.SetConfig(clientConfig)
 
-	// Create new Github Client
-	githubClient = g.NewClient(httpClient)
-
-	return
-}
-
-// enterpriseGithubClientFromAuthURL returns a client config with required settings for GHE instance
-func enterpriseGithubClientFromAuthURL(authURL string, config *ClientConfig) (*ClientConfig, error) {
-	baseURL, err := url.Parse(authURL)
-	if err != nil {
-		return config, ErrFailedConstructingEndpointURL
-	}
-
-	baseURL.Path = "/api/v3/"
-	config.BaseURL = baseURL
-	config.UploadURL = baseURL
-
-	return config, nil
+	return g.NewClient(httpClient)
 }
 
 // getUserEmails from `user/emails` and return the user's primary email address
