@@ -108,10 +108,10 @@ func WithEnvVars(envVars map[string]string) Option {
 	}
 }
 
-// WithDisableParentContext disable the parent context entirely
-func WithDisableParentContext() Option {
+// WithParentContext enables the parent context entirely
+func WithParentContext() Option {
 	return func(c *OpenFGATestFixture) {
-		c.disableParentContext = true
+		c.disableParentContext = false
 	}
 }
 

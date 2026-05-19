@@ -159,10 +159,10 @@ func WithClientCredentials(clientID, clientSecret, aud, issuer, scopes string) O
 	}
 }
 
-// WithDisableParentContext disables the automatic addition of parent context tuples for all checks
-func WithDisableParentContext() Option {
+// WithParentContext enables the automatic addition of parent context tuples for all checks
+func WithParentContext() Option {
 	return func(c *Client) {
-		c.DisableParentContext = true
+		c.DisableParentContext = false
 	}
 }
 
@@ -273,7 +273,7 @@ func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
 	)
 
 	if c.DisableParentContext {
-		opts = append(opts, WithDisableParentContext())
+		opts = append(opts, WithParentContext())
 	}
 
 	if len(c.ParentContextSkipKinds) > 0 {
