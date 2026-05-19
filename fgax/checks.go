@@ -74,9 +74,18 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 			return nil, err
 		}
 
+		if check == nil {
+			continue
+		}
+
 		ctxTuples := getContextualTuples(opts...)
 		if len(ctxTuples) > 0 {
 			check.ContextualTuples = append(check.ContextualTuples, ctxTuples...)
+		} else if !hasParentContextualTuple(*check) {
+			parentContextualTuple := c.getParentContextualTuple(ctx, check.Object)
+			if parentContextualTuple != nil {
+				check.ContextualTuples = append(check.ContextualTuples, *parentContextualTuple)
+			}
 		}
 
 		checkRequests = append(checkRequests, *check)
