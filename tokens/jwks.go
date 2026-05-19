@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"crypto"
+
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/lestrrat-go/jwx/v3/jwk"
+	"github.com/jwx-go/jwkfetch/v4"
+	"github.com/lestrrat-go/jwx/v4/jwk"
 )
 
 // JWKSValidator provides public verification that JWT tokens have been issued by the
@@ -68,11 +71,12 @@ func (v *JWKSValidator) keyFunc(token *jwt.Token) (publicKey any, err error) {
 		}
 	}
 
-	if err = jwk.Export(key, &publicKey); err != nil {
+	rawKey, err := jwk.Export[crypto.PublicKey](key)
+	if err != nil {
 		return nil, fmt.Errorf("could not extract raw key: %w", err)
 	}
 
-	return publicKey, nil
+	return rawKey, nil
 }
 
 // CachedJWKSValidator struct is a type that extends the functionality of the `JWKSValidator`
@@ -83,14 +87,14 @@ func (v *JWKSValidator) keyFunc(token *jwt.Token) (publicKey any, err error) {
 // `Refresh` and`keyFunc` to handle the caching logic
 type CachedJWKSValidator struct {
 	JWKSValidator
-	cache    *jwk.Cache
+	cache    *jwkfetch.Cache
 	endpoint string
 }
 
 // NewCachedJWKSValidator function is a constructor for creating a new instance of the
 // `CachedJWKSValidator` struct. It takes in a `*jwk.Cache`, an endpoint string,
 // an audience string, and an issuer string
-func NewCachedJWKSValidator(cache *jwk.Cache, endpoint, audience, issuer string) (validator *CachedJWKSValidator, err error) {
+func NewCachedJWKSValidator(cache *jwkfetch.Cache, endpoint, audience, issuer string) (validator *CachedJWKSValidator, err error) {
 	validator = &CachedJWKSValidator{
 		cache:    cache,
 		endpoint: endpoint,
