@@ -49,7 +49,7 @@ type Config struct {
 	// MaxBatchWriteSize is the maximum number of writes per batch in a transaction, default 100
 	MaxBatchWriteSize int `json:"maxbatchwritesize" koanf:"maxbatchwritesize" jsonschema:"description=maximum number of writes per batch in a transaction, defaults to 100" default:"100"`
 	// DisableParentContext disables the automatic addition of parent context tuples entirely
-	DisableParentContext bool `json:"disableparentcontext" koanf:"disableparentcontext" jsonschema:"description=disables the automatic addition of parent context tuples" default:"false"`
+	DisableParentContext bool `json:"disableparentcontext" koanf:"disableparentcontext" jsonschema:"description=disables the automatic addition of parent context tuples" default:"true"`
 	// ParentContextSkipKinds is a list of entity kind names that should not have parent context tuples added
 	ParentContextSkipKinds []string `json:"parentcontextskipkinds" koanf:"parentcontextskipkinds" jsonschema:"description=entity kind names that should not have parent context tuples added"`
 	// ParentContextConditions defines relationship conditions to apply on parent context tuples per entity kind
