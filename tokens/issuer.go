@@ -12,7 +12,7 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/lestrrat-go/jwx/v4/jwk"
+	"github.com/lestrrat-go/jwx/v3/jwk"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -237,7 +237,7 @@ func (i *Issuer) Keys() (jwk.Set, error) {
 
 	keys := jwk.NewSet()
 	for kid, pubkey := range i.keys {
-		key, err := jwk.Import[jwk.Key](pubkey)
+		key, err := jwk.Import(pubkey)
 		if err != nil {
 			return nil, err
 		}
@@ -250,12 +250,7 @@ func (i *Issuer) Keys() (jwk.Set, error) {
 			return nil, err
 		}
 
-		if signer, ok := i.signingKeys[kid]; ok {
-			if err = key.Set(jwk.AlgorithmKey, signingMethodForKey(signer).Alg()); err != nil {
-				return nil, err
-			}
-		}
-
+		// Algorithm is automatically inferred by jwx from key type
 		if err = keys.AddKey(key); err != nil {
 			return nil, err
 		}
@@ -492,7 +487,7 @@ func (i *Issuer) genKeyID() (ulid.ULID, error) {
 
 // signingMethodForKey detects the signing method from a crypto.Signer using jwx
 func signingMethodForKey(signer crypto.Signer) jwt.SigningMethod {
-	key, err := jwk.Import[jwk.Key](signer.Public())
+	key, err := jwk.Import(signer.Public())
 	if err != nil {
 		return jwt.SigningMethodEdDSA
 	}

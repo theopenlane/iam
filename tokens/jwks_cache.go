@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lestrrat-go/jwx/v4/jwk"
+	"github.com/lestrrat-go/jwx/v3/jwk"
 )
 
 const (
