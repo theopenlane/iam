@@ -1,15 +1,15 @@
 module github.com/theopenlane/iam
 
-go 1.26.2
+go 1.26.3
 
 require (
 	entgo.io/ent v0.14.6
 	github.com/99designs/gqlgen v0.17.90
-	github.com/alicebob/miniredis/v2 v2.37.0
+	github.com/alicebob/miniredis/v2 v2.38.0
 	github.com/brianvoe/gofakeit/v7 v7.15.0
-	github.com/go-webauthn/webauthn v0.17.2
+	github.com/go-webauthn/webauthn v0.17.3
 	github.com/golang-jwt/jwt/v5 v5.3.1
-	github.com/google/go-github/v84 v84.0.0
+	github.com/google/go-github/v87 v87.0.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/gqlgo/gqlgenc v0.37.0
 	github.com/hashicorp/go-multierror v1.1.1
@@ -30,7 +30,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.42.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.42.0
 	github.com/theopenlane/echox v0.3.0
-	github.com/theopenlane/entx v0.27.1
+	github.com/theopenlane/entx v0.28.0
 	github.com/theopenlane/utils v0.7.0
 	github.com/urfave/cli/v3 v3.9.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
@@ -86,7 +86,7 @@ require (
 	github.com/go-openapi/inflect v0.21.5 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
-	github.com/go-webauthn/x v0.2.3 // indirect
+	github.com/go-webauthn/x v0.2.5 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/google/cel-go v0.28.0 // indirect

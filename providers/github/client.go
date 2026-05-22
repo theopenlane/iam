@@ -3,24 +3,18 @@ package github
 import (
 	"context"
 	"net/http"
-	"net/url"
 
-	"github.com/google/go-github/v84/github"
+	"github.com/google/go-github/v87/github"
 )
 
 // ClientConfig holds the configuration for the GitHub client
 type ClientConfig struct {
-	BaseURL   *url.URL
-	UploadURL *url.URL
-
-	IsEnterprise bool
-	IsMock       bool
+	IsMock bool
 }
 
 // Interface defines all necessary methods
-// https://godoc.org/github.com/google/go-github/github#NewClient
 type Interface interface {
-	NewClient(httpClient *http.Client) Client
+	NewClient(httpClient *http.Client) (Client, error)
 	GetConfig() *ClientConfig
 	SetConfig(config *ClientConfig)
 }
@@ -52,20 +46,15 @@ func (g *Creator) SetConfig(config *ClientConfig) {
 }
 
 // NewClient returns a new GitHubClient
-func (g *Creator) NewClient(httpClient *http.Client) Client {
-	client := github.NewClient(httpClient)
-
-	if g.Config.BaseURL != nil {
-		client.BaseURL = g.Config.BaseURL
-	}
-
-	if g.Config.UploadURL != nil {
-		client.UploadURL = g.Config.UploadURL
+func (g *Creator) NewClient(httpClient *http.Client) (Client, error) {
+	client, err := github.NewClient(github.WithHTTPClient(httpClient))
+	if err != nil {
+		return Client{}, err
 	}
 
 	return Client{
 		Users: client.Users,
-	}
+	}, nil
 }
 
 // MockInterface implements GitHubInterface
@@ -84,10 +73,10 @@ func (g *MockInterface) SetConfig(config *ClientConfig) {
 }
 
 // NewClient returns a new mock GitHubClient
-func (g *MockInterface) NewClient(_ *http.Client) Client {
+func (g *MockInterface) NewClient(_ *http.Client) (Client, error) {
 	return Client{
 		Users: &UsersMock{},
-	}
+	}, nil
 }
 
 // UsersMock mocks UsersService

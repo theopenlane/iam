@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/google/go-github/v84/github"
+	"github.com/google/go-github/v87/github"
 	"github.com/stretchr/testify/assert"
 )
 

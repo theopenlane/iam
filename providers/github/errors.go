@@ -13,9 +13,6 @@ var (
 	// ErrContextMissingGithubUser is returned when the GitHub user is missing from the context
 	ErrContextMissingGithubUser = errors.New("context missing github user")
 
-	// ErrFailedConstructingEndpointURL is returned when URL is invalid and unable to be parsed
-	ErrFailedConstructingEndpointURL = errors.New("error constructing URL")
-
 	// ErrCreatingGithubClient is returned when the GitHub client cannot be created
 	ErrCreatingGithubClient = errors.New("error creating github client")
 
