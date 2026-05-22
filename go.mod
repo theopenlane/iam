@@ -7,7 +7,7 @@ require (
 	github.com/99designs/gqlgen v0.17.90
 	github.com/alicebob/miniredis/v2 v2.38.0
 	github.com/brianvoe/gofakeit/v7 v7.15.0
-	github.com/go-webauthn/webauthn v0.17.3
+	github.com/go-webauthn/webauthn v0.17.4
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v87 v87.0.0
 	github.com/gorilla/securecookie v1.1.2
@@ -17,7 +17,7 @@ require (
 	github.com/lestrrat-go/jwx/v3 v3.1.1
 	github.com/moby/moby/api v1.54.2
 	github.com/oklog/ulid/v2 v2.1.1
-	github.com/openfga/go-sdk v0.8.0
+	github.com/openfga/go-sdk v0.8.1
 	github.com/openfga/language/pkg/go v0.2.1
 	github.com/openfga/openfga v1.16.0
 	github.com/pkg/errors v0.9.1
@@ -31,7 +31,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.42.0
 	github.com/theopenlane/echox v0.3.0
 	github.com/theopenlane/entx v0.28.0
-	github.com/theopenlane/utils v0.7.0
+	github.com/theopenlane/utils v0.7.1
 	github.com/urfave/cli/v3 v3.9.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.36.0
@@ -86,7 +86,7 @@ require (
 	github.com/go-openapi/inflect v0.21.5 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
-	github.com/go-webauthn/x v0.2.5 // indirect
+	github.com/go-webauthn/x v0.2.6 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/google/cel-go v0.28.0 // indirect
@@ -106,7 +106,7 @@ require (
 	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
-	github.com/lib/pq v1.11.2 // indirect
+	github.com/lib/pq v1.12.3 // indirect
 	github.com/lufia/plan9stats v0.0.0-20260330125221-c963978e514e // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
@@ -171,12 +171,12 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.51.0 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
 	golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a // indirect
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.44.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	gonum.org/v1/gonum v0.17.0 // indirect
