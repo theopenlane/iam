@@ -41,9 +41,9 @@ type Config struct {
 	// CreateNewModel force creates a new model, even if one already exists
 	CreateNewModel bool `json:"createnewmodel" koanf:"createnewmodel" jsonschema:"description=force create a new model, even if one already exists" default:"false"`
 	// ModelFile is the path to the model file
-	ModelFile string `json:"modelfile" koanf:"modelfile" jsonschema:"description=path to the fga model file" default:"fga/model/model.fga"`
+	ModelFile string `json:"modelfile" koanf:"modelfile" jsonschema:"description=path to the fga model file" default:""`
 	// ModuleFile is the path to the module file, this will be used over the model file if provided
-	ModuleFile string `json:"modulefile" koanf:"modulefile" jsonschema:"description=path to the fga module file" default:""`
+	ModuleFile string `json:"modulefile" koanf:"modulefile" jsonschema:"description=path to the fga module file" default:"fga/model/fga.mod"`
 	// Credentials for the client
 	Credentials Credentials `json:"credentials" koanf:"credentials" jsonschema:"description=credentials for the openFGA client"`
 	// MaxBatchWriteSize is the maximum number of writes per batch in a transaction, default 100
