@@ -6,6 +6,7 @@
   "postUpdateOptions": [
     "gomodTidy"
   ],
+  "minimumReleaseAge": "7 days",
   "packageRules": [
     {
       "matchPackageNames": [

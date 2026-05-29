@@ -128,4 +128,3 @@ func TestValidateResponse(t *testing.T) {
 	assert.Equal(t, ErrUnableToGetGithubUser, validateResponse(validUser, invalidResponse, nil))
 	assert.Equal(t, ErrUnableToGetGithubUser, validateResponse(&github.User{}, validResponse, nil))
 }
-
