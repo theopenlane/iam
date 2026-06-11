@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	pageSize = int32(5)
+	pageSize = int32(1)
 )
 
 // CreateModelFromFile creates a new fine grained authorization model and returns the model ID
