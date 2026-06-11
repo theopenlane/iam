@@ -17,6 +17,10 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+var (
+	pageSize = int32(5)
+)
+
 // CreateModelFromFile creates a new fine grained authorization model and returns the model ID
 func (c *Client) CreateModelFromFile(ctx context.Context, fn string, forceCreate bool) (string, error) {
 	existingModelID, err := c.checkForExistingModel(ctx, forceCreate)
@@ -92,10 +96,13 @@ func (c *Client) CreateModel(ctx context.Context, model ofgaclient.ClientWriteAu
 }
 
 func (c *Client) checkForExistingModel(ctx context.Context, forceCreate bool) (string, error) {
-	options := ofgaclient.ClientReadAuthorizationModelsOptions{}
+	options := ofgaclient.ClientReadAuthorizationModelsOptions{
+		PageSize: &pageSize,
+	}
 
 	models, err := c.Ofga.ReadAuthorizationModels(ctx).Options(options).Execute()
 	if err != nil {
+		log.Error().Err(err).Msg("unable to get fga models")
 		return "", err
 	}
 
