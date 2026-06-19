@@ -24,6 +24,10 @@ const (
 	CapBypassSubscriptionCheck Capability = 1 << 6
 	// CapSystemAdmin grants global system-administrator privileges
 	CapSystemAdmin Capability = 1 << 7
+	// CapTrustCenterAnonymous gives select bypass to checks
+	CapTrustCenterAnonymous Capability = 1 << 8
+	// CapQuestionnaireAnonymous gives select bypass to checks
+	CapQuestionnaireAnonymous Capability = 1 << 9
 )
 
 // Caller holds the identity and capabilities for any request actor —
@@ -135,6 +139,16 @@ func (c *Caller) IsAnonymous() bool {
 	return c.OrganizationRole == AnonymousRole
 }
 
+// mergeCapabilities ORs a slice of Capability values into a single bitmask
+func mergeCapabilities(caps []Capability) Capability {
+	var merged Capability
+	for _, c := range caps {
+		merged |= c
+	}
+
+	return merged
+}
+
 // WithCapabilities returns a copy of the Caller with the given capabilities added
 func (c *Caller) WithCapabilities(caps Capability) *Caller {
 	cp := *c
@@ -171,33 +185,35 @@ func NewAcmeSolverCaller(orgID string) *Caller {
 
 // newAnonymousCaller constructs an anonymous Caller (trust center, questionnaire, etc.)
 // with AnonymousRole and the standard anonymous capability set
-func newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail string) *Caller {
+func newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail string, additionalCaps ...Capability) *Caller {
+	additionalCaps = append(additionalCaps, CapBypassSubscriptionCheck)
+
 	return &Caller{
 		SubjectID:        subjectID,
 		SubjectName:      subjectName,
 		SubjectEmail:     subjectEmail,
 		OrganizationID:   orgID,
 		OrganizationRole: AnonymousRole,
-		Capabilities:     CapBypassOrgFilter | CapBypassFGA | CapBypassSubscriptionCheck,
+		Capabilities:     mergeCapabilities(additionalCaps),
 	}
 }
 
 // NewTrustCenterBootstrapCaller returns a Caller for trust center initialization
-// before a subject identity is known. Bypasses org-filter and subscription checks.
+// before a subject identity is known. Bypasses subscription checks.
 func NewTrustCenterBootstrapCaller(orgID string) *Caller {
-	return newAnonymousCaller(orgID, "", "", "")
+	return newAnonymousCaller(orgID, "", "", "", CapTrustCenterAnonymous)
 }
 
 // NewTrustCenterCaller returns a Caller for an anonymous trust center viewer
-// with a resolved identity. Bypasses org-filter, FGA, and subscription checks.
+// with a resolved identity. Bypasses subscription checks.
 func NewTrustCenterCaller(orgID, subjectID, subjectName, subjectEmail string) *Caller {
-	return newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail)
+	return newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail, CapTrustCenterAnonymous)
 }
 
 // NewQuestionnaireCaller returns a Caller for an anonymous questionnaire respondent.
-// Bypasses org-filter, FGA, and subscription checks.
+// Bypasses subscription checks.
 func NewQuestionnaireCaller(orgID, subjectID, subjectName, subjectEmail string) *Caller {
-	return newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail)
+	return newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail, CapQuestionnaireAnonymous)
 }
 
 // NewKeystoreCaller returns a Caller for keystore operations.
