@@ -488,7 +488,7 @@ func TestNewTrustCenterBootstrapCaller(t *testing.T) {
 		t.Errorf("OrganizationRole: want %s, got %s", AnonymousRole, c.OrganizationRole)
 	}
 
-	for _, cap := range []Capability{CapBypassOrgFilter, CapBypassFGA, CapBypassSubscriptionCheck} {
+	for _, cap := range []Capability{CapTrustCenterAnonymous, CapBypassSubscriptionCheck} {
 		if !c.Has(cap) {
 			t.Errorf("NewTrustCenterBootstrapCaller must have cap %d", cap)
 		}
@@ -524,7 +524,7 @@ func TestNewTrustCenterCaller(t *testing.T) {
 		t.Errorf("OrganizationRole: want %s, got %s", AnonymousRole, c.OrganizationRole)
 	}
 
-	for _, cap := range []Capability{CapBypassOrgFilter, CapBypassFGA, CapBypassSubscriptionCheck} {
+	for _, cap := range []Capability{CapTrustCenterAnonymous, CapBypassSubscriptionCheck} {
 		if !c.Has(cap) {
 			t.Errorf("NewTrustCenterCaller must have cap %d", cap)
 		}
@@ -556,7 +556,7 @@ func TestNewQuestionnaireCaller(t *testing.T) {
 		t.Errorf("OrganizationRole: want %s, got %s", AnonymousRole, c.OrganizationRole)
 	}
 
-	for _, cap := range []Capability{CapBypassOrgFilter, CapBypassFGA, CapBypassSubscriptionCheck} {
+	for _, cap := range []Capability{CapQuestionnaireAnonymous, CapBypassSubscriptionCheck} {
 		if !c.Has(cap) {
 			t.Errorf("NewQuestionnaireCaller must have cap %d", cap)
 		}

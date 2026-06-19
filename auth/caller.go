@@ -186,7 +186,7 @@ func NewAcmeSolverCaller(orgID string) *Caller {
 // newAnonymousCaller constructs an anonymous Caller (trust center, questionnaire, etc.)
 // with AnonymousRole and the standard anonymous capability set
 func newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail string, additionalCaps ...Capability) *Caller {
-	caps := append(additionalCaps, CapBypassSubscriptionCheck)
+	additionalCaps = append(additionalCaps, CapBypassSubscriptionCheck)
 
 	return &Caller{
 		SubjectID:        subjectID,
@@ -194,7 +194,7 @@ func newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail string, addi
 		SubjectEmail:     subjectEmail,
 		OrganizationID:   orgID,
 		OrganizationRole: AnonymousRole,
-		Capabilities:     mergeCapabilities(caps),
+		Capabilities:     mergeCapabilities(additionalCaps),
 	}
 }
 
@@ -213,7 +213,7 @@ func NewTrustCenterCaller(orgID, subjectID, subjectName, subjectEmail string) *C
 // NewQuestionnaireCaller returns a Caller for an anonymous questionnaire respondent.
 // Bypasses subscription checks.
 func NewQuestionnaireCaller(orgID, subjectID, subjectName, subjectEmail string) *Caller {
-	return newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail)
+	return newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail, CapQuestionnaireAnonymous)
 }
 
 // NewKeystoreCaller returns a Caller for keystore operations.
