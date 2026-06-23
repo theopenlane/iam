@@ -28,6 +28,8 @@ const (
 	CapTrustCenterAnonymous Capability = 1 << 8
 	// CapQuestionnaireAnonymous gives select bypass to checks
 	CapQuestionnaireAnonymous Capability = 1 << 9
+	// CapOrgSupport grants org-scoped support access without bypassing the org filter or owner assignment
+	CapOrgSupport Capability = 1 << 10
 )
 
 // Caller holds the identity and capabilities for any request actor —
@@ -221,6 +223,20 @@ func NewQuestionnaireCaller(orgID, subjectID, subjectName, subjectEmail string) 
 func NewKeystoreCaller() *Caller {
 	return &Caller{
 		Capabilities: CapBypassOrgFilter | CapBypassFGA | CapBypassFeatureCheck | CapInternalOperation,
+	}
+}
+
+// NewOrgSupportCaller returns a Caller for an org-scoped support session within orgID.
+// Keeps the org filter and owner assignment; bypasses feature-flag and subscription checks.
+func NewOrgSupportCaller(orgID, subjectID, subjectName, subjectEmail string) *Caller {
+	return &Caller{
+		SubjectID:          subjectID,
+		SubjectName:        subjectName,
+		SubjectEmail:       subjectEmail,
+		OrganizationID:     orgID,
+		OrganizationIDs:    []string{orgID},
+		AuthenticationType: JWTAuthentication,
+		Capabilities:       CapOrgSupport | CapBypassFeatureCheck | CapBypassSubscriptionCheck,
 	}
 }
 

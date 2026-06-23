@@ -17,7 +17,6 @@ func TestImpersonationClaims(t *testing.T) {
 		Type:              "support",
 		Reason:            "debugging issue",
 		SessionID:         ulids.New().String(),
-		Scopes:            []string{"read", "debug"},
 		TargetUserEmail:   "user@example.com",
 		OriginalToken:     "original-token-here",
 	}
@@ -38,31 +37,6 @@ func TestImpersonationClaims(t *testing.T) {
 		impersonatorID := claims.ParseImpersonatorID()
 		assert.NotEqual(t, ulids.Null, impersonatorID)
 		assert.Equal(t, claims.ImpersonatorID, impersonatorID.String())
-	})
-
-	t.Run("HasScope", func(t *testing.T) {
-		tests := []struct {
-			name  string
-			scope string
-			want  bool
-		}{
-			{
-				name:  "has exact scope",
-				scope: "read",
-				want:  true,
-			},
-			{
-				name:  "missing scope",
-				scope: "write",
-				want:  false,
-			},
-		}
-
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				assert.Equal(t, tt.want, claims.HasScope(tt.scope))
-			})
-		}
 	})
 
 	t.Run("GetSessionID", func(t *testing.T) {
@@ -89,17 +63,6 @@ func TestImpersonationClaims(t *testing.T) {
 		assert.False(t, claims.IsJobImpersonation())
 		assert.False(t, claims.IsSupportImpersonation())
 	})
-}
-
-func TestImpersonationClaims_WithWildcardScope(t *testing.T) {
-	claims := &ImpersonationClaims{
-		Scopes: []string{"*"},
-	}
-
-	assert.True(t, claims.HasScope("read"))
-	assert.True(t, claims.HasScope("write"))
-	assert.True(t, claims.HasScope("admin"))
-	assert.True(t, claims.HasScope("anything"))
 }
 
 func TestImpersonationClaims_InvalidULIDs(t *testing.T) {
@@ -135,7 +98,6 @@ func TestCreateImpersonationTokenOptions(t *testing.T) {
 		Type:              "support",
 		Reason:            "debugging issue",
 		Duration:          4 * time.Hour,
-		Scopes:            []string{"read", "debug"},
 		OriginalToken:     "original-token",
 	}
 
@@ -148,7 +110,6 @@ func TestCreateImpersonationTokenOptions(t *testing.T) {
 	assert.Equal(t, "support", opts.Type)
 	assert.Equal(t, "debugging issue", opts.Reason)
 	assert.Equal(t, 4*time.Hour, opts.Duration)
-	assert.Equal(t, []string{"read", "debug"}, opts.Scopes)
 	assert.Equal(t, "original-token", opts.OriginalToken)
 }
 

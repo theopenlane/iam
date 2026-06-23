@@ -60,7 +60,6 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				OrganizationID:    ulids.New().String(),
 				Type:              "support",
 				Reason:            "debugging user issue",
-				Scopes:            []string{"read", "debug"},
 				OriginalToken:     "original-token",
 			},
 			wantErr: false,
@@ -79,7 +78,6 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				assert.Equal(t, opts.OrganizationID, claims.OrgID)
 				assert.Equal(t, opts.Type, claims.Type)
 				assert.Equal(t, opts.Reason, claims.Reason)
-				assert.Equal(t, opts.Scopes, claims.Scopes)
 				assert.Equal(t, opts.OriginalToken, claims.OriginalToken)
 				assert.NotEmpty(t, claims.SessionID)
 				assert.NotEmpty(t, claims.ID)
@@ -97,7 +95,6 @@ func TestTokenManager_CreateImpersonationToken(t *testing.T) {
 				Type:              "job",
 				Reason:            "async processing",
 				Duration:          48 * time.Hour,
-				Scopes:            []string{"*"},
 			},
 			wantErr: false,
 			verify: func(t *testing.T, token string, _ tokens.CreateImpersonationTokenOptions) {
@@ -237,7 +234,6 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 		Type:              "support",
 		Reason:            "debugging",
 		Duration:          1 * time.Hour,
-		Scopes:            []string{"read"},
 	}
 
 	validToken, err := tm.CreateImpersonationToken(ctx, validOpts)
@@ -259,7 +255,6 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 				assert.Equal(t, validOpts.ImpersonatorID, claims.ImpersonatorID)
 				assert.Equal(t, validOpts.TargetUserID, claims.UserID)
 				assert.Equal(t, validOpts.Type, claims.Type)
-				assert.Equal(t, validOpts.Scopes, claims.Scopes)
 			},
 		},
 		{ //nolint:gosec // obviously not a real token
@@ -497,7 +492,6 @@ func TestTokenManager_ImpersonationTokenLifecycle(t *testing.T) {
 		Type:              "support",
 		Reason:            "debugging issue #123",
 		Duration:          2 * time.Hour,
-		Scopes:            []string{"read", "write", "debug"},
 		OriginalToken:     "original-auth-token",
 	}
 
@@ -519,19 +513,12 @@ func TestTokenManager_ImpersonationTokenLifecycle(t *testing.T) {
 	assert.Equal(t, opts.OrganizationID, claims.OrgID)
 	assert.Equal(t, opts.Type, claims.Type)
 	assert.Equal(t, opts.Reason, claims.Reason)
-	assert.Equal(t, opts.Scopes, claims.Scopes)
 	assert.Equal(t, opts.OriginalToken, claims.OriginalToken)
 
 	// Test parsed IDs
 	assert.Equal(t, opts.TargetUserID, claims.ParseUserID().String())
 	assert.Equal(t, opts.OrganizationID, claims.ParseOrgID().String())
 	assert.Equal(t, opts.ImpersonatorID, claims.ParseImpersonatorID().String())
-
-	// Test scope checking
-	assert.True(t, claims.HasScope("read"))
-	assert.True(t, claims.HasScope("write"))
-	assert.True(t, claims.HasScope("debug"))
-	assert.False(t, claims.HasScope("admin"))
 
 	// Test type checking
 	assert.True(t, claims.IsSupportImpersonation())

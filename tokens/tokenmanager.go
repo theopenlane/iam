@@ -213,7 +213,6 @@ func (tm *TokenManager) CreateImpersonationToken(_ context.Context, opts CreateI
 		Type:              opts.Type,
 		Reason:            opts.Reason,
 		SessionID:         sessionID,
-		Scopes:            opts.Scopes,
 		TargetUserEmail:   opts.TargetUserEmail,
 		OriginalToken:     opts.OriginalToken,
 	}
@@ -517,8 +516,6 @@ type ImpersonationClaims struct {
 	Reason string `json:"reason"`
 	// SessionID uniquely identifies this impersonation session
 	SessionID string `json:"session_id"`
-	// Scopes defines what actions are allowed
-	Scopes []string `json:"scopes"`
 	// TargetUserEmail is the email of the user being impersonated
 	TargetUserEmail string `json:"target_user_email"`
 	// OriginalToken stores the original user's token for reference
@@ -535,7 +532,6 @@ type CreateImpersonationTokenOptions struct {
 	Type              string
 	Reason            string
 	Duration          time.Duration
-	Scopes            []string
 	OriginalToken     string
 }
 
@@ -567,17 +563,6 @@ func (c ImpersonationClaims) ParseImpersonatorID() ulid.ULID {
 	}
 
 	return impersonatorID
-}
-
-// HasScope checks if the impersonation token has a specific scope
-func (c ImpersonationClaims) HasScope(scope string) bool {
-	for _, s := range c.Scopes {
-		if s == scope || s == "*" {
-			return true
-		}
-	}
-
-	return false
 }
 
 // GetSessionID returns the session ID for this impersonation
