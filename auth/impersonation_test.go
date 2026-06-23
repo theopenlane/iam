@@ -38,111 +38,6 @@ func TestImpersonationContext(t *testing.T) {
 	}
 }
 
-func TestImpersonationContextHasScope(t *testing.T) {
-	tests := []struct {
-		name  string
-		ctx   *ImpersonationContext
-		scope string
-		want  bool
-	}{
-		{
-			name: "has exact scope",
-			ctx: &ImpersonationContext{
-				Scopes: []string{"read", "write", "export"},
-			},
-			scope: "write",
-			want:  true,
-		},
-		{
-			name: "has wildcard scope",
-			ctx: &ImpersonationContext{
-				Scopes: []string{"*"},
-			},
-			scope: "anything",
-			want:  true,
-		},
-		{
-			name: "missing scope",
-			ctx: &ImpersonationContext{
-				Scopes: []string{"read"},
-			},
-			scope: "write",
-			want:  false,
-		},
-		{
-			name: "empty scopes",
-			ctx: &ImpersonationContext{
-				Scopes: []string{},
-			},
-			scope: "read",
-			want:  false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, tt.ctx.HasScope(tt.scope))
-		})
-	}
-}
-
-func TestCallerCanPerformAction(t *testing.T) {
-	tests := []struct {
-		name   string
-		caller *Caller
-		action string
-		want   bool
-	}{
-		{
-			name: "not impersonated caller is always allowed",
-			caller: &Caller{
-				SubjectID: "user123",
-			},
-			action: "anything",
-			want:   true,
-		},
-		{
-			name: "expired impersonation denies",
-			caller: &Caller{
-				Impersonation: &ImpersonationContext{
-					ExpiresAt: time.Now().Add(-time.Hour),
-					Scopes:    []string{"*"},
-				},
-			},
-			action: "read",
-			want:   false,
-		},
-		{
-			name: "valid impersonation scope allows",
-			caller: &Caller{
-				Impersonation: &ImpersonationContext{
-					ExpiresAt: time.Now().Add(time.Hour),
-					Scopes:    []string{"read", "export"},
-				},
-			},
-			action: "export",
-			want:   true,
-		},
-		{
-			name: "valid impersonation missing scope denies",
-			caller: &Caller{
-				Impersonation: &ImpersonationContext{
-					ExpiresAt: time.Now().Add(time.Hour),
-					Scopes:    []string{"read"},
-				},
-			},
-			action: "write",
-			want:   false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, tt.caller.CanPerformAction(tt.action))
-		})
-	}
-}
-
 func TestCallerFromContextWithImpersonation(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -206,7 +101,6 @@ func TestImpersonationAuditLog(t *testing.T) {
 		IPAddress:         "192.168.1.1",
 		UserAgent:         "Mozilla/5.0",
 		OrganizationID:    "org123",
-		Scopes:            []string{"read", "debug"},
 		AdditionalData: map[string]any{
 			"ticket_id": "TICKET-123",
 		},
@@ -224,6 +118,5 @@ func TestImpersonationAuditLog(t *testing.T) {
 	assert.Equal(t, "192.168.1.1", auditLog.IPAddress)
 	assert.Equal(t, "Mozilla/5.0", auditLog.UserAgent)
 	assert.Equal(t, "org123", auditLog.OrganizationID)
-	assert.Equal(t, []string{"read", "debug"}, auditLog.Scopes)
 	assert.Equal(t, "TICKET-123", auditLog.AdditionalData["ticket_id"])
 }

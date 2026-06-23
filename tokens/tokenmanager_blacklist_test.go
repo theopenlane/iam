@@ -58,9 +58,7 @@ func TestTokenManagerWithBlacklist(t *testing.T) {
 			OrganizationID:    "org-789",
 			Type:              "admin",
 			Reason:            "debugging user issue",
-			Duration:          1 * time.Hour,
-			Scopes:            []string{"read", "write"},
-		}
+			Duration:          1 * time.Hour,		}
 
 		tokenString, err := tm.CreateImpersonationToken(ctx, opts)
 		assert.NoError(t, err)
@@ -97,9 +95,7 @@ func TestTokenManagerWithBlacklist(t *testing.T) {
 			OrganizationID:    "org-789",
 			Type:              "admin",
 			Reason:            "debugging user issue",
-			Duration:          1 * time.Hour,
-			Scopes:            []string{"read", "write"},
-		}
+			Duration:          1 * time.Hour,		}
 
 		tokenString, err := tmNoBlacklist.CreateImpersonationToken(ctx, opts)
 		assert.NoError(t, err)
@@ -127,9 +123,7 @@ func TestTokenManagerWithBlacklist(t *testing.T) {
 			OrganizationID:    "org-789",
 			Type:              "admin",
 			Reason:            "debugging user issue",
-			Duration:          1 * time.Hour,
-			Scopes:            []string{"read", "write"},
-		}
+			Duration:          1 * time.Hour,		}
 
 		tokenString, err := tm.CreateImpersonationToken(ctx, opts)
 		assert.NoError(t, err)
@@ -162,9 +156,7 @@ func TestTokenManagerWithBlacklist(t *testing.T) {
 			OrganizationID:    "org-789",
 			Type:              "admin",
 			Reason:            "debugging user issue",
-			Duration:          1 * time.Hour,
-			Scopes:            []string{"read", "write"},
-		}
+			Duration:          1 * time.Hour,		}
 
 		tokenString, err := tm.CreateImpersonationToken(ctx, opts)
 		assert.NoError(t, err)
@@ -193,9 +185,7 @@ func TestTokenManagerWithBlacklist(t *testing.T) {
 			OrganizationID:    "org-789",
 			Type:              "admin",
 			Reason:            "debugging user issue",
-			Duration:          1 * time.Hour,
-			Scopes:            []string{"read", "write"},
-		}
+			Duration:          1 * time.Hour,		}
 
 		tokenString, err := tm.CreateImpersonationToken(ctx, opts)
 		assert.NoError(t, err)
@@ -267,9 +257,7 @@ func TestTokenManagerBlacklistEdgeCases(t *testing.T) {
 			OrganizationID:    "org-789",
 			Type:              "admin",
 			Reason:            "debugging user issue",
-			Duration:          1 * time.Hour,
-			Scopes:            []string{"read", "write"},
-		}
+			Duration:          1 * time.Hour,		}
 
 		tokenString, err := tmNil.CreateImpersonationToken(ctx, opts)
 		assert.NoError(t, err)
@@ -323,7 +311,6 @@ func BenchmarkTokenManagerBlacklist(b *testing.B) {
 		Type:              "admin",
 		Reason:            "benchmark test",
 		Duration:          1 * time.Hour,
-		Scopes:            []string{"read", "write"},
 	}
 
 	tokenString, err := tm.CreateImpersonationToken(ctx, opts)

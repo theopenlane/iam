@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"slices"
 	"time"
 )
 
@@ -37,34 +36,11 @@ type ImpersonationContext struct {
 	ExpiresAt time.Time
 	// SessionID is a unique identifier for this impersonation session
 	SessionID string
-	// Scopes defines what actions are allowed during impersonation
-	Scopes []string
 }
 
 // IsExpired checks if the impersonation session has expired
 func (i *ImpersonationContext) IsExpired() bool {
 	return time.Now().After(i.ExpiresAt)
-}
-
-// HasScope checks if the impersonation session allows a specific scope
-func (i *ImpersonationContext) HasScope(scope string) bool {
-	return slices.ContainsFunc(i.Scopes, func(s string) bool {
-		return s == scope || s == "*"
-	})
-}
-
-// CanPerformAction checks whether this caller's impersonation context allows a specific action.
-// Non-impersonated callers are always allowed.
-func (c *Caller) CanPerformAction(scope string) bool {
-	if c == nil || c.Impersonation == nil {
-		return true // Not impersonated, normal user permissions apply
-	}
-
-	if c.Impersonation.IsExpired() {
-		return false // Impersonation has expired
-	}
-
-	return c.Impersonation.HasScope(scope)
 }
 
 // ImpersonationAuditLog represents an audit log entry for impersonation events
@@ -81,6 +57,5 @@ type ImpersonationAuditLog struct {
 	IPAddress         string            `json:"ip_address,omitempty"`
 	UserAgent         string            `json:"user_agent,omitempty"`
 	OrganizationID    string            `json:"organization_id"`
-	Scopes            []string          `json:"scopes"`
 	AdditionalData    map[string]any    `json:"additional_data,omitempty"`
 }
