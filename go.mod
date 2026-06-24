@@ -15,6 +15,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/lestrrat-go/httprc/v3 v3.0.6
 	github.com/lestrrat-go/jwx/v3 v3.1.1
+	github.com/lestrrat-go/jwx/v4 v4.0.2
 	github.com/moby/moby/api v1.54.2
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/openfga/go-sdk v0.8.2
