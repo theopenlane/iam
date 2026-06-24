@@ -336,8 +336,8 @@ github.com/testcontainers/testcontainers-go/modules/openfga v0.42.0 h1:o539g4y8N
 github.com/testcontainers/testcontainers-go/modules/openfga v0.42.0/go.mod h1:qQSUg95NxKo09d8drX57NrZ26vDhdpb7Ljo3g6BRgpg=
 github.com/theopenlane/echox v0.3.0 h1:uwOKEw+r1utGQoOR6dZQqAVuY5j8TcasqnTwO5+rMsA=
 github.com/theopenlane/echox v0.3.0/go.mod h1:yTrXnj7s3VNIg0FCvB7Dut2Elr+LqJKU/nruxx1E1cM=
-github.com/theopenlane/entx v0.28.1 h1:Vouh8SLVHPFoidzWn0e4WaxZ3OO858W93MKKtg9Dv5Y=
-github.com/theopenlane/entx v0.28.1/go.mod h1:yMkUL9e++jwZgRi20IxC6b9dO/MBtErZ6dnarsuqGsM=
+github.com/theopenlane/entx v0.29.0 h1:KvpP78yuxk5p7NCjIZBFvgN5zIvSd/7tX4HQZbaxbZc=
+github.com/theopenlane/entx v0.29.0/go.mod h1:Lyp+YR7PCaye6B/QVTwHcGQ0cXgXLx2CeDgxsG8Do2Q=
 github.com/theopenlane/utils v0.7.1 h1:x+9kVMgOALYqAH6GaLaDb9tj16nzasoGM8X0v0XNTn8=
 github.com/theopenlane/utils v0.7.1/go.mod h1:uxiLqjtcqgH57yOpYl3tTfKuenGYyAROxHFMpXx6mDY=
 github.com/tinylib/msgp v1.6.4 h1:mOwYbyYDLPj35mkA2BjjYejgJk9BuHxDdvRnb6v2ZcQ=
