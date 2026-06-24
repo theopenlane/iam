@@ -4,7 +4,7 @@ go 1.26.3
 
 require (
 	entgo.io/ent v0.14.6
-	github.com/99designs/gqlgen v0.17.90
+	github.com/99designs/gqlgen v0.17.91
 	github.com/alicebob/miniredis/v2 v2.38.0
 	github.com/brianvoe/gofakeit/v7 v7.15.0
 	github.com/go-webauthn/webauthn v0.17.4
@@ -13,11 +13,11 @@ require (
 	github.com/gorilla/securecookie v1.1.2
 	github.com/gqlgo/gqlgenc v0.37.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/lestrrat-go/httprc/v3 v3.0.5
+	github.com/lestrrat-go/httprc/v3 v3.0.6
 	github.com/lestrrat-go/jwx/v3 v3.1.1
 	github.com/moby/moby/api v1.54.2
 	github.com/oklog/ulid/v2 v2.1.1
-	github.com/openfga/go-sdk v0.8.1
+	github.com/openfga/go-sdk v0.8.2
 	github.com/openfga/language/pkg/go v0.3.0
 	github.com/openfga/openfga v1.18.0
 	github.com/pkg/errors v0.9.1
@@ -63,6 +63,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/coder/websocket v1.8.14 // indirect
 	github.com/containerd/continuity v0.4.5 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
@@ -138,7 +139,6 @@ require (
 	github.com/prometheus/procfs v0.20.1 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
-	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.4 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/sosodev/duration v1.4.0 // indirect
@@ -155,7 +155,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fastjson v1.6.10 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/vektah/gqlparser/v2 v2.5.33 // indirect
+	github.com/vektah/gqlparser/v2 v2.5.34 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/yuin/gopher-lua v1.1.1 // indirect
