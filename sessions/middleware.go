@@ -2,6 +2,7 @@ package sessions
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"slices"
 	"time"
@@ -113,6 +114,43 @@ func (sc *SessionConfig) SaveAndStoreSession(ctx context.Context, w http.Respons
 	}
 
 	return c, nil
+}
+
+// DestroySession is the inverse of CreateAndStoreSession: it removes the session presented on the
+// request by deleting the persisted session from the backing store (e.g. redis) and expiring the
+// session cookie on the response. This is the correct way to invalidate a session on logout, since
+// the cookie-only Store.Destroy and Session.Destroy leave the persisted session in place.
+//
+// A request that carries no resolvable session is treated as already destroyed: the cookie is still
+// expired and nil is returned, which keeps logout idempotent. A cookie that is present but cannot be
+// decoded is anomalous (tampering, corruption, or a dropped signing key); it cannot identify a
+// persisted session to delete, so it is logged and the bad cookie is cleared, but it is not treated
+// as a hard failure since it is not retryable and decode errors can occur benignly during key
+// rotation. An error is only returned when an identified, persisted session could not be deleted, so
+// callers can avoid reporting a logout that did not take effect
+func (sc *SessionConfig) DestroySession(ctx context.Context, w http.ResponseWriter, req *http.Request) error {
+	session, err := sc.SessionManager.Get(req, sc.CookieConfig.Name)
+	if err != nil {
+		// a missing cookie is normal; a cookie that is present but undecodable is anomalous and logged
+		if !errors.Is(err, http.ErrNoCookie) {
+			log.Warn().Err(err).Msg("could not decode session cookie on destroy; clearing it")
+		}
+
+		// no resolvable session to remove server-side, but still expire whatever cookie was presented
+		RemoveCookie(w, sc.CookieConfig.Name, *sc.CookieConfig)
+
+		return nil
+	}
+
+	if sessionID := sc.SessionManager.GetSessionIDFromCookie(session); sessionID != "" && sc.RedisStore != nil {
+		if err := sc.RedisStore.DeleteSession(ctx, sessionID); err != nil {
+			return err
+		}
+	}
+
+	RemoveCookie(w, sc.CookieConfig.Name, *sc.CookieConfig)
+
+	return nil
 }
 
 // LoadAndSave is a middleware function that loads and saves session data using a

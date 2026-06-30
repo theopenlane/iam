@@ -506,17 +506,18 @@ func TestGeneralTokenBlacklist(t *testing.T) {
 		verifiedClaims, err := tmNoBlacklist.VerifyWithContext(ctx, tokenString)
 		assert.NoError(t, err)
 
-		// Try to revoke (should be no-op)
+		// Try to revoke; without a functional blacklist this surfaces an error rather than
+		// silently succeeding, but the token remains valid since the revocation had no effect
 		err = tmNoBlacklist.RevokeToken(ctx, verifiedClaims.ID, 30*time.Minute)
-		assert.NoError(t, err)
+		assert.ErrorIs(t, err, tokens.ErrRevocationNotConfigured)
 
 		// Token should still work since no blacklist
 		_, err = tmNoBlacklist.VerifyWithContext(ctx, tokenString)
 		assert.NoError(t, err)
 
-		// Try to suspend user (should be no-op)
+		// Try to suspend user; same as revoke, this surfaces an error without a functional blacklist
 		err = tmNoBlacklist.SuspendUser(ctx, "user-no-blacklist", 30*time.Minute)
-		assert.NoError(t, err)
+		assert.ErrorIs(t, err, tokens.ErrRevocationNotConfigured)
 
 		// Token should still work since no blacklist
 		_, err = tmNoBlacklist.VerifyWithContext(ctx, tokenString)

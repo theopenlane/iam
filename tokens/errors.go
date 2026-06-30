@@ -142,6 +142,9 @@ var (
 	ErrInvalidTokenID = errors.New("invalid token ID")
 	// ErrKeyLifecycleNotEnabled is returned when key lifecycle management is not enabled
 	ErrKeyLifecycleNotEnabled = errors.New("key lifecycle management not enabled")
+	// ErrRevocationNotConfigured is returned when a revocation or suspension operation is attempted
+	// while only the no-op blacklist is installed, meaning the operation has no effect
+	ErrRevocationNotConfigured = errors.New("token revocation is not configured: no functional blacklist is installed")
 )
 
 // The errors that might occur when parsing and validating a token

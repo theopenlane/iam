@@ -25,7 +25,8 @@ type Store[T any] interface {
 	Get(req *http.Request, name string) (*Session[T], error)
 	// Save writes a Session to the ResponseWriter
 	Save(w http.ResponseWriter, session *Session[T]) error
-	// Destroy removes (expires) a named Session
+	// Destroy expires the named session cookie on the response. This only clears the client cookie
+	// and does not remove any persisted session; use SessionConfig.DestroySession on logout
 	Destroy(w http.ResponseWriter, name string)
 	// GetSessionIDFromCookie returns the key, which should be the sessionID, in the map
 	GetSessionIDFromCookie(sess *Session[T]) string
@@ -115,14 +116,19 @@ func (s *cookieStore[T]) Save(w http.ResponseWriter, session *Session[T]) error 
 	return nil
 }
 
+// EncodeCookie encodes the session values into a cookie value string
 func (s *cookieStore[T]) EncodeCookie(session *Session[T]) (string, error) {
 	return securecookie.EncodeMulti(session.Name(), &session.values, s.codecs...)
 }
 
-// Destroy deletes the Session with the given name by issuing an expired
-// session cookie with the same name.
+// Destroy expires the session cookie with the given name by issuing an expired cookie. It only
+// clears the client cookie and does not remove any persisted session; use
+// SessionConfig.DestroySession to also delete the session from the backing store on logout.
 func (s *cookieStore[T]) Destroy(w http.ResponseWriter, name string) {
-	http.SetCookie(w, NewCookie(name, "", &CookieConfig{MaxAge: -1, Path: s.config.Path}))
+	// reuse the full store config so the deletion cookie matches the original on Domain, Path,
+	// Secure, and SameSite; a deletion cookie that omits the Domain will not match a cookie that was
+	// set with one and the browser will keep it
+	RemoveCookie(w, name, *s.config)
 }
 
 // NewSessionCookie creates a cookie from a session id

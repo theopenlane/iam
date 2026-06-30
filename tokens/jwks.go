@@ -3,6 +3,7 @@ package tokens
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/lestrrat-go/jwx/v3/jwk"
@@ -33,6 +34,15 @@ func NewJWKSValidator(keys jwk.Set, audience, issuer string) *JWKSValidator {
 	return validator
 }
 
+// WithBlacklist attaches a token blacklist so the validator consults revocation state during
+// verification. Without it the JWKS validator performs signature and claim checks only and
+// cannot honor token or user revocation
+func (v *JWKSValidator) WithBlacklist(blacklist TokenBlacklist) *JWKSValidator {
+	v.blacklist = blacklist
+
+	return v
+}
+
 // keyFunc is a jwt.KeyFunc that selects the RSA public key from the list of managed
 // internal keys based on the kid in the token header
 func (v *JWKSValidator) keyFunc(token *jwt.Token) (publicKey any, err error) {
@@ -49,16 +59,8 @@ func (v *JWKSValidator) keyFunc(token *jwt.Token) (publicKey any, err error) {
 
 	// Per JWT security notice: do not forget to validate alg is expected
 	method := token.Method.Alg()
-	allowed := false
 
-	for _, allowedAlg := range allowedAlgorithms {
-		if method == allowedAlg {
-			allowed = true
-			break
-		}
-	}
-
-	if !allowed {
+	if !slices.Contains(allowedAlgorithms, method) {
 		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"]) //nolint:err113
 	}
 
@@ -109,6 +111,14 @@ func NewCachedJWKSValidator(cache *jwk.Cache, endpoint, audience, issuer string)
 	return validator, nil
 }
 
+// WithBlacklist attaches a token blacklist to the cached validator so the per-request verify
+// path consults revocation state
+func (v *CachedJWKSValidator) WithBlacklist(blacklist TokenBlacklist) *CachedJWKSValidator {
+	v.blacklist = blacklist
+
+	return v
+}
+
 // Refresh method in the `CachedJWKSValidator` struct is responsible for refreshing the JWKS
 // (JSON Web Key Set) cache. It takes in a `context.Context` as a parameter and returns an error if
 // the refresh process fails
@@ -123,7 +133,7 @@ func (v *CachedJWKSValidator) Refresh(ctx context.Context) (err error) {
 // The `func (v *CachedJWKSValidator) keyFunc(token *jwt.Token)` method in the `CachedJWKSValidator`
 // struct is implementing a custom key function for retrieving the public key used to verify the JWT
 // token signature
-func (v *CachedJWKSValidator) keyFunc(token *jwt.Token) (publicKey interface{}, err error) {
+func (v *CachedJWKSValidator) keyFunc(token *jwt.Token) (publicKey any, err error) {
 	if v.keys, err = v.cache.Lookup(context.Background(), v.endpoint); err != nil {
 		return nil, fmt.Errorf("could not retrieve JWKS from cache: %w", err)
 	}

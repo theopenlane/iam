@@ -105,9 +105,10 @@ func TestTokenManagerWithBlacklist(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotEmpty(t, claims.SessionID)
 
-		// Try to revoke (should be no-op with no blacklist)
+		// Try to revoke without a functional blacklist; this now surfaces an error rather than
+		// silently succeeding so callers are not misled into believing the session was revoked
 		err = tmNoBlacklist.RevokeImpersonationToken(ctx, claims.SessionID, 30*time.Minute)
-		assert.NoError(t, err) // Should not error
+		assert.ErrorIs(t, err, tokens.ErrRevocationNotConfigured)
 
 		// Validate again (should still work since no blacklist)
 		_, err = tmNoBlacklist.ValidateImpersonationToken(ctx, tokenString)
