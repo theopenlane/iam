@@ -7,8 +7,9 @@ package ent
 import (
 	"context"
 
+	"entgo.io/ent"
 	"github.com/rs/zerolog/log"
-	"github.com/theopenlane/iam/entfga"
+	"github.com/theopenlane/iam/entfga/_examples/basic/ent/enums"
 	"github.com/theopenlane/iam/entfga/_examples/basic/ent/orgmembership"
 	"github.com/theopenlane/iam/fgax"
 )
@@ -42,6 +43,11 @@ func (m *OrgMembershipMutation) CreateTuplesFromCreate(ctx context.Context) erro
 }
 
 func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) error {
+	// role was not updated, continue
+	newRole, exists := m.Role()
+	if !exists {
+		return nil
+	}
 
 	// get ids that will be updated
 	ids, err := m.IDs(ctx)
@@ -65,17 +71,17 @@ func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) erro
 		deletes []fgax.TupleKey
 	)
 
-	oldRole, err := m.OldRole(ctx)
-	if err != nil {
-		return err
+	var oldRole *enums.Role
+	switch m.Op() {
+	case ent.OpUpdateOne:
+		role, err := m.OldRole(ctx)
+		if err == nil {
+			oldRole = &role
+		}
+
 	}
 
-	newRole, exists := m.Role()
-	if !exists {
-		return entfga.ErrMissingRole
-	}
-
-	if oldRole == newRole {
+	if oldRole != nil && *oldRole == newRole {
 		log.Debug().
 			Str("old_role", oldRole.String()).
 			Str("new_role", newRole.String()).
@@ -106,11 +112,27 @@ func (m *OrgMembershipMutation) CreateTuplesFromUpdate(ctx context.Context) erro
 			SubjectType: "user",
 			ObjectID:    member.OrganizationID,
 			ObjectType:  "organization",
-			Relation:    oldRole.String(),
 		}
 
-		d := fgax.GetTupleKey(req)
-		deletes = append(deletes, d)
+		// if oldRole is set for OpUpdateOne, use that
+		if oldRole != nil {
+			req.Relation = oldRole.String()
+
+			d := fgax.GetTupleKey(req)
+			deletes = append(deletes, d)
+		} else {
+			// otherwise write a delete for all non-current roles
+			var r enums.Role
+			for _, role := range r.Values() {
+				if role == newRole.String() {
+					continue
+				}
+
+				req.Relation = role
+				d := fgax.GetTupleKey(req)
+				deletes = append(deletes, d)
+			}
+		}
 
 		req.Relation = newRole.String()
 
