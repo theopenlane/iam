@@ -8,9 +8,9 @@
 
     {{/* Add imports so the correct packages are imported */}}
     import (
+        "github.com/theopenlane/entx"
         "github.com/theopenlane/iam/fgax"
         "github.com/theopenlane/iam/entfga"
-        "github.com/theopenlane/entx"
     )
 
     {{/* Add Check for Soft Delete See: AuthzConfig.SoftDeletes */}}
@@ -54,6 +54,11 @@
 
             func (m *{{ $mutator }}) CreateTuplesFromUpdate(ctx context.Context) error {
                 {{- $includeHooks := extractIncludeHooks $n.Annotations.Authz.IncludeHooks }}
+                // role was not updated, continue
+                newRole, exists := m.Role()
+                if !exists {
+                    return nil
+                }
 
                 // get ids that will be updated
                 ids, err := m.IDs(ctx)
@@ -77,17 +82,17 @@
                     deletes []fgax.TupleKey
                 )
 
-                oldRole, err := m.OldRole(ctx)
-                if err != nil {
-                    return err
+                var oldRole *enums.Role
+                switch m.Op() {
+                case ent.OpUpdateOne:
+                    role, err := m.OldRole(ctx)
+                    if err == nil {
+                        oldRole = &role
+                    }
+
                 }
 
-                newRole, exists := m.Role()
-                if !exists {
-                    return entfga.ErrMissingRole
-                }
-
-                if oldRole == newRole {
+                if oldRole != nil && *oldRole == newRole {
                     log.Debug().
                         Str("old_role", oldRole.String()).
                         Str("new_role", newRole.String()).
@@ -118,11 +123,27 @@
                         SubjectType: "user",
                         ObjectID:  member.{{ $objectType | ToUpperCamel }}ID,
                         ObjectType: "{{ $objectType | ToLower }}",
-                        Relation: oldRole.String(),
                     }
 
-                    d := fgax.GetTupleKey(req)
-                    deletes = append(deletes, d)
+                    // if oldRole is set for OpUpdateOne, use that
+                    if oldRole != nil {
+                        req.Relation = oldRole.String()
+
+                        d := fgax.GetTupleKey(req)
+                        deletes = append(deletes, d)
+                    } else {
+                        // otherwise write a delete for all non-current roles
+                        var r enums.Role
+                        for _, role := range r.Values() {
+                            if role == newRole.String() {
+                                continue
+                            }
+
+                            req.Relation = role
+                            d := fgax.GetTupleKey(req)
+                            deletes = append(deletes, d)
+                        }
+                    }
 
                     req.Relation = newRole.String()
 
