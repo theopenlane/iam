@@ -38,7 +38,7 @@ func NewJWKSValidator(keys jwk.Set, audience, issuer string) *JWKSValidator {
 // verification. Without it the JWKS validator performs signature and claim checks only and
 // cannot honor token or user revocation
 func (v *JWKSValidator) WithBlacklist(blacklist TokenBlacklist) *JWKSValidator {
-	v.validator.blacklist = blacklist
+	v.blacklist = blacklist
 
 	return v
 }
@@ -114,7 +114,7 @@ func NewCachedJWKSValidator(cache *jwk.Cache, endpoint, audience, issuer string)
 // WithBlacklist attaches a token blacklist to the cached validator so the per-request verify
 // path consults revocation state
 func (v *CachedJWKSValidator) WithBlacklist(blacklist TokenBlacklist) *CachedJWKSValidator {
-	v.validator.blacklist = blacklist
+	v.blacklist = blacklist
 
 	return v
 }

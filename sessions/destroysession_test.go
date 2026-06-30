@@ -56,7 +56,7 @@ func requestWithSessionCookie(t *testing.T, sc sessions.SessionConfig, userID st
 	_, err := sc.CreateAndStoreSession(context.Background(), createRec, userID)
 	require.NoError(t, err)
 
-	req := httptest.NewRequest(http.MethodPost, "/logout", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/logout", nil)
 	for _, c := range createRec.Result().Cookies() {
 		req.AddCookie(c)
 	}
@@ -103,7 +103,7 @@ func TestDestroySession(t *testing.T) {
 		sc, _, mr := newDestroyTestConfig(t)
 		defer mr.Close()
 
-		req := httptest.NewRequest(http.MethodPost, "/logout", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/logout", nil)
 		rec := httptest.NewRecorder()
 
 		err := sc.DestroySession(ctx, rec, req)
@@ -114,8 +114,14 @@ func TestDestroySession(t *testing.T) {
 		sc, _, mr := newDestroyTestConfig(t)
 		defer mr.Close()
 
-		req := httptest.NewRequest(http.MethodPost, "/logout", nil)
-		req.AddCookie(&http.Cookie{Name: sc.CookieConfig.Name, Value: "not-a-valid-encoded-cookie"})
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/logout", nil)
+		req.AddCookie(&http.Cookie{
+			Name:     sc.CookieConfig.Name,
+			Value:    "not-a-valid-encoded-cookie",
+			Secure:   true,
+			HttpOnly: true,
+			SameSite: http.SameSiteStrictMode,
+		})
 
 		rec := httptest.NewRecorder()
 
@@ -158,7 +164,7 @@ func TestDestroySession(t *testing.T) {
 		session.Set(sessions.GenerateSessionID(), map[string]any{sessions.UserIDKey: "user-x"})
 		require.NoError(t, session.Save(setRec))
 
-		req := httptest.NewRequest(http.MethodPost, "/logout", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/logout", nil)
 		for _, c := range setRec.Result().Cookies() {
 			req.AddCookie(c)
 		}
