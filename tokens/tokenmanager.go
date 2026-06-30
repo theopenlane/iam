@@ -279,31 +279,40 @@ func (tm *TokenManager) ValidateImpersonationToken(ctx context.Context, tokenStr
 	return claims, nil
 }
 
-// RevokeImpersonationToken revokes an impersonation token by adding it to the blacklist
+// RevokeImpersonationToken revokes an impersonation token by adding it to the blacklist. It returns
+// ErrRevocationNotConfigured, and logs a warning, when no functional blacklist is installed so the
+// caller is not misled into believing the session was revoked
 func (tm *TokenManager) RevokeImpersonationToken(ctx context.Context, sessionID string, ttl time.Duration) error {
-	if tm.blacklist == nil {
-		// No blacklist configured, tokens cannot be revoked
-		return nil
+	if !tm.RevocationEnabled() {
+		log.Warn().Str("session_id", sessionID).Msg("impersonation token revocation requested but no functional blacklist is configured; the session remains valid until it expires")
+
+		return ErrRevocationNotConfigured
 	}
 
 	return tm.blacklist.Revoke(ctx, sessionID, ttl)
 }
 
-// RevokeToken revokes a JWT token by its ID
+// RevokeToken revokes a JWT token by its ID. It returns ErrRevocationNotConfigured, and logs a
+// warning, when no functional blacklist is installed so the caller is not misled into believing the
+// token was revoked
 func (tm *TokenManager) RevokeToken(ctx context.Context, tokenID string, ttl time.Duration) error {
-	if tm.blacklist == nil {
-		// No blacklist configured, tokens cannot be revoked
-		return nil
+	if !tm.RevocationEnabled() {
+		log.Warn().Str("token_id", tokenID).Msg("token revocation requested but no functional blacklist is configured; the token remains valid until it expires")
+
+		return ErrRevocationNotConfigured
 	}
 
 	return tm.blacklist.Revoke(ctx, tokenID, ttl)
 }
 
-// SuspendUser suspends all tokens for a user
+// SuspendUser suspends all tokens for a user. It returns ErrRevocationNotConfigured, and logs a
+// warning, when no functional blacklist is installed so the caller is not misled into believing the
+// user was suspended
 func (tm *TokenManager) SuspendUser(ctx context.Context, userID string, ttl time.Duration) error {
-	if tm.blacklist == nil {
-		// No blacklist configured, users cannot be suspended
-		return nil
+	if !tm.RevocationEnabled() {
+		log.Warn().Str("user_id", userID).Msg("user suspension requested but no functional blacklist is configured; the user's tokens remain valid until they expire")
+
+		return ErrRevocationNotConfigured
 	}
 
 	return tm.blacklist.RevokeAllForUser(ctx, userID, ttl)
@@ -314,10 +323,27 @@ func (tm *TokenManager) GetBlacklist() TokenBlacklist {
 	return tm.blacklist
 }
 
-// IsUserSuspended checks if a user is currently suspended
-func (tm *TokenManager) IsUserSuspended(ctx context.Context, userID string) (bool, error) {
+// RevocationEnabled reports whether a functional token blacklist is configured. It returns false
+// when the no-op blacklist is installed, in which case RevokeToken, SuspendUser, and
+// RevokeImpersonationToken silently have no effect and IsRevoked always reports not revoked
+func (tm *TokenManager) RevocationEnabled() bool {
 	if tm.blacklist == nil {
-		return false, nil
+		return false
+	}
+
+	_, isNoOp := tm.blacklist.(*NoOpTokenBlacklist)
+
+	return !isNoOp
+}
+
+// IsUserSuspended checks if a user is currently suspended. It returns ErrRevocationNotConfigured,
+// and logs a warning, when no functional blacklist is installed so callers can distinguish a
+// genuine "not suspended" result from an inoperative check
+func (tm *TokenManager) IsUserSuspended(ctx context.Context, userID string) (bool, error) {
+	if !tm.RevocationEnabled() {
+		log.Warn().Str("user_id", userID).Msg("user suspension check requested but no functional blacklist is configured; reporting user as not suspended")
+
+		return false, ErrRevocationNotConfigured
 	}
 
 	return tm.blacklist.IsUserRevoked(ctx, userID)
@@ -343,10 +369,14 @@ func (tm *TokenManager) GetUserSuspensionStatus(ctx context.Context, userID stri
 	}, nil
 }
 
-// IsTokenRevoked checks if a specific token (by JWT ID) has been revoked
+// IsTokenRevoked checks if a specific token (by JWT ID) has been revoked. It returns
+// ErrRevocationNotConfigured, and logs a warning, when no functional blacklist is installed so
+// callers can distinguish a genuine "not revoked" result from an inoperative check
 func (tm *TokenManager) IsTokenRevoked(ctx context.Context, tokenID string) (bool, error) {
-	if tm.blacklist == nil {
-		return false, nil
+	if !tm.RevocationEnabled() {
+		log.Warn().Str("token_id", tokenID).Msg("token revocation check requested but no functional blacklist is configured; reporting token as not revoked")
+
+		return false, ErrRevocationNotConfigured
 	}
 
 	return tm.blacklist.IsRevoked(ctx, tokenID)

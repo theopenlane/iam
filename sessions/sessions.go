@@ -83,8 +83,10 @@ func (s *Session[T]) Save(w http.ResponseWriter) error {
 	return s.store.Save(w, s)
 }
 
-// Destroy destroys the session. Identical to calling
-// store.Destroy(w, session.name).
+// Destroy expires the session cookie on the response. Identical to calling
+// store.Destroy(w, session.name). This only clears the client cookie and does not remove any
+// persisted session; use SessionConfig.DestroySession to also delete the session from the backing
+// store on logout.
 func (s *Session[T]) Destroy(w http.ResponseWriter) {
 	s.store.Destroy(w, s.name)
 }

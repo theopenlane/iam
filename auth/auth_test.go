@@ -259,7 +259,7 @@ func TestClearAuthCookies(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(_ *testing.T) {
-			auth.ClearAuthCookies(tc.ctx.Response().Writer)
+			auth.ClearAuthCookies(tc.ctx.Response().Writer, *sessions.DebugOnlyCookieConfig)
 		})
 	}
 }

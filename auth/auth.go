@@ -113,10 +113,13 @@ func SetAuthCookies(w http.ResponseWriter, accessToken, refreshToken string, c s
 	sessions.SetCookie(w, refreshToken, RefreshTokenCookie, c)
 }
 
-// ClearAuthCookies is a helper function to clear authentication cookies on a echo
-// request to effectively logger out a user.
-func ClearAuthCookies(w http.ResponseWriter) {
-	sessions.RemoveCookies(w, *sessions.DefaultCookieConfig, AccessTokenCookie, RefreshTokenCookie)
+// ClearAuthCookies clears the access and refresh token cookies to effectively log out a user. The
+// supplied CookieConfig must match the one the cookies were set with via SetAuthCookies (domain,
+// path, secure, samesite); otherwise the browser will not match the expiry cookie and the original
+// cookies will persist. Pass the same SessionConfig.CookieConfig used at login rather than a global
+// default.
+func ClearAuthCookies(w http.ResponseWriter, c sessions.CookieConfig) {
+	sessions.RemoveCookies(w, c, AccessTokenCookie, RefreshTokenCookie)
 }
 
 // CookieExpired checks to see if a cookie is expired
