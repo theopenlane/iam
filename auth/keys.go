@@ -15,6 +15,9 @@ var ActiveTrustCenterIDKey = contextx.NewKey[string]()
 // ActiveAssessmentIDKey stores the assessment ID for the current anonymous questionnaire request.
 var ActiveAssessmentIDKey = contextx.NewKey[string]()
 
+// ActiveAssessmentPreviewKey marks the current anonymous questionnaire request as a sender preview (is_test)
+var ActiveAssessmentPreviewKey = contextx.NewKey[bool]()
+
 // AccessTokenKey stores and retrieves the request access token.
 var AccessTokenKey = contextx.NewKey[string]()
 
