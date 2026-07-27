@@ -213,3 +213,45 @@ func HasFullOrgWriteAccessFromContext(ctx context.Context) bool {
 
 	return caller.OrganizationRole.HasFullWriteAccess()
 }
+
+// IsAnonymousFromContext reports whether ctx carries an anonymous-role caller
+func IsAnonymousFromContext(ctx context.Context) bool {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
+		return false
+	}
+
+	return caller.IsAnonymous()
+}
+
+// IsQuestionnaireFromContext reports whether ctx carries an anonymous questionnaire caller
+func IsQuestionnaireFromContext(ctx context.Context) bool {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || caller == nil {
+		return false
+	}
+
+	return caller.IsQuestionnaire()
+}
+
+// TrustCenterScopeFromContext reports the trust center and org for an anonymous trust center caller
+func TrustCenterScopeFromContext(ctx context.Context) (tcID, orgID string, ok bool) {
+	caller, callerOK := CallerFromContext(ctx)
+	if !callerOK || caller == nil || !caller.IsTrustCenter() {
+		return "", "", false
+	}
+
+	id, hasID := ActiveTrustCenterIDKey.Get(ctx)
+	if !hasID || id == "" {
+		return "", "", false
+	}
+
+	return id, caller.OrganizationID, true
+}
+
+// IsTrustCenterFromContext reports whether ctx carries an anonymous trust center caller
+func IsTrustCenterFromContext(ctx context.Context) bool {
+	_, _, ok := TrustCenterScopeFromContext(ctx)
+
+	return ok
+}

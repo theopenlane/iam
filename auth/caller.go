@@ -143,6 +143,16 @@ func (c *Caller) IsAnonymous() bool {
 	return c.OrganizationRole == AnonymousRole
 }
 
+// IsTrustCenter reports whether this Caller is an anonymous trust center visitor
+func (c *Caller) IsTrustCenter() bool {
+	return c.IsAnonymous() && c.Has(CapTrustCenterAnonymous)
+}
+
+// IsQuestionnaire reports whether this Caller is an anonymous questionnaire respondent
+func (c *Caller) IsQuestionnaire() bool {
+	return c.IsAnonymous() && c.Has(CapQuestionnaireAnonymous)
+}
+
 // mergeCapabilities ORs a slice of Capability values into a single bitmask
 func mergeCapabilities(caps []Capability) Capability {
 	var merged Capability
