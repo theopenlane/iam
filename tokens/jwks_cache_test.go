@@ -3,6 +3,7 @@ package tokens_test
 import (
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/rsa"
 	"testing"
 	"time"
 
@@ -99,4 +100,44 @@ func TestJWKSCacheDefault(t *testing.T) {
 	keys, err := tm.Keys()
 	require.NoError(t, err)
 	assert.Equal(t, 1, keys.Len())
+}
+
+func TestKeysIncludeAlgorithm(t *testing.T) {
+	_, edKey, err := ed25519.GenerateKey(rand.Reader)
+	require.NoError(t, err)
+
+	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+
+	conf := tokens.Config{
+		Audience:        "test-audience",
+		Issuer:          "test-issuer",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 2 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
+	}
+
+	tm, err := tokens.NewWithKey(edKey, conf)
+	require.NoError(t, err)
+
+	edKID := tm.CurrentKeyID()
+	require.NoError(t, tm.AddSigningKeyWithID("rsa-key", rsaKey))
+
+	keys, err := tm.Keys()
+	require.NoError(t, err)
+	require.Equal(t, 2, keys.Len())
+
+	expected := map[string]string{edKID: "EdDSA", "rsa-key": "RS256"}
+
+	for i := range keys.Len() {
+		key, ok := keys.Key(i)
+		require.True(t, ok)
+
+		kid, ok := key.KeyID()
+		require.True(t, ok)
+
+		alg, ok := key.Algorithm()
+		require.True(t, ok, "published JWK %s is missing alg", kid)
+		assert.Equal(t, expected[kid], alg.String())
+	}
 }
