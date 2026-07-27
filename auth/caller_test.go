@@ -620,6 +620,10 @@ func TestCapabilityConstantsAreDistinctPowersOfTwo(t *testing.T) {
 		CapInternalOperation,
 		CapBypassSubscriptionCheck,
 		CapSystemAdmin,
+		CapTrustCenterAnonymous,
+		CapQuestionnaireAnonymous,
+		CapOrgSupport,
+		CapIntegrationActor,
 	}
 
 	seen := make(map[Capability]bool, len(all))
