@@ -250,7 +250,12 @@ func (i *Issuer) Keys() (jwk.Set, error) {
 			return nil, err
 		}
 
-		// Algorithm is automatically inferred by jwx from key type
+		if meta, ok := i.keyLifecycle.GetMetadata(kid); ok {
+			if err = key.Set(jwk.AlgorithmKey, meta.Algorithm); err != nil {
+				return nil, err
+			}
+		}
+
 		if err = keys.AddKey(key); err != nil {
 			return nil, err
 		}
