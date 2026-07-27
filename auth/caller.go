@@ -30,6 +30,8 @@ const (
 	CapQuestionnaireAnonymous Capability = 1 << 9
 	// CapOrgSupport grants org-scoped support access without bypassing the org filter or owner assignment
 	CapOrgSupport Capability = 1 << 10
+	// CapIntegrationActor is used to identify an integration installation virtual user/actor
+	CapIntegrationActor Capability = 1 << 11
 )
 
 // Caller holds the identity and capabilities for any request actor —
