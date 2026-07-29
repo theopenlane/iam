@@ -1,6 +1,6 @@
 # Tokens Package
 
-The tokens package provides JWT token creation, signing, and validation using Ed25519 (`EdDSA`).
+The tokens package provides JWT token creation, signing, and validation. Signing keys may be Ed25519 (`EdDSA`) or RSA (`RS256`, `RS384`, `RS512`); the algorithm is inferred from the key material.
 
 ## Architecture
 
@@ -90,6 +90,52 @@ validatedClaims, err := tm.VerifyWithContext(ctx, accessToken)
 err = tm.RevokeToken(ctx, tokenID, ttl)
 ```
 
+## Key Rotation
+
+`SetKeySet` atomically replaces an issuer's key material. Because it swaps the whole set
+under a write lock, the same `Issuer` or `TokenManager` pointer can be rotated while it is
+serving traffic — callers holding the pointer do not need to be rebuilt or re-injected.
+
+`KeySet.Verification` is the important half. Those keys verify but never sign, so a key can
+stop signing and later have its private material deleted while tokens it already signed
+remain valid:
+
+```go
+err := tm.SetKeySet(tokens.KeySet{
+    Signing: map[string]crypto.Signer{
+        "current": currentSigner,
+    },
+    Verification: map[string]crypto.PublicKey{
+        "retired": retiredPublicKey,
+    },
+    KID: "current",
+})
+```
+
+Both kids are published in `Keys()`, so external validators can still resolve `retired`.
+
+Selection rules:
+
+- `KID` must name a key in `Signing`. An unknown `KID` returns `ErrUnknownSigningKey` rather
+  than silently choosing another key.
+- Leaving `KID` empty lets the issuer select from `Signing`, preferring the most recent
+  ULID-formatted kid and otherwise taking the lexicographically last one. Supply `KID`
+  explicitly if your kids are not ULIDs, since neither rule is likely to mean anything for
+  content-derived identifiers such as thumbprints.
+- Only `Signing` is considered for selection, so a key placed in `Verification` can never be
+  promoted back into signing.
+- An empty `Signing` map returns `ErrTokenManagerFailedInit`. A rejected set leaves the
+  issuer untouched.
+
+For incremental changes, `AddKey`, `UseSigningKeyID`, and `RemoveSigningKeyByID` mutate the
+set in place and take the same lock.
+
+## Concurrency
+
+`Issuer` and `TokenManager` are safe for concurrent use. Signing, verification, JWKS
+generation, and key set replacement may all run on different goroutines against the same
+instance.
+
 ## Opaque API Tokens
 
 Personal access tokens and other long-lived API credentials can be issued as opaque strings that never persist the raw secret. Configure a symmetric keyring, generate the token, and store only the derived hash alongside the key version. All key material is supplied declaratively via configuration/environment so deployments stay static—rotations happen by updating secrets and restarting the service, never by calling runtime helpers.
@@ -171,10 +217,12 @@ For convenience a CLI lives at `tokens/examples`. Run it with `go run ./tokens/e
 
 ## Key Material
 
-- PEM files referenced in `tokens.Config.Keys` **must** contain an Ed25519 key
-  pair encoded as PKCS#8 (`PRIVATE KEY`) plus a companion `PUBLIC KEY` block.
-- Existing RSA material must be rotated or regenerated. A simple Go snippet can
-  produce compatible files:
+- PEM files referenced in `tokens.Config.Keys` must contain an Ed25519 or RSA
+  private key encoded as PKCS#8 (`PRIVATE KEY`); PKCS#1 (`RSA PRIVATE KEY`) is
+  also accepted. RSA keys must be at least 2048 bits.
+- A companion `PUBLIC KEY` block is optional. When present it is validated
+  against the private key and a mismatch is an error.
+- A Go snippet to produce an Ed25519 file:
 
   ```go
   package main
@@ -201,36 +249,16 @@ For convenience a CLI lives at `tokens/examples`. Run it with `go run ./tokens/e
   }
   ```
 
-- JWKS responses emitted by `TokenManager.Keys()` advertise `alg=EdDSA`,
-  `kty=OKP`, and `crv=Ed25519`, which is compatible with the lestrrat-go/jwx
-  toolchain used elsewhere in this repository.
-
-## API Changes
-
-### New Architecture
-
-The package now provides:
-
-- **`Issuer`** - New interface for token creation and signing
-  - `NewIssuer(config)` - Create issuer from configuration
-  - `NewIssuerWithKey(key, config)` - Create issuer with single key
-  - `CreateAccessToken(claims)` - Create access token
-  - `CreateRefreshToken(accessToken)` - Create refresh token
-  - `CreateTokens(claims)` - Create both tokens in one call
-  - `Sign(token)` - Sign a token
-  - `Parse(tks)` - Parse without claim validation
-  - `Keys()` - Get JWKS
-
-- **`TokenManager`** - Wraps Issuer, adds validation
-  - Inherits all Issuer methods
-  - Adds `Verify()` and `VerifyWithContext()` for validation
-  - Adds blacklist and replay prevention features
+- JWKS responses emitted by `TokenManager.Keys()` advertise the algorithm matching
+  each key: Ed25519 keys as `alg=EdDSA`, `kty=OKP`, `crv=Ed25519`, and RSA keys as
+  `alg=RS256`, `kty=RSA`. Both are compatible with the lestrrat-go/jwx toolchain
+  used elsewhere in this repository.
 
 ## Signer Helpers
 
 Helper constructors are available when loading keys from files:
 
-- `NewFileSigner(path)` loads an Ed25519 key pair from a PEM file and returns it as a `crypto.Signer`.
+- `NewFileSigner(path)` loads an Ed25519 or RSA private key from a PEM file and returns it as a `crypto.Signer`.
 
 ### Token Blacklist
 
@@ -238,35 +266,3 @@ Allows revoking individual tokens or suspending all tokens for a user. Useful fo
 - Immediate token revocation on logout
 - User account suspension
 - Compromised token mitigation
-
-### Configuration
-
-Enable Redis features by adding the `redis` configuration to your `tokens.Config`:
-
-```go
-import (
-    "github.com/theopenlane/iam/tokens"
-    "github.com/theopenlane/utils/cache"
-)
-
-config := tokens.Config{
-    Audience:        "https://api.example.com",
-    Issuer:          "https://api.example.com",
-    AccessDuration:  1 * time.Hour,
-    RefreshDuration: 2 * time.Hour,
-    RefreshOverlap:  -15 * time.Minute,
-    Keys:            map[string]string{"01ABC": "/path/to/key.pem"},
-    Redis: tokens.RedisConfig{
-        Enabled: true,
-        Config: cache.Config{
-            Enabled:  true,
-            Address:  "localhost:6379",
-            Password: "secret",
-            DB:       0,
-        },
-        BlacklistPrefix: "token:blacklist:",  // Redis key prefix for blacklist
-    },
-}
-
-tm, err := tokens.New(config)
-```

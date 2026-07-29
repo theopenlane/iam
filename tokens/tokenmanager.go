@@ -217,13 +217,9 @@ func (tm *TokenManager) CreateImpersonationToken(_ context.Context, opts CreateI
 		OriginalToken:     opts.OriginalToken,
 	}
 
-	token := jwt.NewWithClaims(tm.currentSigningMethod, claims)
+	token := jwt.NewWithClaims(tm.signingMethod(), claims)
 
-	// Add key ID to header
-	if tm.conf.KID != "" {
-		token.Header["kid"] = tm.conf.KID
-	}
-
+	// Sign stamps the header with the current kid
 	return tm.Sign(token)
 }
 

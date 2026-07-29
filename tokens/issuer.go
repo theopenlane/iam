@@ -5,10 +5,12 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
+	"maps"
 	"net/url"
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
@@ -16,9 +18,20 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
+// KeySet is the complete set of key material an issuer serves
+type KeySet struct {
+	// Signing holds the private keys eligible to sign, keyed by kid
+	Signing map[string]crypto.Signer
+	// Verification holds public keys that verify but never sign, keyed by kid
+	Verification map[string]crypto.PublicKey
+	// KID names the key in Signing to sign with; empty lets the issuer select one
+	KID string
+}
+
 // Issuer handles JWT token creation and signing. It manages signing keys and
 // provides methods to create access tokens, refresh tokens, and sign them
 type Issuer struct {
+	mu                   sync.RWMutex
 	conf                 Config
 	currentKeyID         string
 	currentKey           crypto.Signer
@@ -40,11 +53,12 @@ func NewIssuer(conf Config) (*Issuer, error) {
 	}
 
 	issuer := &Issuer{
-		conf:         conf,
-		keys:         make(map[string]crypto.PublicKey),
-		signingKeys:  make(map[string]crypto.Signer),
-		keyLifecycle: newKeyLifecycleManager(),
-		jwksCache:    newJWKSCache(conf.JWKSCacheTTL),
+		conf:            conf,
+		keys:            make(map[string]crypto.PublicKey),
+		signingKeys:     make(map[string]crypto.Signer),
+		keyLifecycle:    newKeyLifecycleManager(),
+		jwksCache:       newJWKSCache(conf.JWKSCacheTTL),
+		refreshAudience: resolveRefreshAudience(conf),
 		kidEntropy: &ulid.LockedMonotonicReader{
 			MonotonicReader: ulid.Monotonic(rand.Reader, 0),
 		},
@@ -83,7 +97,9 @@ func NewIssuer(conf Config) (*Issuer, error) {
 		loaded = append(loaded, info)
 	}
 
-	issuer.selectInitialKey(loaded, conf.KID)
+	issuer.mu.Lock()
+	issuer.selectInitialKeyLocked(loaded, conf.KID)
+	issuer.mu.Unlock()
 
 	if issuer.currentKey == nil {
 		return nil, ErrTokenManagerFailedInit
@@ -101,11 +117,12 @@ func NewIssuerWithKey(key crypto.Signer, conf Config) (*Issuer, error) {
 	}
 
 	issuer := &Issuer{
-		conf:         conf,
-		keys:         make(map[string]crypto.PublicKey),
-		signingKeys:  make(map[string]crypto.Signer),
-		keyLifecycle: newKeyLifecycleManager(),
-		jwksCache:    newJWKSCache(conf.JWKSCacheTTL),
+		conf:            conf,
+		keys:            make(map[string]crypto.PublicKey),
+		signingKeys:     make(map[string]crypto.Signer),
+		keyLifecycle:    newKeyLifecycleManager(),
+		jwksCache:       newJWKSCache(conf.JWKSCacheTTL),
+		refreshAudience: resolveRefreshAudience(conf),
 		kidEntropy: &ulid.LockedMonotonicReader{
 			MonotonicReader: ulid.Monotonic(rand.Reader, 0),
 		},
@@ -128,15 +145,27 @@ func NewIssuerWithKey(key crypto.Signer, conf Config) (*Issuer, error) {
 	return issuer, nil
 }
 
-// Sign an access or refresh token and return the signed token string.
+// Sign an access or refresh token and return the signed token string
 func (i *Issuer) Sign(token *jwt.Token) (string, error) {
-	if i.currentKey == nil || i.currentKeyID == "" {
+	i.mu.RLock()
+	key, kid := i.currentKey, i.currentKeyID
+	i.mu.RUnlock()
+
+	if key == nil || kid == "" {
 		return "", ErrTokenManagerFailedInit
 	}
 
-	token.Header["kid"] = i.currentKeyID
+	token.Header["kid"] = kid
 
-	return token.SignedString(i.currentKey)
+	return token.SignedString(key)
+}
+
+// signingMethod returns the signing method of the current signing key
+func (i *Issuer) signingMethod() jwt.SigningMethod {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+
+	return i.currentSigningMethod
 }
 
 // CreateAccessToken creates an access token from the provided claims.
@@ -165,7 +194,7 @@ func (i *Issuer) createAccessTokenWithDuration(claims *Claims, duration time.Dur
 		ExpiresAt: jwt.NewNumericDate(now.Add(duration)),
 	}
 
-	return jwt.NewWithClaims(i.currentSigningMethod, claims), nil
+	return jwt.NewWithClaims(i.signingMethod(), claims), nil
 }
 
 // CreateRefreshToken creates a refresh token from an access token.
@@ -191,7 +220,7 @@ func (i *Issuer) CreateRefreshToken(accessToken *jwt.Token) (*jwt.Token, error) 
 		OrgID: accessClaims.OrgID,
 	}
 
-	return jwt.NewWithClaims(i.currentSigningMethod, claims), nil
+	return jwt.NewWithClaims(i.signingMethod(), claims), nil
 }
 
 // CreateTokens creates and signs both access and refresh tokens in one step.
@@ -235,8 +264,13 @@ func (i *Issuer) Keys() (jwk.Set, error) {
 		return cached, nil
 	}
 
+	i.mu.RLock()
+	snapshot := maps.Clone(i.keys)
+	i.mu.RUnlock()
+
 	keys := jwk.NewSet()
-	for kid, pubkey := range i.keys {
+
+	for kid, pubkey := range snapshot {
 		key, err := jwk.Import(pubkey)
 		if err != nil {
 			return nil, err
@@ -268,25 +302,27 @@ func (i *Issuer) Keys() (jwk.Set, error) {
 
 // RefreshAudience returns the refresh audience for tokens
 func (i *Issuer) RefreshAudience() string {
-	if i.refreshAudience == "" {
-		if i.conf.RefreshAudience != "" {
-			i.refreshAudience = i.conf.RefreshAudience
-			return i.refreshAudience
-		}
+	return i.refreshAudience
+}
 
-		if aud, err := url.Parse(i.conf.Issuer); err == nil {
-			i.refreshAudience = aud.ResolveReference(&url.URL{Path: "/v1/refresh"}).String()
-		} else {
-			i.refreshAudience = DefaultRefreshAudience
-		}
+// resolveRefreshAudience derives the refresh audience from the configured audience or issuer
+// It is computed once during construction so reads never mutate the issuer
+func resolveRefreshAudience(conf Config) string {
+	if conf.RefreshAudience != "" {
+		return conf.RefreshAudience
 	}
 
-	return i.refreshAudience
+	aud, err := url.Parse(conf.Issuer)
+	if err != nil {
+		return DefaultRefreshAudience
+	}
+
+	return aud.ResolveReference(&url.URL{Path: "/v1/refresh"}).String()
 }
 
 // CurrentKey returns the ULID of the current signing key if it is ULID formatted
 func (i *Issuer) CurrentKey() ulid.ULID {
-	if id, err := ulid.Parse(i.currentKeyID); err == nil {
+	if id, err := ulid.Parse(i.CurrentKeyID()); err == nil {
 		return id
 	}
 
@@ -295,11 +331,115 @@ func (i *Issuer) CurrentKey() ulid.ULID {
 
 // CurrentKeyID returns the identifier of the current signing key
 func (i *Issuer) CurrentKeyID() string {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+
 	return i.currentKeyID
+}
+
+// SetKeySet atomically replaces the issuer's key material, letting callers retire a
+// signing key without invalidating tokens it already signed
+func (i *Issuer) SetKeySet(ks KeySet) error {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
+	keys := make(map[string]crypto.PublicKey, len(ks.Signing)+len(ks.Verification))
+	signingKeys := make(map[string]crypto.Signer, len(ks.Signing))
+
+	for kid, signer := range ks.Signing {
+		if kid == "" {
+			return ErrEmptySigningKeyID
+		}
+
+		keys[kid] = signer.Public()
+		signingKeys[kid] = signer
+	}
+
+	for kid, publicKey := range ks.Verification {
+		if kid == "" {
+			return ErrEmptySigningKeyID
+		}
+
+		// a kid that can sign is never downgraded to verification only
+		if _, ok := keys[kid]; !ok {
+			keys[kid] = publicKey
+		}
+	}
+
+	if len(signingKeys) == 0 {
+		return ErrTokenManagerFailedInit
+	}
+
+	if ks.KID != "" {
+		if _, ok := signingKeys[ks.KID]; !ok {
+			return ErrUnknownSigningKey
+		}
+	}
+
+	i.keys = keys
+	i.signingKeys = signingKeys
+
+	for kid, publicKey := range keys {
+		i.keyLifecycle.AddKey(kid, signingMethodForPublicKey(publicKey).Alg())
+	}
+
+	for _, kid := range i.keyLifecycle.List() {
+		if _, ok := keys[kid]; !ok {
+			i.keyLifecycle.RemoveKey(kid)
+		}
+	}
+
+	i.jwksCache.Invalidate()
+
+	i.currentKey = nil
+	i.currentKeyID = ""
+	i.currentSigningMethod = nil
+
+	i.selectInitialKeyLocked(loadedKeysFrom(signingKeys), ks.KID)
+
+	if i.currentKey == nil {
+		return ErrTokenManagerFailedInit
+	}
+
+	i.conf.KID = i.currentKeyID
+
+	return nil
+}
+
+// loadedKeysFrom builds the kid metadata selectInitialKeyLocked ranges over, in a stable order
+func loadedKeysFrom(signingKeys map[string]crypto.Signer) []loadedKey {
+	kids := make([]string, 0, len(signingKeys))
+	for kid := range signingKeys {
+		kids = append(kids, kid)
+	}
+
+	sort.Strings(kids)
+
+	loaded := make([]loadedKey, 0, len(kids))
+
+	for _, kid := range kids {
+		info := loadedKey{kid: kid}
+		if parsed, err := ulid.Parse(kid); err == nil {
+			info.ulid = parsed
+			info.hasULID = true
+		}
+
+		loaded = append(loaded, info)
+	}
+
+	return loaded
 }
 
 // AddKey registers a new signing key with the issuer
 func (i *Issuer) AddKey(kid string, signer crypto.Signer) error {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
+	return i.addKeyLocked(kid, signer)
+}
+
+// addKeyLocked registers a new signing key; callers must hold the write lock
+func (i *Issuer) addKeyLocked(kid string, signer crypto.Signer) error {
 	if kid == "" {
 		return ErrEmptySigningKeyID
 	}
@@ -349,6 +489,9 @@ func (i *Issuer) AddKey(kid string, signer crypto.Signer) error {
 
 // UseSigningKeyID sets the current signing key to the specified key ID.
 func (i *Issuer) UseSigningKeyID(kid string) error {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
 	key, ok := i.signingKeys[kid]
 	if !ok {
 		return ErrUnknownSigningKey
@@ -362,8 +505,11 @@ func (i *Issuer) UseSigningKeyID(kid string) error {
 	return nil
 }
 
-// RemoveSigningKeyByID removes a signing key from the issuer.
+// RemoveSigningKeyByID removes a signing key from the issuer
 func (i *Issuer) RemoveSigningKeyByID(kid string) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
 	delete(i.keys, kid)
 	delete(i.signingKeys, kid)
 
@@ -399,7 +545,7 @@ func (i *Issuer) RemoveSigningKeyByID(kid string) {
 
 		i.currentKey = nil
 		i.currentKeyID = ""
-		i.selectInitialKey(remaining, i.conf.KID)
+		i.selectInitialKeyLocked(remaining, i.conf.KID)
 
 		if i.currentKey != nil {
 			i.conf.KID = i.currentKeyID
@@ -407,12 +553,15 @@ func (i *Issuer) RemoveSigningKeyByID(kid string) {
 	}
 }
 
-// Config returns the issuer configuration.
+// Config returns the issuer configuration
 func (i *Issuer) Config() Config {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+
 	return i.conf
 }
 
-// keyFunc is the jwt.Keyfunc used for token verification.
+// keyFunc is the jwt.Keyfunc used for token verification
 func (i *Issuer) keyFunc(token *jwt.Token) (any, error) {
 	alg := token.Method.Alg()
 
@@ -430,7 +579,10 @@ func (i *Issuer) keyFunc(token *jwt.Token) (any, error) {
 		return nil, ErrFailedParsingKid
 	}
 
+	i.mu.RLock()
 	key, ok := i.keys[kidStr]
+	i.mu.RUnlock()
+
 	if !ok {
 		return nil, ErrUnknownSigningKey
 	}
@@ -438,8 +590,9 @@ func (i *Issuer) keyFunc(token *jwt.Token) (any, error) {
 	return key, nil
 }
 
-// selectInitialKey selects the initial signing key based on the desired key ID or the most recent ULID key
-func (i *Issuer) selectInitialKey(loaded []loadedKey, desired string) {
+// selectInitialKeyLocked selects the initial signing key based on the desired key ID or the
+// most recent ULID key; callers must hold the write lock
+func (i *Issuer) selectInitialKeyLocked(loaded []loadedKey, desired string) {
 	if desired != "" {
 		if signer, ok := i.signingKeys[desired]; ok {
 			i.currentKeyID = desired
@@ -492,7 +645,12 @@ func (i *Issuer) genKeyID() (ulid.ULID, error) {
 
 // signingMethodForKey detects the signing method from a crypto.Signer using jwx
 func signingMethodForKey(signer crypto.Signer) jwt.SigningMethod {
-	key, err := jwk.Import(signer.Public())
+	return signingMethodForPublicKey(signer.Public())
+}
+
+// signingMethodForPublicKey detects the signing method from a public key using jwx
+func signingMethodForPublicKey(publicKey crypto.PublicKey) jwt.SigningMethod {
+	key, err := jwk.Import(publicKey)
 	if err != nil {
 		return jwt.SigningMethodEdDSA
 	}

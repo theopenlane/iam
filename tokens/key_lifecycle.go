@@ -4,6 +4,8 @@ import (
 	"crypto"
 	"crypto/ed25519"
 	"crypto/rand"
+	"maps"
+	"slices"
 	"sync"
 	"time"
 
@@ -109,6 +111,14 @@ func (klm *keyLifecycleManager) AddKey(kid string, algorithm string) {
 	}
 }
 
+// List returns every key ID the manager holds metadata for
+func (klm *keyLifecycleManager) List() []string {
+	klm.mu.RLock()
+	defer klm.mu.RUnlock()
+
+	return slices.Collect(maps.Keys(klm.metadata))
+}
+
 // GetMetadata returns metadata for a key
 func (klm *keyLifecycleManager) GetMetadata(kid string) (*KeyMetadata, bool) {
 	klm.mu.RLock()
@@ -209,7 +219,7 @@ func (tm *TokenManager) ShouldRotate(maxAge time.Duration) bool {
 		return false
 	}
 
-	meta, exists := tm.keyLifecycle.GetMetadata(tm.currentKeyID)
+	meta, exists := tm.keyLifecycle.GetMetadata(tm.CurrentKeyID())
 	if !exists {
 		return false
 	}
@@ -289,7 +299,7 @@ func (tm *TokenManager) RotateKeys(generateKey RotateKeyFunc, deprecationGrace t
 		RevokedKeys:    []string{},
 	}
 
-	previousKeyID := tm.currentKeyID
+	previousKeyID := tm.CurrentKeyID()
 
 	kid, signer, err := generateKey()
 	if err != nil {
