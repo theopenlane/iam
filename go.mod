@@ -30,7 +30,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.42.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.42.0
 	github.com/theopenlane/echox v0.3.0
-	github.com/theopenlane/entx v0.29.0
+	github.com/theopenlane/entx v0.30.3
 	github.com/theopenlane/utils v0.7.1
 	github.com/urfave/cli/v3 v3.10.1
 	github.com/vmihailenco/msgpack/v5 v5.4.1
@@ -51,7 +51,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
-	github.com/XSAM/otelsql v0.42.0 // indirect
+	github.com/XSAM/otelsql v0.43.0 // indirect
 	github.com/Yiling-J/theine-go v0.6.2 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
@@ -84,7 +84,7 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
-	github.com/go-openapi/inflect v0.21.5 // indirect
+	github.com/go-openapi/inflect v0.21.6 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/go-webauthn/x v0.2.6 // indirect
