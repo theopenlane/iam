@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/google/go-github/v87/github"
+	"github.com/google/go-github/v89/github"
 )
 
 // ClientConfig holds the configuration for the GitHub client
