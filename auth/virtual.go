@@ -48,7 +48,7 @@ func NewIntegrationCaller(orgID string) *Caller {
 		SubjectName:    IntegrationDisplayName,
 		SubjectEmail:   IntegrationEmail,
 		OrganizationID: orgID,
-		Capabilities:   CapIntegrationActor | CapBypassOrgFilter | CapBypassFGA | CapInternalOperation,
+		Capabilities:   CapIntegrationActor | CapBypassOrgFilter | CapBypassFGA | CapInternalOperation | CapBypassAuditLog,
 	}
 }
 
