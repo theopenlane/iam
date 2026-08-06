@@ -52,7 +52,8 @@ func NewIntegrationCaller(orgID string) *Caller {
 	}
 }
 
-// EnsureIntegrationCaller fills the integration actor identity on subject-less callers, retaining attributed ones
+// EnsureIntegrationCaller fills the integration actor identity on subject-less callers, retaining attributed ones, granting audit-log bypass either way so integration-driven
+// writes skip history tables
 func EnsureIntegrationCaller(ctx context.Context, orgID string) context.Context {
 	caller, ok := CallerFromContext(ctx)
 	if !ok || caller == nil {
@@ -60,14 +61,17 @@ func EnsureIntegrationCaller(ctx context.Context, orgID string) context.Context 
 	}
 
 	if caller.SubjectID != "" {
-		return EnsureCallerOrg(ctx, orgID)
+		attributed := *caller
+		attributed.Capabilities |= CapBypassAuditLog
+
+		return EnsureCallerOrg(WithCaller(ctx, &attributed), orgID)
 	}
 
 	attributed := *caller
 	attributed.SubjectID = IntegrationSubjectID
 	attributed.SubjectName = IntegrationDisplayName
 	attributed.SubjectEmail = IntegrationEmail
-	attributed.Capabilities |= CapIntegrationActor
+	attributed.Capabilities |= CapIntegrationActor | CapBypassAuditLog
 
 	return EnsureCallerOrg(WithCaller(ctx, &attributed), orgID)
 }
