@@ -16,7 +16,7 @@ const (
 	CapBypassFGA Capability = 1 << 2
 	// CapBypassManagedGroup bypasses managed-group mutation guards
 	CapBypassManagedGroup Capability = 1 << 3
-	// CapBypassAuditLog suppresses audit log emission
+	// CapBypassAuditLog suppresses audit log emission, skips writes to history tables
 	CapBypassAuditLog Capability = 1 << 4
 	// CapInternalOperation marks the caller as a trusted internal service operation
 	CapInternalOperation Capability = 1 << 5
