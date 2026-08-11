@@ -22,8 +22,7 @@ type Validator interface {
 // validator implements the Validator interface, allowing structs in this package to
 // embed the validation code base and supply their own keyFunc; unifying functionality
 type validator struct {
-	audience  string
-	issuer    string
+	conf      Config
 	keyFunc   jwt.Keyfunc
 	blacklist TokenBlacklist
 }
@@ -46,11 +45,11 @@ func (v *validator) VerifyWithContext(ctx context.Context, tks string) (claims *
 		return nil, ErrTokenInvalidClaims
 	}
 
-	if !claims.VerifyAudience(v.audience, true) {
+	if !claims.VerifyAudience(v.conf.Audience, true) {
 		return nil, ErrTokenInvalidAudience
 	}
 
-	if !claims.VerifyIssuer(v.issuer, true) {
+	if !claims.VerifyIssuer(v.conf.Issuer, true) {
 		return nil, ErrTokenInvalidIssuer
 	}
 

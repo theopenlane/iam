@@ -25,19 +25,14 @@ type Claims struct {
 	OrgID string `json:"org,omitempty"`
 	// Scopes lists objects that can be accessed for each permission level
 	Scopes PermissionScopes `json:"scopes,omitempty"`
-
 	// TrustCenterID is the internal generated mapping ID for the trust center the JWT token is valid for
 	TrustCenterID string `json:"trust_center_id,omitempty"`
-
 	// Modules is a list of modules that are enabled for the user in their current organization
 	Modules []string `json:"modules,omitempty"`
-
 	// Email is the email address of the user
 	Email string `json:"email,omitempty"`
-
 	// AssessmentID is the id of the questionnaire to fill
 	AssessmentID string `json:"assessment_id,omitempty"`
-
 	// AssessmentPreview marks the token as a sender preview (is_test) so the questionnaire
 	// resolves to the test response rather than a real recipient's response
 	AssessmentPreview bool `json:"assessment_preview,omitempty"`

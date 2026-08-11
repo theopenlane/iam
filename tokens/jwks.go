@@ -24,8 +24,7 @@ type JWKSValidator struct {
 func NewJWKSValidator(keys jwk.Set, audience, issuer string) *JWKSValidator {
 	validator := &JWKSValidator{
 		validator: validator{
-			audience: audience,
-			issuer:   issuer,
+			conf: NewConfig(WithAudience(audience), WithIssuer(issuer)),
 		},
 		keys: keys,
 	}

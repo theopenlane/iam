@@ -168,13 +168,10 @@ func (i *Issuer) signingMethod() jwt.SigningMethod {
 	return i.currentSigningMethod
 }
 
-// CreateAccessToken creates an access token from the provided claims.
-func (i *Issuer) CreateAccessToken(claims *Claims) (*jwt.Token, error) {
-	return i.createAccessTokenWithDuration(claims, i.conf.AccessDuration)
-}
+// CreateAccessToken creates an access token from the provided claims and config options
+func (i *Issuer) CreateAccessToken(claims *Claims, opts ...ConfigOpt) (*jwt.Token, error) {
+	conf := i.Config().derive(opts...)
 
-// createAccessTokenWithDuration creates an access token with a specified duration.
-func (i *Issuer) createAccessTokenWithDuration(claims *Claims, duration time.Duration) (*jwt.Token, error) {
 	now := time.Now()
 	sub := claims.Subject
 
@@ -187,14 +184,48 @@ func (i *Issuer) createAccessTokenWithDuration(claims *Claims, duration time.Dur
 	claims.RegisteredClaims = jwt.RegisteredClaims{
 		ID:        strings.ToLower(kid.String()),
 		Subject:   sub,
-		Audience:  jwt.ClaimStrings{i.conf.Audience},
-		Issuer:    i.conf.Issuer,
+		Audience:  jwt.ClaimStrings{conf.Audience},
+		Issuer:    conf.Issuer,
 		IssuedAt:  issueTime,
 		NotBefore: issueTime,
-		ExpiresAt: jwt.NewNumericDate(now.Add(duration)),
+		ExpiresAt: jwt.NewNumericDate(now.Add(conf.AccessDuration)),
 	}
 
 	return jwt.NewWithClaims(i.signingMethod(), claims), nil
+}
+
+// CreateSignedToken mints and signs a token from the derived config; the iat, nbf,
+// and jti claims are always server-derived
+func (i *Issuer) CreateSignedToken(opts ...ConfigOpt) (string, error) {
+	conf := i.Config().derive(opts...)
+
+	method := i.signingMethod()
+	if conf.RequiredAlgorithm != "" && method.Alg() != conf.RequiredAlgorithm {
+		return "", ErrSigningAlgorithmMismatch
+	}
+
+	jti, err := i.genKeyID()
+	if err != nil {
+		return "", err
+	}
+
+	now := time.Now()
+
+	claims := jwt.MapClaims{}
+	maps.Copy(claims, conf.ExtraClaims)
+
+	claims["iss"] = conf.Issuer
+	claims["aud"] = conf.Audience
+	claims["iat"] = jwt.NewNumericDate(now)
+	claims["nbf"] = jwt.NewNumericDate(now)
+	claims["exp"] = jwt.NewNumericDate(now.Add(conf.AccessDuration))
+	claims["jti"] = strings.ToLower(jti.String())
+
+	if conf.Subject != "" {
+		claims["sub"] = conf.Subject
+	}
+
+	return i.Sign(jwt.NewWithClaims(method, claims))
 }
 
 // CreateRefreshToken creates a refresh token from an access token.
@@ -221,29 +252,6 @@ func (i *Issuer) CreateRefreshToken(accessToken *jwt.Token) (*jwt.Token, error) 
 	}
 
 	return jwt.NewWithClaims(i.signingMethod(), claims), nil
-}
-
-// CreateTokens creates and signs both access and refresh tokens in one step.
-func (i *Issuer) CreateTokens(claims *Claims) (accessToken, refreshToken string, err error) {
-	var atk, rtk *jwt.Token
-
-	if atk, err = i.CreateAccessToken(claims); err != nil {
-		return "", "", fmt.Errorf("could not create access token: %w", err)
-	}
-
-	if rtk, err = i.CreateRefreshToken(atk); err != nil {
-		return "", "", fmt.Errorf("could not create refresh token: %w", err)
-	}
-
-	if accessToken, err = i.Sign(atk); err != nil {
-		return "", "", fmt.Errorf("could not sign access token: %w", err)
-	}
-
-	if refreshToken, err = i.Sign(rtk); err != nil {
-		return "", "", fmt.Errorf("could not sign refresh token: %w", err)
-	}
-
-	return accessToken, refreshToken, nil
 }
 
 // Parse parses a token without validating claims (but does verify signature).

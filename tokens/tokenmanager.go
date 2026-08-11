@@ -59,9 +59,8 @@ func New(conf Config) (tm *TokenManager, err error) {
 	tm = &TokenManager{
 		Issuer: issuer,
 		validator: validator{
-			audience: conf.Audience,
-			issuer:   conf.Issuer,
-			keyFunc:  issuer.keyFunc,
+			conf:    conf,
+			keyFunc: issuer.keyFunc,
 		},
 	}
 
@@ -135,9 +134,8 @@ func NewWithKey(key crypto.Signer, conf Config) (tm *TokenManager, err error) {
 	tm = &TokenManager{
 		Issuer: issuer,
 		validator: validator{
-			audience: conf.Audience,
-			issuer:   conf.Issuer,
-			keyFunc:  issuer.keyFunc,
+			conf:    conf,
+			keyFunc: issuer.keyFunc,
 		},
 	}
 
@@ -201,9 +199,9 @@ func (tm *TokenManager) CreateImpersonationToken(_ context.Context, opts CreateI
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(opts.Duration)),
 			NotBefore: jwt.NewNumericDate(now),
-			Issuer:    tm.conf.Issuer,
+			Issuer:    tm.Issuer.conf.Issuer,
 			Subject:   opts.TargetUserID,
-			Audience:  jwt.ClaimStrings{tm.conf.Audience},
+			Audience:  jwt.ClaimStrings{tm.Issuer.conf.Audience},
 			ID:        sessionID,
 		},
 		UserID:            opts.TargetUserID,
@@ -232,8 +230,8 @@ func (tm *TokenManager) ValidateImpersonationToken(ctx context.Context, tokenStr
 	// Parse with validation
 	parser := jwt.NewParser(
 		jwt.WithValidMethods(allowedAlgorithms),
-		jwt.WithAudience(tm.conf.Audience),
-		jwt.WithIssuer(tm.conf.Issuer),
+		jwt.WithAudience(tm.Issuer.conf.Audience),
+		jwt.WithIssuer(tm.Issuer.conf.Issuer),
 	)
 
 	token, err := parser.ParseWithClaims(tokenString, claims, tm.Issuer.keyFunc)
@@ -388,33 +386,11 @@ func (tm *TokenManager) SuspendUserWithDuration(ctx context.Context, userID stri
 	return tm.SuspendUser(ctx, userID, duration)
 }
 
-// CreateTokenPairOption allows you configure token pair generations
-type CreateTokenPairOption func(*createTokenPairConfig)
-
-type createTokenPairConfig struct {
-	duration time.Duration
-}
-
-// WithAccessDuration sets a custom access token duration, it overrides the default value set in the config
-func WithAccessDuration(d time.Duration) CreateTokenPairOption {
-	return func(c *createTokenPairConfig) {
-		c.duration = d
-	}
-}
-
 // CreateTokenPair returns signed access and refresh tokens for the specified claims in one step since usually you want both access and refresh tokens at the same time
-func (tm *TokenManager) CreateTokenPair(claims *Claims, opts ...CreateTokenPairOption) (accessToken, refreshToken string, err error) {
+func (tm *TokenManager) CreateTokenPair(claims *Claims, opts ...ConfigOpt) (accessToken, refreshToken string, err error) {
 	var atk, rtk *jwt.Token
 
-	cfg := &createTokenPairConfig{
-		duration: tm.conf.AccessDuration,
-	}
-
-	for _, opt := range opts {
-		opt(cfg)
-	}
-
-	if atk, err = tm.createAccessTokenWithDuration(claims, cfg.duration); err != nil {
+	if atk, err = tm.CreateAccessToken(claims, opts...); err != nil {
 		return "", "", fmt.Errorf("could not create access token: %w", err)
 	}
 
