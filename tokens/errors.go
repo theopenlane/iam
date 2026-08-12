@@ -69,6 +69,8 @@ var (
 	ErrAudienceRequired = errors.New("audience is required")
 	// ErrIssuerRequired is returned when issuer is not specified
 	ErrIssuerRequired = errors.New("issuer is required")
+	// ErrSigningAlgorithmMismatch is returned when the current signing key does not use the algorithm the operation requires
+	ErrSigningAlgorithmMismatch = errors.New("current signing key does not use the required algorithm")
 	// ErrAPITokenMultipleActive is returned when multiple keys are marked as active
 	ErrAPITokenMultipleActive = errors.New("only one api token key can be active at a time")
 	// ErrAPITokenNoActive is returned when API tokens are enabled but no active key exists

@@ -3,12 +3,21 @@ package tokens
 import (
 	"encoding/base64"
 	"fmt"
+	"maps"
 	"time"
 
 	"github.com/theopenlane/utils/cache"
 )
 
 const (
+	// DefaultAccessDuration is the access token duration applied when none is configured
+	DefaultAccessDuration = time.Hour
+	// DefaultRefreshDuration is the refresh token duration applied when none is configured
+	DefaultRefreshDuration = 2 * time.Hour
+	// DefaultRefreshOverlap is the refresh overlap applied when none is configured
+	DefaultRefreshOverlap = -15 * time.Minute
+	// DefaultJWKSCacheTTL is the JWKS cache duration applied when none is configured
+	DefaultJWKSCacheTTL = 5 * time.Minute
 	// MinAccessDuration is the minimum allowed access token duration
 	MinAccessDuration = 5 * time.Minute
 	// MaxAccessDuration is the maximum allowed access token duration
@@ -63,6 +72,90 @@ type Config struct {
 	AssessmentAccessDuration time.Duration `json:"assessmentaccessduration" koanf:"assessmentaccessduration" default:"1h"`
 	// TrustCenterNDARequestAccessDuration represents the validity duration of the access token used for trust center NDA requests
 	TrustCenterNDARequestAccessDuration time.Duration `json:"trustcenterndarequestaccessduration" koanf:"trustcenterndarequestaccessduration" default:"1h"`
+	// Subject is the subject bound into minted tokens, set per operation
+	Subject string `json:"-" koanf:"-"`
+	// ExtraClaims holds additional claims minted into tokens, set per operation
+	ExtraClaims map[string]any `json:"-" koanf:"-"`
+	// RequiredAlgorithm refuses signing when the current key uses a different algorithm
+	RequiredAlgorithm string `json:"-" koanf:"-"`
+}
+
+// ConfigOpt customizes a Config at construction or derives a per-operation copy
+type ConfigOpt func(*Config)
+
+// NewConfig returns a Config with defaults and the supplied options applied
+func NewConfig(opts ...ConfigOpt) Config {
+	conf := Config{
+		AccessDuration:  DefaultAccessDuration,
+		RefreshDuration: DefaultRefreshDuration,
+		RefreshOverlap:  DefaultRefreshOverlap,
+		JWKSCacheTTL:    DefaultJWKSCacheTTL,
+		GenerateKeys:    true,
+	}
+
+	for _, opt := range opts {
+		opt(&conf)
+	}
+
+	return conf
+}
+
+// WithIssuer sets the issuer for minting and verification
+func WithIssuer(issuer string) ConfigOpt {
+	return func(c *Config) {
+		c.Issuer = issuer
+	}
+}
+
+// WithAudience sets the audience for minting and verification
+func WithAudience(audience string) ConfigOpt {
+	return func(c *Config) {
+		c.Audience = audience
+	}
+}
+
+// WithSubject sets the subject bound into minted tokens
+func WithSubject(subject string) ConfigOpt {
+	return func(c *Config) {
+		c.Subject = subject
+	}
+}
+
+// WithAccessDuration overrides the configured access token duration
+func WithAccessDuration(duration time.Duration) ConfigOpt {
+	return func(c *Config) {
+		c.AccessDuration = duration
+	}
+}
+
+// WithClaim adds one extra claim; registered claims always win
+func WithClaim(name string, value any) ConfigOpt {
+	return func(c *Config) {
+		if c.ExtraClaims == nil {
+			c.ExtraClaims = map[string]any{}
+		}
+
+		c.ExtraClaims[name] = value
+	}
+}
+
+// WithRequiredAlgorithm refuses to sign when the current key uses a different algorithm
+func WithRequiredAlgorithm(alg string) ConfigOpt {
+	return func(c *Config) {
+		c.RequiredAlgorithm = alg
+	}
+}
+
+// derive returns a copy with the options applied, cloning ExtraClaims so the base is never mutated
+func (c Config) derive(opts ...ConfigOpt) Config {
+	conf := c
+	conf.ExtraClaims = maps.Clone(conf.ExtraClaims)
+
+	for _, opt := range opts {
+		opt(&conf)
+	}
+
+	return conf
 }
 
 // RedisConfig contains Redis configuration for token security features
