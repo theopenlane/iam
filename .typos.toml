@@ -1,5 +1,5 @@
 [files]
-extend-exclude = ["tokens/testdata/**","go.mod","go.sum"]
+extend-exclude = ["tokens/testdata/**","go.mod","go.sum","entfga/templates/authzChecks.tmpl"]
 ignore-hidden = true
 ignore-files = true
 ignore-dot = true

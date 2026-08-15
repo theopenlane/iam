@@ -12,6 +12,6 @@ repos:
     hooks:
       - id: yamlfmt
   - repo: https://github.com/adhtruong/mirrors-typos
-    rev: v1.43.4
+    rev: v1.49.0
     hooks:
       - id: typos
