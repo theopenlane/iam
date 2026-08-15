@@ -13,6 +13,7 @@ require (
 	github.com/gorilla/securecookie v1.1.2
 	github.com/gqlgo/gqlgenc v0.38.0
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/labstack/echo/v5 v5.3.1
 	github.com/lestrrat-go/httprc/v3 v3.0.6
 	github.com/lestrrat-go/jwx/v3 v3.2.0
 	github.com/moby/moby/api v1.55.0

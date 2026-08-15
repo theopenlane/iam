@@ -33,15 +33,15 @@ var (
 	impersonation = regexp.MustCompile(`^\s*` + ImpersonationScheme + `\s+([a-zA-Z0-9_\-\.]+)\s*$`)
 )
 
-// GetBearerToken retrieves the bearer token from the authorization header and parses it
+// BearerToken retrieves the bearer token from the authorization header and parses it
 // to return only the JWT access token component of the header. Alternatively, if the
 // authorization header is not present, then the token is fetched from cookies. If the
 // header is missing or the token is not available, an error is returned.
 //
 // NOTE: the authorization header takes precedence over access tokens in cookies.
-func GetBearerToken(c echo.Context) (string, error) {
+func BearerToken(r *http.Request) (string, error) {
 	// Attempt to get the access token from the header.
-	if h := c.Request().Header.Get(Authorization); h != "" {
+	if h := r.Header.Get(Authorization); h != "" {
 		match := bearer.FindStringSubmatch(h)
 		if len(match) == 2 { //nolint:mnd
 			return match[1], nil
@@ -51,7 +51,7 @@ func GetBearerToken(c echo.Context) (string, error) {
 	}
 
 	// Attempt to get the access token from cookies.
-	if cookie, err := c.Cookie(AccessTokenCookie); err == nil {
+	if cookie, err := r.Cookie(AccessTokenCookie); err == nil {
 		// If the error is nil, that means we were able to retrieve the access token cookie
 		if CookieExpired(cookie) {
 			return "", ErrNoAuthorization
@@ -61,6 +61,12 @@ func GetBearerToken(c echo.Context) (string, error) {
 	}
 
 	return "", ErrNoAuthorization
+}
+
+// GetBearerToken retrieves the bearer token from the authorization header or access token
+// cookie on the request held by the echo context, see BearerToken
+func GetBearerToken(c echo.Context) (string, error) {
+	return BearerToken(c.Request())
 }
 
 // GetBearerTokenFromWebsocketRequest retrieves the bearer token from the
@@ -77,20 +83,25 @@ func GetBearerTokenFromWebsocketRequest(initPayload transport.InitPayload) (stri
 	return bearerToken[1], nil
 }
 
-// GetAPIKey retrieves the API key from the authorization header or the X-API-Key header.
-func GetAPIKey(c echo.Context) (string, error) {
+// APIKey retrieves the API key from the X-API-Key header.
+func APIKey(r *http.Request) (string, error) {
 	// Attempt to get the api token from the header
-	if h := c.Request().Header.Get(APIKeyHeader); h != "" {
+	if h := r.Header.Get(APIKeyHeader); h != "" {
 		return h, nil
 	}
 
 	return "", ErrNoAPIKey
 }
 
-// GetRefreshToken retrieves the refresh token from the cookies in the request. If the
+// GetAPIKey retrieves the API key from the X-API-Key header on the request held by the echo context, see APIKey
+func GetAPIKey(c echo.Context) (string, error) {
+	return APIKey(c.Request())
+}
+
+// RefreshToken retrieves the refresh token from the cookies in the request. If the
 // cookie is not present or expired then an error is returned.
-func GetRefreshToken(c echo.Context) (string, error) {
-	cookie, err := c.Cookie(RefreshTokenCookie)
+func RefreshToken(r *http.Request) (string, error) {
+	cookie, err := r.Cookie(RefreshTokenCookie)
 	if err != nil {
 		return "", ErrNoRefreshToken
 	}
@@ -101,6 +112,11 @@ func GetRefreshToken(c echo.Context) (string, error) {
 	}
 
 	return cookie.Value, nil
+}
+
+// GetRefreshToken retrieves the refresh token from the cookies on the request held by the echo context, see RefreshToken
+func GetRefreshToken(c echo.Context) (string, error) {
+	return RefreshToken(c.Request())
 }
 
 // SetAuthCookies is a helper function to set authentication cookies on a echo request.
@@ -127,11 +143,11 @@ func CookieExpired(cookie *http.Cookie) bool {
 	return sessions.CookieExpired(cookie)
 }
 
-// GetImpersonationToken retrieves the impersonation token from the authorization header
+// ImpersonationToken retrieves the impersonation token from the authorization header
 // and parses it to return only the token component. If the header is missing or malformed,
 // an error is returned.
-func GetImpersonationToken(c echo.Context) (string, error) {
-	if h := c.Request().Header.Get(Authorization); h != "" {
+func ImpersonationToken(r *http.Request) (string, error) {
+	if h := r.Header.Get(Authorization); h != "" {
 		match := impersonation.FindStringSubmatch(h)
 		if len(match) == 2 { //nolint:mnd
 			return match[1], nil
@@ -141,35 +157,50 @@ func GetImpersonationToken(c echo.Context) (string, error) {
 	return "", ErrNoAuthorization
 }
 
-// GetUserContextHeaders retrieves the user context headers used by system admins
+// GetImpersonationToken retrieves the impersonation token from the authorization header on the
+// request held by the echo context, see ImpersonationToken
+func GetImpersonationToken(c echo.Context) (string, error) {
+	return ImpersonationToken(c.Request())
+}
+
+// UserContextHeaders retrieves the user context headers used by system admins
 // to specify which user context to operate under. Returns the user ID and organization ID
 // from the X-User-ID and X-Organization-ID headers respectively.
-func GetUserContextHeaders(c echo.Context) (userID, orgID string) {
-	userID = c.Request().Header.Get(UserIDHeader)
-	orgID = c.Request().Header.Get(OrganizationIDHeader)
+func UserContextHeaders(r *http.Request) (userID, orgID string) {
+	return r.Header.Get(UserIDHeader), r.Header.Get(OrganizationIDHeader)
+}
 
-	return userID, orgID
+// GetUserContextHeaders retrieves the user context headers from the request held by the echo
+// context, see UserContextHeaders
+func GetUserContextHeaders(c echo.Context) (userID, orgID string) {
+	return UserContextHeaders(c.Request())
 }
 
 // HasUserContextHeaders checks if both required user context headers are present
 func HasUserContextHeaders(c echo.Context) bool {
-	userID, orgID := GetUserContextHeaders(c)
+	userID, orgID := UserContextHeaders(c.Request())
 
 	return userID != "" && orgID != ""
 }
 
-// GetOrganizationContextHeader retrieves the org context header
+// OrganizationContextHeader retrieves the org context header
 // to specify which organization context to operate under. This can be useful
 // in scenarios when using a PAT that has access to multiple organizations and
 // some preliminary check is needed for the operation. e.g checking if they have access
 // to some modules.
 //
 // If this is present, it will be the default OrganizationID when using a PAT
+func OrganizationContextHeader(r *http.Request) string {
+	return r.Header.Get(OrganizationIDHeader)
+}
+
+// GetOrganizationContextHeader retrieves the org context header from the request held by the echo
+// context, see OrganizationContextHeader
 func GetOrganizationContextHeader(c echo.Context) string {
-	return c.Request().Header.Get(OrganizationIDHeader)
+	return OrganizationContextHeader(c.Request())
 }
 
 // HasOrganizationContextHeader checks if the required organization context header is present
 func HasOrganizationContextHeader(c echo.Context) bool {
-	return GetOrganizationContextHeader(c) != ""
+	return OrganizationContextHeader(c.Request()) != ""
 }

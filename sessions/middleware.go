@@ -182,36 +182,9 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 				config.BeforeFunc(c)
 			}
 
-			// get session from request cookies
-			session, err := config.SessionManager.Get(c.Request(), config.CookieConfig.Name)
+			session, userID, err := config.requestSession(c.Request())
 			if err != nil {
-				log.Error().Err(err).Msg("unable to get session")
-
-				return unauthorized(c, ErrInvalidSession)
-			}
-
-			// get the session id from the session data
-			sessionID := config.SessionManager.GetSessionIDFromCookie(session)
-			sessionData := config.SessionManager.GetSessionDataFromCookie(session)
-
-			// check session token on request matches cache
-			userIDFromCookie := sessionData.(map[string]any)[UserIDKey]
-
-			// lookup userID in cache to ensure tokens match
-			userID, err := config.RedisStore.GetSession(c.Request().Context(), sessionID)
-			if err != nil {
-				log.Error().Err(err).Msg("unable to get session from store")
-
-				return unauthorized(c, ErrInvalidSession)
-			}
-
-			if userIDFromCookie != userID {
-				log.Error().
-					Interface("cookie", userIDFromCookie).
-					Str("store", userID).
-					Msg("sessions do not match")
-
-				return unauthorized(c, ErrInvalidSession)
+				return unauthorized(c, err)
 			}
 
 			// Add session to context to be used in request paths
@@ -219,33 +192,82 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 			c.SetRequest(c.Request().WithContext(ctx))
 
 			c.Response().Before(func() {
-				// do not write session/cookie if context is cancelled
-				select {
-				case <-c.Request().Context().Done():
-					log.Debug().Msg("request context cancelled, skipping session save")
-					// Context cancelled, skip writing session/cookie
+				refreshed, ok := config.writeRefreshedSession(c.Request().Context(), c.Response(), userID)
+				if !ok {
 					return
-				default:
-					// context is still active, proceed to write session/cookie
 				}
 
-				// refresh and save session cookie
-				ctx, err := config.CreateAndStoreSession(c.Request().Context(), c.Response().Writer, userID)
-				if err != nil {
-					log.Error().Err(err).Msg("unable to create and store new session")
-
-					panic(err)
-				}
-
-				c.SetRequest(c.Request().WithContext(ctx))
-
-				addHeaderIfMissing(c.Response(), "Cache-Control", `no-cache="Set-Cookie"`)
-				addHeaderIfMissing(c.Response(), "Vary", "Cookie")
+				c.SetRequest(c.Request().WithContext(refreshed))
 			})
 
 			return next(c)
 		}
 	}
+}
+
+// requestSession resolves the session presented on the request and verifies it against the
+// persistent store, returning the session and the user id the store holds for it
+func (sc *SessionConfig) requestSession(r *http.Request) (*Session[map[string]any], string, error) {
+	// get session from request cookies
+	session, err := sc.SessionManager.Get(r, sc.CookieConfig.Name)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get session")
+
+		return nil, "", ErrInvalidSession
+	}
+
+	// get the session id from the session data
+	sessionID := sc.SessionManager.GetSessionIDFromCookie(session)
+	sessionData := sc.SessionManager.GetSessionDataFromCookie(session)
+
+	// check session token on request matches cache
+	userIDFromCookie := sessionData.(map[string]any)[UserIDKey]
+
+	// lookup userID in cache to ensure tokens match
+	userID, err := sc.RedisStore.GetSession(r.Context(), sessionID)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get session from store")
+
+		return nil, "", ErrInvalidSession
+	}
+
+	if userIDFromCookie != userID {
+		log.Error().
+			Interface("cookie", userIDFromCookie).
+			Str("store", userID).
+			Msg("sessions do not match")
+
+		return nil, "", ErrInvalidSession
+	}
+
+	return session, userID, nil
+}
+
+// writeRefreshedSession refreshes and saves the session cookie and store entry unless the request
+// context is already cancelled, returning the refreshed context and whether a refresh occurred
+func (sc *SessionConfig) writeRefreshedSession(ctx context.Context, w http.ResponseWriter, userID string) (context.Context, bool) {
+	// do not write session/cookie if context is cancelled
+	select {
+	case <-ctx.Done():
+		log.Debug().Msg("request context cancelled, skipping session save")
+
+		return ctx, false
+	default:
+		// context is still active, proceed to write session/cookie
+	}
+
+	// refresh and save session cookie
+	refreshed, err := sc.CreateAndStoreSession(ctx, w, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to create and store new session")
+
+		panic(err)
+	}
+
+	addHeaderIfMissing(w, "Cache-Control", `no-cache="Set-Cookie"`)
+	addHeaderIfMissing(w, "Vary", "Cookie")
+
+	return refreshed, true
 }
 
 // addHeaderIfMissing function is used to add a header to the HTTP response if it is not already
@@ -259,8 +281,13 @@ func addHeaderIfMissing(w http.ResponseWriter, key, value string) {
 	w.Header().Add(key, value)
 }
 
+// jsonWriter is satisfied by both echo context flavors so the unauthorized reply is written once
+type jsonWriter interface {
+	JSON(code int, i any) error
+}
+
 // unauthorized returns a 401 Unauthorized response with the error message.
-func unauthorized(c echo.Context, err error) error {
+func unauthorized(c jsonWriter, err error) error {
 	if err := c.JSON(http.StatusUnauthorized, rout.ErrorResponse(err)); err != nil {
 		return err
 	}
