@@ -33,7 +33,7 @@ require (
 	github.com/theopenlane/echox v0.3.0
 	github.com/theopenlane/entx v0.30.3
 	github.com/theopenlane/utils v0.7.1
-	github.com/urfave/cli/v3 v3.10.1
+	github.com/urfave/cli/v3 v3.11.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/tools v0.48.0
