@@ -108,11 +108,16 @@ func (c *Client) checkForExistingModel(ctx context.Context, forceCreate bool) (s
 
 	// Only create a new test model if one does not exist and we aren't forcing a new model to be created
 	if !forceCreate {
-		if len(models.AuthorizationModels) > 0 {
-			modelID := models.GetAuthorizationModels()[0].Id
-			log.Info().Str("model_id", modelID).Msg("fga model exists")
+		for _, model := range models.GetAuthorizationModels() {
+			if c.ModelMatcher != nil && !c.ModelMatcher(model) {
+				log.Info().Str("model_id", model.Id).Msg("fga model is stale")
 
-			return modelID, nil
+				continue
+			}
+
+			log.Info().Str("model_id", model.Id).Msg("fga model exists")
+
+			return model.Id, nil
 		}
 	}
 

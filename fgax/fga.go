@@ -24,7 +24,13 @@ type Client struct {
 	ParentContextSkipKinds map[string]struct{}
 	// EnableParentContext disables the automatic addition of parent context tuples entirely
 	EnableParentContext bool
+	// ModelMatcher decides whether an existing model in the store can be reused
+	ModelMatcher ModelMatcher
 }
+
+// ModelMatcher reports whether an authorization model already in the store is the one the caller
+// expects to run against
+type ModelMatcher func(model openfga.AuthorizationModel) bool
 
 // Config configures the openFGA setup
 type Config struct {
@@ -54,6 +60,9 @@ type Config struct {
 	ParentContextSkipKinds []string `json:"parentcontextskipkinds" koanf:"parentcontextskipkinds" jsonschema:"description=entity kind names that should not have parent context tuples added"`
 	// ParentContextConditions defines relationship conditions to apply on parent context tuples per entity kind
 	ParentContextConditions []ParentContextConditionConfig `json:"parentcontextconditions" koanf:"parentcontextconditions" jsonschema:"description=relationship conditions to apply on parent context tuples per entity kind"`
+	// ModelMatcher decides whether an existing model in the store can be reused, when it is not set
+	// the newest model in the store is reused
+	ModelMatcher ModelMatcher `json:"-" koanf:"-" jsonschema:"-"`
 }
 
 // ParentContextConditionConfig defines a relationship condition to apply on the parent context tuple for a given entity kind
@@ -121,6 +130,13 @@ func (c *Client) GetModelID() string {
 func WithStoreID(storeID string) Option {
 	return func(c *Client) {
 		c.Config.StoreId = storeID
+	}
+}
+
+// WithModelMatcher sets the function used to decide whether an existing model can be reused
+func WithModelMatcher(matcher ModelMatcher) Option {
+	return func(c *Client) {
+		c.ModelMatcher = matcher
 	}
 }
 
@@ -220,6 +236,11 @@ func CreateFGAClientWithStore(ctx context.Context, c Config) (*Client, error) {
 			c.Credentials.Issuer,
 			c.Credentials.Scopes,
 		))
+	}
+
+	// let the caller judge whether a model already in the store is the one it expects
+	if c.ModelMatcher != nil {
+		opts = append(opts, WithModelMatcher(c.ModelMatcher))
 	}
 
 	// create store if an ID was not configured
