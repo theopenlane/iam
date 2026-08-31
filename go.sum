@@ -158,8 +158,8 @@ github.com/gorilla/securecookie v1.1.2 h1:YCIWL56dvtr73r6715mJs5ZvhtnY73hBvEF8kX
 github.com/gorilla/securecookie v1.1.2/go.mod h1:NfCASbcHqRSY+3a8tlWJwsQap2VX5pwzwo4h3eOamfo=
 github.com/gotestyourself/gotestyourself v2.2.0+incompatible h1:AQwinXlbQR2HvPjQZOmDhRqsv5mZf+Jb1RnSLxcqZcI=
 github.com/gotestyourself/gotestyourself v2.2.0+incompatible/go.mod h1:zZKM6oeNM8k+FRljX1mnzVYeS8wiGgQyvST1/GafPbY=
-github.com/gqlgo/gqlgenc v0.38.1 h1:RnPUAdJ5UNoNYzHrrmNZknAyHGTNB+bWwwEXh2V+KYw=
-github.com/gqlgo/gqlgenc v0.38.1/go.mod h1:/REfmqIkqktK6RgE95vMo3Mtd7qlLuca9NRLn+wxTR8=
+github.com/gqlgo/gqlgenc v0.38.2 h1:cBfvDntlB9YEcaBG+XcFXimb0+A9+WqrmdLlFYGx2dA=
+github.com/gqlgo/gqlgenc v0.38.2/go.mod h1:/REfmqIkqktK6RgE95vMo3Mtd7qlLuca9NRLn+wxTR8=
 github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 h1:UH//fgunKIs4JdUbpDl1VZCDaL56wXCB/5+wF6uHfaI=
 github.com/grpc-ecosystem/go-grpc-middleware v1.4.0/go.mod h1:g5qyo/la0ALbONm6Vbp88Yd8NsDy6rZz+RcrMPxvld8=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.30.0 h1:/Tnpcb2E0Pz/tN9s3bfEY2Q8ePCEX9iuS+cneUwncnw=
