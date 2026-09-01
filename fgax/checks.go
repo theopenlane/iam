@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	ofgaclient "github.com/openfga/go-sdk/client"
-	"github.com/rs/zerolog/log"
+	"github.com/theopenlane/logx"
 	"github.com/theopenlane/utils/ulids"
 
 	"github.com/theopenlane/iam/auth"
@@ -69,7 +69,7 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 	checkRequests := []ofgaclient.ClientBatchCheckItem{}
 
 	for _, ac := range checks {
-		check, err := toBatchCheckItem(ac)
+		check, err := toBatchCheckItem(ctx, ac)
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +107,7 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 		if result.HasError() {
 			err := result.GetError()
 
-			log.Error().Str("error", err.GetMessage()).Interface("accessCheck", id).Str("type", getCheckErrorType(err)).Msg("error checking access")
+			logx.FromContext(ctx).Error().Str("error", err.GetMessage()).Interface("accessCheck", id).Str("type", getCheckErrorType(err)).Msg("error checking access")
 
 			continue
 		}
@@ -115,14 +115,14 @@ func (c *Client) BatchCheckObjectAccess(ctx context.Context, checks []AccessChec
 		// get id from the correlation ID
 		check, ok := getCheckItemByCorrelationID(id, checkRequests)
 		if !ok {
-			log.Error().Str("correlationID", id).Msg("correlation ID not found in checks")
+			logx.FromContext(ctx).Error().Str("correlationID", id).Msg("correlation ID not found in checks")
 
 			continue
 		}
 
 		obj, err := ParseEntity(check.Object)
 		if err != nil {
-			log.Error().Err(err).Str("object", check.Object).Msg("error parsing object")
+			logx.FromContext(ctx).Error().Err(err).Str("object", check.Object).Msg("error parsing object")
 
 			return nil, err
 		}
@@ -158,9 +158,9 @@ func (c *Client) CheckAccessHighConsistency(ctx context.Context, ac AccessCheck,
 	return c.checkTuple(ctx, *checkReq, opts...)
 }
 
-func toBatchCheckItem(ac AccessCheck) (*ofgaclient.ClientBatchCheckItem, error) {
+func toBatchCheckItem(ctx context.Context, ac AccessCheck) (*ofgaclient.ClientBatchCheckItem, error) {
 	if err := validateAccessCheck(ac); err != nil {
-		log.Error().Err(err).Interface("accessCheck", ac).Msg("invalid access check")
+		logx.FromContext(ctx).Error().Err(err).Interface("accessCheck", ac).Msg("invalid access check")
 
 		return nil, err
 	}
@@ -243,7 +243,7 @@ func (c *Client) ListRelations(ctx context.Context, ac ListAccess, opts ...Reque
 
 		relations, err = c.getRelationsFromModel(ctx, ac.ObjectType.String())
 		if err != nil {
-			log.Error().Err(err).Msg("error getting relations from model")
+			logx.FromContext(ctx).Error().Err(err).Msg("error getting relations from model")
 
 			return nil, err
 		}
@@ -311,7 +311,7 @@ func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckReq
 	data, err := c.Ofga.Check(ctx).Body(check).
 		Options(options).Execute()
 	if err != nil {
-		log.Error().Err(err).Interface("tuple", check).Msg("error checking tuple")
+		logx.FromContext(ctx).Error().Err(err).Interface("tuple", check).Msg("error checking tuple")
 
 		return false, err
 	}
@@ -417,7 +417,7 @@ func (c *Client) batchCheckTuples(ctx context.Context, checks []ofgaclient.Clien
 			// get id from the correlation ID
 			check, ok := getCheckItemByCorrelationID(i, checks)
 			if !ok {
-				log.Error().Str("correlationID", i).Msg("correlation ID not found in checks")
+				logx.FromContext(ctx).Error().Str("correlationID", i).Msg("correlation ID not found in checks")
 
 				continue
 			}
