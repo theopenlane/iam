@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/rs/zerolog/log"
 	echo "github.com/theopenlane/echox"
 	"github.com/theopenlane/echox/middleware"
+	"github.com/theopenlane/logx"
 	"github.com/theopenlane/utils/rout"
 )
 
@@ -133,7 +133,7 @@ func (sc *SessionConfig) DestroySession(ctx context.Context, w http.ResponseWrit
 	if err != nil {
 		// a missing cookie is normal; a cookie that is present but undecodable is anomalous and logged
 		if !errors.Is(err, http.ErrNoCookie) {
-			log.Warn().Err(err).Msg("could not decode session cookie on destroy; clearing it")
+			logx.FromContext(ctx).Warn().Err(err).Msg("could not decode session cookie on destroy; clearing it")
 		}
 
 		// no resolvable session to remove server-side, but still expire whatever cookie was presented
@@ -211,7 +211,12 @@ func (sc *SessionConfig) requestSession(r *http.Request) (*Session[map[string]an
 	// get session from request cookies
 	session, err := sc.SessionManager.Get(r, sc.CookieConfig.Name)
 	if err != nil {
-		log.Error().Err(err).Msg("unable to get session")
+		switch {
+		case errors.Is(err, http.ErrNoCookie):
+			logx.FromContext(r.Context()).Debug().Err(err).Msg("no session cookie on request")
+		default:
+			logx.FromContext(r.Context()).Error().Err(err).Msg("unable to get session")
+		}
 
 		return nil, "", ErrInvalidSession
 	}
@@ -226,16 +231,13 @@ func (sc *SessionConfig) requestSession(r *http.Request) (*Session[map[string]an
 	// lookup userID in cache to ensure tokens match
 	userID, err := sc.RedisStore.GetSession(r.Context(), sessionID)
 	if err != nil {
-		log.Error().Err(err).Msg("unable to get session from store")
+		logx.FromContext(r.Context()).Error().Err(err).Msg("unable to get session from store")
 
 		return nil, "", ErrInvalidSession
 	}
 
 	if userIDFromCookie != userID {
-		log.Error().
-			Interface("cookie", userIDFromCookie).
-			Str("store", userID).
-			Msg("sessions do not match")
+		logx.FromContext(r.Context()).Error().Interface("cookie", userIDFromCookie).Str("store", userID).Msg("sessions do not match")
 
 		return nil, "", ErrInvalidSession
 	}
@@ -249,7 +251,7 @@ func (sc *SessionConfig) writeRefreshedSession(ctx context.Context, w http.Respo
 	// do not write session/cookie if context is cancelled
 	select {
 	case <-ctx.Done():
-		log.Debug().Msg("request context cancelled, skipping session save")
+		logx.FromContext(ctx).Debug().Msg("request context cancelled, skipping session save")
 
 		return ctx, false
 	default:
@@ -259,7 +261,7 @@ func (sc *SessionConfig) writeRefreshedSession(ctx context.Context, w http.Respo
 	// refresh and save session cookie
 	refreshed, err := sc.CreateAndStoreSession(ctx, w, userID)
 	if err != nil {
-		log.Error().Err(err).Msg("unable to create and store new session")
+		logx.FromContext(ctx).Error().Err(err).Msg("unable to create and store new session")
 
 		panic(err)
 	}
