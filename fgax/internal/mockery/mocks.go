@@ -374,8 +374,8 @@ func (_c *MockSdkClient_ClientBatchCheckExecute_Call) Run(run func(request clien
 	return _c
 }
 
-func (_c *MockSdkClient_ClientBatchCheckExecute_Call) Return(v *client.ClientBatchCheckClientResponse, err error) *MockSdkClient_ClientBatchCheckExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_ClientBatchCheckExecute_Call) Return(clientBatchCheckClientResponse *client.ClientBatchCheckClientResponse, err error) *MockSdkClient_ClientBatchCheckExecute_Call {
+	_c.Call.Return(clientBatchCheckClientResponse, err)
 	return _c
 }
 
@@ -489,8 +489,8 @@ func (_c *MockSdkClient_CreateStoreExecute_Call) Run(run func(request client.Sdk
 	return _c
 }
 
-func (_c *MockSdkClient_CreateStoreExecute_Call) Return(v *client.ClientCreateStoreResponse, err error) *MockSdkClient_CreateStoreExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_CreateStoreExecute_Call) Return(clientCreateStoreResponse *client.ClientCreateStoreResponse, err error) *MockSdkClient_CreateStoreExecute_Call {
+	_c.Call.Return(clientCreateStoreResponse, err)
 	return _c
 }
 
@@ -834,8 +834,8 @@ func (_c *MockSdkClient_ExpandExecute_Call) Run(run func(request client.SdkClien
 	return _c
 }
 
-func (_c *MockSdkClient_ExpandExecute_Call) Return(v *client.ClientExpandResponse, err error) *MockSdkClient_ExpandExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_ExpandExecute_Call) Return(clientExpandResponse *client.ClientExpandResponse, err error) *MockSdkClient_ExpandExecute_Call {
+	_c.Call.Return(clientExpandResponse, err)
 	return _c
 }
 
@@ -1002,8 +1002,8 @@ func (_c *MockSdkClient_GetStoreExecute_Call) Run(run func(request client.SdkCli
 	return _c
 }
 
-func (_c *MockSdkClient_GetStoreExecute_Call) Return(v *client.ClientGetStoreResponse, err error) *MockSdkClient_GetStoreExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_GetStoreExecute_Call) Return(clientGetStoreResponse *client.ClientGetStoreResponse, err error) *MockSdkClient_GetStoreExecute_Call {
+	_c.Call.Return(clientGetStoreResponse, err)
 	return _c
 }
 
@@ -1170,8 +1170,8 @@ func (_c *MockSdkClient_ListObjectsExecute_Call) Run(run func(request client.Sdk
 	return _c
 }
 
-func (_c *MockSdkClient_ListObjectsExecute_Call) Return(v *client.ClientListObjectsResponse, err error) *MockSdkClient_ListObjectsExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_ListObjectsExecute_Call) Return(clientListObjectsResponse *client.ClientListObjectsResponse, err error) *MockSdkClient_ListObjectsExecute_Call {
+	_c.Call.Return(clientListObjectsResponse, err)
 	return _c
 }
 
@@ -1400,8 +1400,8 @@ func (_c *MockSdkClient_ListStoresExecute_Call) Run(run func(request client.SdkC
 	return _c
 }
 
-func (_c *MockSdkClient_ListStoresExecute_Call) Return(v *client.ClientListStoresResponse, err error) *MockSdkClient_ListStoresExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_ListStoresExecute_Call) Return(clientListStoresResponse *client.ClientListStoresResponse, err error) *MockSdkClient_ListStoresExecute_Call {
+	_c.Call.Return(clientListStoresResponse, err)
 	return _c
 }
 
@@ -1515,8 +1515,8 @@ func (_c *MockSdkClient_ListUsersExecute_Call) Run(run func(r client.SdkClientLi
 	return _c
 }
 
-func (_c *MockSdkClient_ListUsersExecute_Call) Return(v *client.ClientListUsersResponse, err error) *MockSdkClient_ListUsersExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_ListUsersExecute_Call) Return(clientListUsersResponse *client.ClientListUsersResponse, err error) *MockSdkClient_ListUsersExecute_Call {
+	_c.Call.Return(clientListUsersResponse, err)
 	return _c
 }
 
@@ -1683,8 +1683,8 @@ func (_c *MockSdkClient_ReadAssertionsExecute_Call) Run(run func(request client.
 	return _c
 }
 
-func (_c *MockSdkClient_ReadAssertionsExecute_Call) Return(v *client.ClientReadAssertionsResponse, err error) *MockSdkClient_ReadAssertionsExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_ReadAssertionsExecute_Call) Return(clientReadAssertionsResponse *client.ClientReadAssertionsResponse, err error) *MockSdkClient_ReadAssertionsExecute_Call {
+	_c.Call.Return(clientReadAssertionsResponse, err)
 	return _c
 }
 
@@ -1798,8 +1798,8 @@ func (_c *MockSdkClient_ReadAuthorizationModelExecute_Call) Run(run func(request
 	return _c
 }
 
-func (_c *MockSdkClient_ReadAuthorizationModelExecute_Call) Return(v *client.ClientReadAuthorizationModelResponse, err error) *MockSdkClient_ReadAuthorizationModelExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_ReadAuthorizationModelExecute_Call) Return(clientReadAuthorizationModelResponse *client.ClientReadAuthorizationModelResponse, err error) *MockSdkClient_ReadAuthorizationModelExecute_Call {
+	_c.Call.Return(clientReadAuthorizationModelResponse, err)
 	return _c
 }
 
@@ -1913,8 +1913,8 @@ func (_c *MockSdkClient_ReadAuthorizationModelsExecute_Call) Run(run func(reques
 	return _c
 }
 
-func (_c *MockSdkClient_ReadAuthorizationModelsExecute_Call) Return(v *client.ClientReadAuthorizationModelsResponse, err error) *MockSdkClient_ReadAuthorizationModelsExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_ReadAuthorizationModelsExecute_Call) Return(clientReadAuthorizationModelsResponse *client.ClientReadAuthorizationModelsResponse, err error) *MockSdkClient_ReadAuthorizationModelsExecute_Call {
+	_c.Call.Return(clientReadAuthorizationModelsResponse, err)
 	return _c
 }
 
@@ -2028,8 +2028,8 @@ func (_c *MockSdkClient_ReadChangesExecute_Call) Run(run func(request client.Sdk
 	return _c
 }
 
-func (_c *MockSdkClient_ReadChangesExecute_Call) Return(v *client.ClientReadChangesResponse, err error) *MockSdkClient_ReadChangesExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_ReadChangesExecute_Call) Return(clientReadChangesResponse *client.ClientReadChangesResponse, err error) *MockSdkClient_ReadChangesExecute_Call {
+	_c.Call.Return(clientReadChangesResponse, err)
 	return _c
 }
 
@@ -2090,8 +2090,8 @@ func (_c *MockSdkClient_ReadExecute_Call) Run(run func(request client.SdkClientR
 	return _c
 }
 
-func (_c *MockSdkClient_ReadExecute_Call) Return(v *client.ClientReadResponse, err error) *MockSdkClient_ReadExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_ReadExecute_Call) Return(clientReadResponse *client.ClientReadResponse, err error) *MockSdkClient_ReadExecute_Call {
+	_c.Call.Return(clientReadResponse, err)
 	return _c
 }
 
@@ -2205,8 +2205,8 @@ func (_c *MockSdkClient_ReadLatestAuthorizationModelExecute_Call) Run(run func(r
 	return _c
 }
 
-func (_c *MockSdkClient_ReadLatestAuthorizationModelExecute_Call) Return(v *client.ClientReadAuthorizationModelResponse, err error) *MockSdkClient_ReadLatestAuthorizationModelExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_ReadLatestAuthorizationModelExecute_Call) Return(clientReadAuthorizationModelResponse *client.ClientReadAuthorizationModelResponse, err error) *MockSdkClient_ReadLatestAuthorizationModelExecute_Call {
+	_c.Call.Return(clientReadAuthorizationModelResponse, err)
 	return _c
 }
 
@@ -2705,8 +2705,8 @@ func (_c *MockSdkClient_WriteAuthorizationModelExecute_Call) Run(run func(reques
 	return _c
 }
 
-func (_c *MockSdkClient_WriteAuthorizationModelExecute_Call) Return(v *client.ClientWriteAuthorizationModelResponse, err error) *MockSdkClient_WriteAuthorizationModelExecute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClient_WriteAuthorizationModelExecute_Call) Return(clientWriteAuthorizationModelResponse *client.ClientWriteAuthorizationModelResponse, err error) *MockSdkClient_WriteAuthorizationModelExecute_Call {
+	_c.Call.Return(clientWriteAuthorizationModelResponse, err)
 	return _c
 }
 
@@ -3017,8 +3017,8 @@ func (_c *MockSdkClientReadAuthorizationModelRequestInterface_Execute_Call) Run(
 	return _c
 }
 
-func (_c *MockSdkClientReadAuthorizationModelRequestInterface_Execute_Call) Return(v *client.ClientReadAuthorizationModelResponse, err error) *MockSdkClientReadAuthorizationModelRequestInterface_Execute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClientReadAuthorizationModelRequestInterface_Execute_Call) Return(clientReadAuthorizationModelResponse *client.ClientReadAuthorizationModelResponse, err error) *MockSdkClientReadAuthorizationModelRequestInterface_Execute_Call {
+	_c.Call.Return(clientReadAuthorizationModelResponse, err)
 	return _c
 }
 
@@ -3435,8 +3435,8 @@ func (_c *MockSdkClientReadRequestInterface_Execute_Call) Run(run func()) *MockS
 	return _c
 }
 
-func (_c *MockSdkClientReadRequestInterface_Execute_Call) Return(v *client.ClientReadResponse, err error) *MockSdkClientReadRequestInterface_Execute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClientReadRequestInterface_Execute_Call) Return(clientReadResponse *client.ClientReadResponse, err error) *MockSdkClientReadRequestInterface_Execute_Call {
+	_c.Call.Return(clientReadResponse, err)
 	return _c
 }
 
@@ -4271,8 +4271,8 @@ func (_c *MockSdkClientDeleteTuplesRequestInterface_GetBody_Call) Run(run func()
 	return _c
 }
 
-func (_c *MockSdkClientDeleteTuplesRequestInterface_GetBody_Call) Return(v *client.ClientDeleteTuplesBody) *MockSdkClientDeleteTuplesRequestInterface_GetBody_Call {
-	_c.Call.Return(v)
+func (_c *MockSdkClientDeleteTuplesRequestInterface_GetBody_Call) Return(clientDeleteTuplesBody *client.ClientDeleteTuplesBody) *MockSdkClientDeleteTuplesRequestInterface_GetBody_Call {
+	_c.Call.Return(clientDeleteTuplesBody)
 	return _c
 }
 
@@ -5295,8 +5295,8 @@ func (_c *MockSdkClientListObjectsRequestInterface_Execute_Call) Run(run func())
 	return _c
 }
 
-func (_c *MockSdkClientListObjectsRequestInterface_Execute_Call) Return(v *client.ClientListObjectsResponse, err error) *MockSdkClientListObjectsRequestInterface_Execute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClientListObjectsRequestInterface_Execute_Call) Return(clientListObjectsResponse *client.ClientListObjectsResponse, err error) *MockSdkClientListObjectsRequestInterface_Execute_Call {
+	_c.Call.Return(clientListObjectsResponse, err)
 	return _c
 }
 
@@ -5713,8 +5713,8 @@ func (_c *MockSdkClientListUsersRequestInterface_Execute_Call) Run(run func()) *
 	return _c
 }
 
-func (_c *MockSdkClientListUsersRequestInterface_Execute_Call) Return(v *client.ClientListUsersResponse, err error) *MockSdkClientListUsersRequestInterface_Execute_Call {
-	_c.Call.Return(v, err)
+func (_c *MockSdkClientListUsersRequestInterface_Execute_Call) Return(clientListUsersResponse *client.ClientListUsersResponse, err error) *MockSdkClientListUsersRequestInterface_Execute_Call {
+	_c.Call.Return(clientListUsersResponse, err)
 	return _c
 }
 
