@@ -180,8 +180,8 @@ func newRedisClient() *redis.Client {
 	}
 
 	client := redis.NewClient(&redis.Options{
-		Addr:             mr.Addr(),
-		DisableIndentity: true, // # spellcheck:off
+		Addr:            mr.Addr(),
+		DisableIdentity: true,
 	})
 
 	return client
