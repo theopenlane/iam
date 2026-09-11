@@ -16,7 +16,7 @@ require (
 	github.com/labstack/echo/v5 v5.3.1
 	github.com/lestrrat-go/httprc/v3 v3.0.6
 	github.com/lestrrat-go/jwx/v3 v3.2.0
-	github.com/moby/moby/api v1.55.0
+	github.com/moby/moby/api v1.56.0
 	github.com/oklog/ulid/v2 v2.1.2
 	github.com/openfga/go-sdk v0.8.2
 	github.com/openfga/language/pkg/go v0.3.2-0.20260730144454-83fedf8a4e70
