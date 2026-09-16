@@ -113,12 +113,12 @@ func (sc *SessionConfig) SaveAndStoreSession(ctx context.Context, w http.Respons
 	// Add session to context
 	c := session.addSessionDataToContext(ctx)
 
-	if err := session.Save(w); err != nil {
+	ttl := time.Duration(sc.CookieConfig.MaxAge * int(time.Second))
+	if err := sc.RedisStore.StoreSessionWithExpiration(c, sessionID, userID, ttl); err != nil {
 		return c, err
 	}
 
-	ttl := time.Duration(sc.CookieConfig.MaxAge * int(time.Second))
-	if err := sc.RedisStore.StoreSessionWithExpiration(c, sessionID, userID, ttl); err != nil {
+	if err := session.Save(w); err != nil {
 		return c, err
 	}
 
@@ -234,7 +234,7 @@ func (sc *SessionConfig) loadSession(ctx context.Context, w http.ResponseWriter,
 	}
 
 	fallbackUserID, ok := sc.FallbackUserID(ctx)
-	if !ok {
+	if !ok || fallbackUserID == "" {
 		return loadedSession{}, err
 	}
 
@@ -246,6 +246,8 @@ func (sc *SessionConfig) loadSession(ctx context.Context, w http.ResponseWriter,
 
 		return loadedSession{}, ErrInvalidSession
 	}
+
+	markSessionCookieResponse(w)
 
 	return loadedSession{ctx: created, userID: fallbackUserID, created: true}, nil
 }
@@ -311,10 +313,15 @@ func (sc *SessionConfig) writeRefreshedSession(ctx context.Context, w http.Respo
 		panic(err)
 	}
 
-	addHeaderIfMissing(w, "Cache-Control", `no-cache="Set-Cookie"`)
-	addHeaderIfMissing(w, "Vary", "Cookie")
+	markSessionCookieResponse(w)
 
 	return refreshed, true
+}
+
+// markSessionCookieResponse adds the headers that keep a response carrying a session cookie out of shared caches
+func markSessionCookieResponse(w http.ResponseWriter) {
+	addHeaderIfMissing(w, "Cache-Control", `no-cache="Set-Cookie"`)
+	addHeaderIfMissing(w, "Vary", "Cookie")
 }
 
 // addHeaderIfMissing function is used to add a header to the HTTP response if it is not already

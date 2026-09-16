@@ -2,9 +2,11 @@ package sessions_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -291,6 +293,75 @@ func TestLoadAndSaveWithConfig_FallbackUserID(t *testing.T) {
 		assert.NotEqual(t, staleID, sessionIDFromCookie(t, sc, cookies[0]))
 	})
 
+	t.Run("marks the minted response as uncacheable", func(t *testing.T) {
+		sc, _, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		sc.FallbackUserID = func(context.Context) (string, bool) { return userID, true }
+
+		middleware := sessions.LoadAndSaveWithConfig(sc)
+
+		e := echo.New()
+		handler := func(c echo.Context) error {
+			return c.String(http.StatusOK, "ok")
+		}
+
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		require.NoError(t, middleware(handler)(c))
+		assert.Equal(t, `no-cache="Set-Cookie"`, rec.Header().Get("Cache-Control"))
+		assert.Equal(t, "Cookie", rec.Header().Get("Vary"))
+	})
+
+	t.Run("rejects the request when the fallback reports an empty user", func(t *testing.T) {
+		sc, _, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		sc.FallbackUserID = func(context.Context) (string, bool) { return "", true }
+
+		middleware := sessions.LoadAndSaveWithConfig(sc)
+
+		e := echo.New()
+		handler := func(c echo.Context) error {
+			return c.String(http.StatusOK, "ok")
+		}
+
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		err := middleware(handler)(c)
+		assert.ErrorIs(t, err, sessions.ErrInvalidSession)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.Empty(t, sessionCookies(rec, sc.CookieConfig.Name))
+	})
+
+	t.Run("sets no cookie when the store rejects the minted session", func(t *testing.T) {
+		sc, _, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		sc.FallbackUserID = func(context.Context) (string, bool) { return userID, true }
+		sc.RedisStore = failingStoreSession{sc.RedisStore}
+
+		middleware := sessions.LoadAndSaveWithConfig(sc)
+
+		e := echo.New()
+		handler := func(c echo.Context) error {
+			return c.String(http.StatusOK, "ok")
+		}
+
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		err := middleware(handler)(c)
+		assert.ErrorIs(t, err, sessions.ErrInvalidSession)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.Empty(t, sessionCookies(rec, sc.CookieConfig.Name))
+	})
+
 	t.Run("rejects the request when the fallback reports no user", func(t *testing.T) {
 		sc, _, mr := newDestroyTestConfig(t)
 		defer mr.Close()
@@ -342,4 +413,17 @@ func sessionIDFromCookie(t *testing.T, sc sessions.SessionConfig, cookie *http.C
 	require.NoError(t, err)
 
 	return sc.SessionManager.GetSessionIDFromCookie(session)
+}
+
+// errStoreSession simulates a backing-store failure when persisting a session
+var errStoreSession = errors.New("store failed")
+
+// failingStoreSession wraps a PersistentStore but always fails StoreSessionWithExpiration
+type failingStoreSession struct {
+	sessions.PersistentStore
+}
+
+// StoreSessionWithExpiration always returns an error
+func (failingStoreSession) StoreSessionWithExpiration(context.Context, string, string, time.Duration) error {
+	return errStoreSession
 }
