@@ -14,14 +14,17 @@ func Middleware(config SessionConfig, skipper func(c *echo.Context) bool) echo.M
 				return next(c)
 			}
 
-			session, userID, err := config.requestSession(c.Request())
+			loaded, err := config.loadSession(c.Request().Context(), c.Response(), c.Request())
 			if err != nil {
 				return unauthorized(c, err)
 			}
 
 			// add session to context to be used in request paths
-			ctx := session.addSessionDataToContext(c.Request().Context())
-			c.SetRequest(c.Request().WithContext(ctx))
+			c.SetRequest(c.Request().WithContext(loaded.ctx))
+
+			if loaded.created {
+				return next(c)
+			}
 
 			res, err := echo.UnwrapResponse(c.Response())
 			if err != nil {
@@ -29,7 +32,7 @@ func Middleware(config SessionConfig, skipper func(c *echo.Context) bool) echo.M
 			}
 
 			res.Before(func() {
-				refreshed, ok := config.writeRefreshedSession(c.Request().Context(), c.Response(), userID)
+				refreshed, ok := config.writeRefreshedSession(c.Request().Context(), c.Response(), loaded.userID)
 				if !ok {
 					return
 				}

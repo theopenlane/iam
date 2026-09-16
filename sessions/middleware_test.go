@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	echo "github.com/theopenlane/echox"
 
 	"github.com/theopenlane/iam/sessions"
@@ -219,4 +220,126 @@ func TestLoadAndSaveWithConfig_DefaultSkipper(t *testing.T) {
 	// Should not skip (default skipper returns false)
 	err := middleware(handler)(c)
 	assert.Error(t, err) // Will error due to missing session, but not skipped
+}
+
+func TestLoadAndSaveWithConfig_FallbackUserID(t *testing.T) {
+	const userID = "user-123"
+
+	t.Run("mints a session for the resolved user when the request carries none", func(t *testing.T) {
+		sc, _, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		sc.FallbackUserID = func(context.Context) (string, bool) { return userID, true }
+
+		middleware := sessions.LoadAndSaveWithConfig(sc)
+
+		e := echo.New()
+		handler := func(c echo.Context) error {
+			_, err := sessions.SessionToken(c.Request().Context())
+			require.NoError(t, err)
+
+			return c.String(http.StatusOK, "ok")
+		}
+
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		err := middleware(handler)(c)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		cookies := sessionCookies(rec, sc.CookieConfig.Name)
+		require.Len(t, cookies, 1)
+
+		stored, err := sc.RedisStore.GetSession(context.Background(), sessionIDFromCookie(t, sc, cookies[0]))
+		require.NoError(t, err)
+		assert.Equal(t, userID, stored)
+	})
+
+	t.Run("replaces a session the store no longer holds", func(t *testing.T) {
+		sc, _, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		sc.FallbackUserID = func(context.Context) (string, bool) { return userID, true }
+
+		req := requestWithSessionCookie(t, sc, userID)
+
+		mr.FlushAll()
+
+		stale, err := sc.SessionManager.Get(req, sc.CookieConfig.Name)
+		require.NoError(t, err)
+
+		staleID := sc.SessionManager.GetSessionIDFromCookie(stale)
+
+		middleware := sessions.LoadAndSaveWithConfig(sc)
+
+		e := echo.New()
+		handler := func(c echo.Context) error {
+			return c.String(http.StatusOK, "ok")
+		}
+
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		err = middleware(handler)(c)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		cookies := sessionCookies(rec, sc.CookieConfig.Name)
+		require.Len(t, cookies, 1)
+		assert.NotEqual(t, staleID, sessionIDFromCookie(t, sc, cookies[0]))
+	})
+
+	t.Run("rejects the request when the fallback reports no user", func(t *testing.T) {
+		sc, _, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		sc.FallbackUserID = func(context.Context) (string, bool) { return "", false }
+
+		middleware := sessions.LoadAndSaveWithConfig(sc)
+
+		e := echo.New()
+		handlerCalled := false
+		handler := func(c echo.Context) error {
+			handlerCalled = true
+
+			return c.String(http.StatusOK, "ok")
+		}
+
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		err := middleware(handler)(c)
+		assert.ErrorIs(t, err, sessions.ErrInvalidSession)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.False(t, handlerCalled)
+	})
+}
+
+// sessionCookies returns the response cookies with the given name
+func sessionCookies(rec *httptest.ResponseRecorder, name string) []*http.Cookie {
+	var found []*http.Cookie
+
+	for _, c := range rec.Result().Cookies() {
+		if c.Name == name {
+			found = append(found, c)
+		}
+	}
+
+	return found
+}
+
+// sessionIDFromCookie returns the session id carried by a response cookie
+func sessionIDFromCookie(t *testing.T, sc sessions.SessionConfig, cookie *http.Cookie) string {
+	t.Helper()
+
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+	req.AddCookie(cookie)
+
+	session, err := sc.SessionManager.Get(req, sc.CookieConfig.Name)
+	require.NoError(t, err)
+
+	return sc.SessionManager.GetSessionIDFromCookie(session)
 }

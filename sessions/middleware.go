@@ -29,6 +29,8 @@ type SessionConfig struct {
 	RedisStore PersistentStore
 	// RedisClient establishes a connection to a Redis server and perform operations such as storing and retrieving data
 	RedisClient *redis.Client
+	// FallbackUserID resolves the user to mint a session for when the request carries no valid one
+	FallbackUserID func(ctx context.Context) (string, bool)
 }
 
 // Option allows users to optionally supply configuration to the session middleware.
@@ -70,6 +72,13 @@ func WithSkipperFunc(skipper middleware.Skipper) Option {
 func WithBeforeFunc(before middleware.BeforeFunc) Option {
 	return func(opts *SessionConfig) {
 		opts.BeforeFunc = before
+	}
+}
+
+// WithFallbackUserID sets the resolver used to mint a session when the request carries no valid one
+func WithFallbackUserID(resolve func(ctx context.Context) (string, bool)) Option {
+	return func(opts *SessionConfig) {
+		opts.FallbackUserID = resolve
 	}
 }
 
@@ -182,27 +191,63 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 				config.BeforeFunc(c)
 			}
 
-			session, userID, err := config.requestSession(c.Request())
+			loaded, err := config.loadSession(c.Request().Context(), c.Response(), c.Request())
 			if err != nil {
 				return unauthorized(c, err)
 			}
 
 			// Add session to context to be used in request paths
-			ctx := session.addSessionDataToContext(c.Request().Context())
-			c.SetRequest(c.Request().WithContext(ctx))
+			c.SetRequest(c.Request().WithContext(loaded.ctx))
 
-			c.Response().Before(func() {
-				refreshed, ok := config.writeRefreshedSession(c.Request().Context(), c.Response(), userID)
-				if !ok {
-					return
-				}
+			if !loaded.created {
+				c.Response().Before(func() {
+					refreshed, ok := config.writeRefreshedSession(c.Request().Context(), c.Response(), loaded.userID)
+					if !ok {
+						return
+					}
 
-				c.SetRequest(c.Request().WithContext(refreshed))
-			})
+					c.SetRequest(c.Request().WithContext(refreshed))
+				})
+			}
 
 			return next(c)
 		}
 	}
+}
+
+// loadedSession is a resolved session and whether it was minted on this request
+type loadedSession struct {
+	ctx     context.Context
+	userID  string
+	created bool
+}
+
+// loadSession resolves the session on the request, minting one via FallbackUserID when it is invalid
+func (sc *SessionConfig) loadSession(ctx context.Context, w http.ResponseWriter, r *http.Request) (loadedSession, error) {
+	session, userID, err := sc.requestSession(r)
+	if err == nil {
+		return loadedSession{ctx: session.addSessionDataToContext(ctx), userID: userID}, nil
+	}
+
+	if sc.FallbackUserID == nil {
+		return loadedSession{}, err
+	}
+
+	fallbackUserID, ok := sc.FallbackUserID(ctx)
+	if !ok {
+		return loadedSession{}, err
+	}
+
+	logx.FromContext(ctx).Debug().Str("user_id", fallbackUserID).Msg("no valid session on request, creating one for the authenticated caller")
+
+	created, err := sc.CreateAndStoreSession(ctx, w, fallbackUserID)
+	if err != nil {
+		logx.FromContext(ctx).Error().Err(err).Msg("unable to create session for the authenticated caller")
+
+		return loadedSession{}, ErrInvalidSession
+	}
+
+	return loadedSession{ctx: created, userID: fallbackUserID, created: true}, nil
 }
 
 // requestSession resolves the session presented on the request and verifies it against the
