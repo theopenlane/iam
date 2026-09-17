@@ -36,6 +36,8 @@ type Claims struct {
 	// AssessmentPreview marks the token as a sender preview (is_test) so the questionnaire
 	// resolves to the test response rather than a real recipient's response
 	AssessmentPreview bool `json:"assessment_preview,omitempty"`
+	// CampaignID is the id of the campaign attached to this questionnaire
+	CampaignID string `json:"campaign_id,omitempty"`
 }
 
 // ParseUserID returns the ID of the user from the Subject of the claims
