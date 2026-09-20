@@ -11,7 +11,7 @@ import (
 
 	oauth2Login "github.com/theopenlane/iam/providers/oauth2"
 
-	"github.com/google/go-github/v90/github"
+	"github.com/google/go-github/v91/github"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
 )
@@ -27,9 +27,9 @@ func TestGithubHandler(t *testing.T) {
 	emailJSONData := `[{"primary": true, "email": "sfunk@meow.net"}, {"primary": false, "email": "sfunk@woof.net"}]`
 
 	expectedUser := &github.User{
-		ID:    github.Ptr(int64(917408)),
-		Name:  github.Ptr("Sarah Funkytown"),
-		Email: github.Ptr("sfunk@meow.net"),
+		ID:    new(int64(917408)),
+		Name:  new("Sarah Funkytown"),
+		Email: new("sfunk@meow.net"),
 	}
 
 	proxyClient, server := newGithubTestServer("", jsonData, emailJSONData)
@@ -119,7 +119,7 @@ func TestErrorGettingUser(t *testing.T) {
 }
 
 func TestValidateResponse(t *testing.T) {
-	validUser := &github.User{ID: github.Ptr(int64(123))}
+	validUser := &github.User{ID: new(int64(123))}
 	validResponse := &github.Response{Response: &http.Response{StatusCode: 200}}
 	invalidResponse := &github.Response{Response: &http.Response{StatusCode: 500}}
 
