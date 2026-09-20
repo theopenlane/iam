@@ -10,8 +10,9 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/jwx-go/jwkfetch/v4"
 	"github.com/lestrrat-go/httprc/v3"
-	"github.com/lestrrat-go/jwx/v3/jwk"
+	"github.com/lestrrat-go/jwx/v4/jwk"
 
 	"github.com/theopenlane/iam/tokens"
 )
@@ -42,7 +43,7 @@ func (s *TokenTestSuite) TestJWKSValidator() {
 	time.Sleep(500 * time.Millisecond)
 
 	// Create a validator from a JWKS key set
-	jwks, err := jwk.ReadFile("testdata/jwks.json")
+	jwks, err := jwk.ParseFS(os.DirFS("testdata"), "jwks.json")
 	require.NoError(err, "could not read jwks from file")
 
 	validator := tokens.NewJWKSValidator(jwks, "http://localhost:3000", "http://localhost:3001")
@@ -113,11 +114,11 @@ func (s *TokenTestSuite) TestCachedJWKSValidator() {
 	require.NoError(err, "could not create token pair")
 	time.Sleep(500 * time.Millisecond)
 
-	httprcclient := httprc.NewClient() // new for v3
+	httprcclient := httprc.NewClient()
 
 	// Create a new cached validator for testing
-	cache, _ := jwk.NewCache(context.Background(), httprcclient)
-	cache.Register(context.Background(), srv.URL, jwk.WithMinInterval(1*time.Minute)) // nolint: errcheck
+	cache, _ := jwkfetch.NewCache(context.Background(), httprcclient)
+	cache.Register(context.Background(), srv.URL, jwkfetch.WithMinInterval(1*time.Minute)) // nolint: errcheck
 
 	validator, err := tokens.NewCachedJWKSValidator(cache, srv.URL, "http://localhost:3000", "http://localhost:3001")
 	require.NoError(err, "could not create new cached JWKS validator")
@@ -136,4 +137,6 @@ func (s *TokenTestSuite) TestCachedJWKSValidator() {
 	actualClaims, err := validator.Verify(atks)
 	require.NoError(err, "should have been able to verify the access token")
 	require.Equal(claims, actualClaims, "expected the correct claims to be returned")
+
+	require.NoError(validator.Shutdown(context.Background()), "could not shut down the cached validator")
 }

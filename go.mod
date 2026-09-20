@@ -5,22 +5,23 @@ go 1.27.1
 require (
 	entgo.io/ent v0.14.6
 	github.com/99designs/gqlgen v0.17.95
-	github.com/alicebob/miniredis/v2 v2.38.0
-	github.com/brianvoe/gofakeit/v7 v7.16.0
-	github.com/go-webauthn/webauthn v0.17.4
+	github.com/alicebob/miniredis/v2 v2.39.0
+	github.com/brianvoe/gofakeit/v7 v7.17.0
+	github.com/go-webauthn/webauthn v0.18.1
 	github.com/golang-jwt/jwt/v5 v5.3.1
-	github.com/google/go-github/v90 v90.0.0
+	github.com/google/go-github/v91 v91.0.0
 	github.com/gorilla/securecookie v1.1.2
-	github.com/gqlgo/gqlgenc v0.38.2
+	github.com/gqlgo/gqlgenc v0.40.1
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/jwx-go/jwkfetch/v4 v4.0.4
 	github.com/labstack/echo/v5 v5.3.1
 	github.com/lestrrat-go/httprc/v3 v3.0.6
-	github.com/lestrrat-go/jwx/v3 v3.2.0
-	github.com/moby/moby/api v1.55.0
+	github.com/lestrrat-go/jwx/v4 v4.5.0
+	github.com/moby/moby/api v1.56.0
 	github.com/oklog/ulid/v2 v2.1.2
 	github.com/openfga/go-sdk v0.8.2
 	github.com/openfga/language/pkg/go v0.3.2-0.20260730144454-83fedf8a4e70
-	github.com/openfga/openfga v1.19.0
+	github.com/openfga/openfga v1.20.0
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.5.0
 	github.com/redis/go-redis/v9 v9.22.0
@@ -31,7 +32,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.44.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.44.0
 	github.com/theopenlane/echox v0.3.0
-	github.com/theopenlane/entx v0.33.3
+	github.com/theopenlane/entx v0.33.5
 	github.com/theopenlane/logx v0.1.0
 	github.com/theopenlane/utils v0.7.1
 	github.com/urfave/cli/v3 v3.11.0
@@ -72,7 +73,6 @@ require (
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/platforms v0.2.1 // indirect
 	github.com/cpuguy83/dockercfg v0.3.2 // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/go-connections v0.7.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -82,15 +82,14 @@ require (
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
-	github.com/fxamacker/cbor/v2 v2.9.2 // indirect
+	github.com/fxamacker/cbor/v2 v2.9.3 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-openapi/inflect v1.0.0 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
-	github.com/go-webauthn/x v0.2.6 // indirect
-	github.com/goccy/go-json v0.10.6 // indirect
+	github.com/go-webauthn/x v0.3.1 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/google/cel-go v0.31.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
@@ -109,6 +108,7 @@ require (
 	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
+	github.com/lestrrat-go/option/v3 v3.0.0-alpha1 // indirect
 	github.com/lib/pq v1.12.3 // indirect
 	github.com/lufia/plan9stats v0.0.0-20260330125221-c963978e514e // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
@@ -139,7 +139,6 @@ require (
 	github.com/prometheus/common v0.70.1 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
-	github.com/segmentio/asm v1.2.1 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.6 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/sosodev/duration v1.4.0 // indirect
@@ -171,13 +170,13 @@ require (
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/crypto v0.55.0 // indirect
-	golang.org/x/exp v0.0.0-20260718201538-764159d718ef // indirect
-	golang.org/x/mod v0.40.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
+	golang.org/x/exp v0.0.0-20260824195058-e88cd73687aa // indirect
+	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	gonum.org/v1/gonum v0.17.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260803160001-6ac0973c030d // indirect
