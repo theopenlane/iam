@@ -14,7 +14,7 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/lestrrat-go/jwx/v3/jwk"
+	"github.com/lestrrat-go/jwx/v4/jwk"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -279,7 +279,7 @@ func (i *Issuer) Keys() (jwk.Set, error) {
 	keys := jwk.NewSet()
 
 	for kid, pubkey := range snapshot {
-		key, err := jwk.Import(pubkey)
+		key, err := jwk.Import[jwk.Key](pubkey)
 		if err != nil {
 			return nil, err
 		}
@@ -658,7 +658,7 @@ func signingMethodForKey(signer crypto.Signer) jwt.SigningMethod {
 
 // signingMethodForPublicKey detects the signing method from a public key using jwx
 func signingMethodForPublicKey(publicKey crypto.PublicKey) jwt.SigningMethod {
-	key, err := jwk.Import(publicKey)
+	key, err := jwk.Import[jwk.Key](publicKey)
 	if err != nil {
 		return jwt.SigningMethodEdDSA
 	}

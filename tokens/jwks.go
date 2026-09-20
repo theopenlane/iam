@@ -6,7 +6,8 @@ import (
 	"slices"
 
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/lestrrat-go/jwx/v3/jwk"
+	"github.com/jwx-go/jwkfetch/v4"
+	"github.com/lestrrat-go/jwx/v4/jwk"
 )
 
 // JWKSValidator provides public verification that JWT tokens have been issued by the
@@ -69,7 +70,7 @@ func (v *JWKSValidator) keyFunc(token *jwt.Token) (publicKey any, err error) {
 		}
 	}
 
-	if err = jwk.Export(key, &publicKey); err != nil {
+	if publicKey, err = jwk.Export[any](key); err != nil {
 		return nil, fmt.Errorf("could not extract raw key: %w", err)
 	}
 
@@ -78,20 +79,20 @@ func (v *JWKSValidator) keyFunc(token *jwt.Token) (publicKey any, err error) {
 
 // CachedJWKSValidator struct is a type that extends the functionality of the `JWKSValidator`
 // struct. It adds caching capabilities to the JWKS validation process. It includes
-// a `cache` field of type `*jwk.Cache` to store and retrieve the JWKS, an `endpoint` field to
+// a `cache` field of type `*jwkfetch.Cache` to store and retrieve the JWKS, an `endpoint` field to
 // specify the endpoint from which to fetch the JWKS, and embeds the `JWKSValidator` struct to
 // inherit its methods and fields. The `CachedJWKSValidator` struct also includes additional methods
 // `Refresh` and`keyFunc` to handle the caching logic
 type CachedJWKSValidator struct {
 	JWKSValidator
-	cache    *jwk.Cache
+	cache    *jwkfetch.Cache
 	endpoint string
 }
 
 // NewCachedJWKSValidator function is a constructor for creating a new instance of the
-// `CachedJWKSValidator` struct. It takes in a `*jwk.Cache`, an endpoint string,
+// `CachedJWKSValidator` struct. It takes in a `*jwkfetch.Cache`, an endpoint string,
 // an audience string, and an issuer string
-func NewCachedJWKSValidator(cache *jwk.Cache, endpoint, audience, issuer string) (validator *CachedJWKSValidator, err error) {
+func NewCachedJWKSValidator(cache *jwkfetch.Cache, endpoint, audience, issuer string) (validator *CachedJWKSValidator, err error) {
 	validator = &CachedJWKSValidator{
 		cache:    cache,
 		endpoint: endpoint,
@@ -127,6 +128,12 @@ func (v *CachedJWKSValidator) Refresh(ctx context.Context) (err error) {
 	}
 
 	return nil
+}
+
+// Shutdown stops the background JWKS refresh workers owned by the cache and waits for them to
+// exit; the context bounds the wait and must not be the one the cache was started with
+func (v *CachedJWKSValidator) Shutdown(ctx context.Context) error {
+	return v.cache.Shutdown(ctx)
 }
 
 // The `func (v *CachedJWKSValidator) keyFunc(token *jwt.Token)` method in the `CachedJWKSValidator`
