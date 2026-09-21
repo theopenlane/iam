@@ -35,7 +35,7 @@ require (
 	github.com/theopenlane/entx v0.33.5
 	github.com/theopenlane/logx v0.1.0
 	github.com/theopenlane/utils v0.7.1
-	github.com/urfave/cli/v3 v3.11.0
+	github.com/urfave/cli/v3 v3.12.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.37.0
 	golang.org/x/tools v0.49.0
