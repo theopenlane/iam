@@ -6,8 +6,8 @@ require (
 	entgo.io/ent v0.14.6
 	github.com/99designs/gqlgen v0.17.95
 	github.com/alicebob/miniredis/v2 v2.39.0
-	github.com/brianvoe/gofakeit/v7 v7.17.0
-	github.com/go-webauthn/webauthn v0.18.1
+	github.com/brianvoe/gofakeit/v7 v7.17.1
+	github.com/go-webauthn/webauthn v0.18.2
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v91 v91.0.0
 	github.com/gorilla/securecookie v1.1.2
@@ -82,7 +82,7 @@ require (
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
-	github.com/fxamacker/cbor/v2 v2.9.3 // indirect
+	github.com/fxamacker/cbor/v2 v2.9.4 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
