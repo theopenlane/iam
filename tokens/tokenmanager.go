@@ -10,7 +10,7 @@ import (
 
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/oklog/ulid/v2"
-	"github.com/rs/zerolog/log"
+	"github.com/theopenlane/logx"
 	"github.com/theopenlane/utils/cache"
 	"github.com/theopenlane/utils/ulids"
 )
@@ -248,12 +248,12 @@ func (tm *TokenManager) ValidateImpersonationToken(ctx context.Context, tokenStr
 		revoked, err := tm.blacklist.IsRevoked(ctx, claims.SessionID)
 
 		if revoked {
-			log.Warn().Str("session_id", claims.SessionID).Msg("impersonation token is revoked")
+			logx.FromContext(ctx).Warn().Str("session_id", claims.SessionID).Msg("impersonation token is revoked")
 			return nil, ErrTokenInvalid
 		}
 		// swallow this error intentionally, we don't want to block validation if blacklist check fails - auth should still succeed
 		if err != nil {
-			log.Warn().Msgf("failed to check blacklist for session %s: %v", claims.SessionID, err)
+			logx.FromContext(ctx).Warn().Msgf("failed to check blacklist for session %s: %v", claims.SessionID, err)
 		}
 	}
 
@@ -278,7 +278,7 @@ func (tm *TokenManager) ValidateImpersonationToken(ctx context.Context, tokenStr
 // caller is not misled into believing the session was revoked
 func (tm *TokenManager) RevokeImpersonationToken(ctx context.Context, sessionID string, ttl time.Duration) error {
 	if !tm.RevocationEnabled() {
-		log.Warn().Str("session_id", sessionID).Msg("impersonation token revocation requested but no functional blacklist is configured; the session remains valid until it expires")
+		logx.FromContext(ctx).Warn().Str("session_id", sessionID).Msg("impersonation token revocation requested but no functional blacklist is configured; the session remains valid until it expires")
 
 		return ErrRevocationNotConfigured
 	}
@@ -291,7 +291,7 @@ func (tm *TokenManager) RevokeImpersonationToken(ctx context.Context, sessionID 
 // token was revoked
 func (tm *TokenManager) RevokeToken(ctx context.Context, tokenID string, ttl time.Duration) error {
 	if !tm.RevocationEnabled() {
-		log.Warn().Str("token_id", tokenID).Msg("token revocation requested but no functional blacklist is configured; the token remains valid until it expires")
+		logx.FromContext(ctx).Warn().Str("token_id", tokenID).Msg("token revocation requested but no functional blacklist is configured; the token remains valid until it expires")
 
 		return ErrRevocationNotConfigured
 	}
@@ -304,7 +304,7 @@ func (tm *TokenManager) RevokeToken(ctx context.Context, tokenID string, ttl tim
 // user was suspended
 func (tm *TokenManager) SuspendUser(ctx context.Context, userID string, ttl time.Duration) error {
 	if !tm.RevocationEnabled() {
-		log.Warn().Str("user_id", userID).Msg("user suspension requested but no functional blacklist is configured; the user's tokens remain valid until they expire")
+		logx.FromContext(ctx).Warn().Str("user_id", userID).Msg("user suspension requested but no functional blacklist is configured; the user's tokens remain valid until they expire")
 
 		return ErrRevocationNotConfigured
 	}
@@ -335,7 +335,7 @@ func (tm *TokenManager) RevocationEnabled() bool {
 // genuine "not suspended" result from an inoperative check
 func (tm *TokenManager) IsUserSuspended(ctx context.Context, userID string) (bool, error) {
 	if !tm.RevocationEnabled() {
-		log.Warn().Str("user_id", userID).Msg("user suspension check requested but no functional blacklist is configured; reporting user as not suspended")
+		logx.FromContext(ctx).Warn().Str("user_id", userID).Msg("user suspension check requested but no functional blacklist is configured; reporting user as not suspended")
 
 		return false, ErrRevocationNotConfigured
 	}
@@ -368,7 +368,7 @@ func (tm *TokenManager) GetUserSuspensionStatus(ctx context.Context, userID stri
 // callers can distinguish a genuine "not revoked" result from an inoperative check
 func (tm *TokenManager) IsTokenRevoked(ctx context.Context, tokenID string) (bool, error) {
 	if !tm.RevocationEnabled() {
-		log.Warn().Str("token_id", tokenID).Msg("token revocation check requested but no functional blacklist is configured; reporting token as not revoked")
+		logx.FromContext(ctx).Warn().Str("token_id", tokenID).Msg("token revocation check requested but no functional blacklist is configured; reporting token as not revoked")
 
 		return false, ErrRevocationNotConfigured
 	}

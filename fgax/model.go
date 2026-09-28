@@ -13,7 +13,7 @@ import (
 	"github.com/openfga/language/pkg/go/transformer"
 	typesystem "github.com/openfga/openfga/pkg/typesystem"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
+	"github.com/theopenlane/logx"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -90,7 +90,7 @@ func (c *Client) CreateModel(ctx context.Context, model ofgaclient.ClientWriteAu
 
 	modelID := resp.GetAuthorizationModelId()
 
-	log.Info().Str("model_id", modelID).Msg("fga model created")
+	logx.FromContext(ctx).Info().Str("model_id", modelID).Msg("fga model created")
 
 	return modelID, nil
 }
@@ -102,7 +102,7 @@ func (c *Client) checkForExistingModel(ctx context.Context, forceCreate bool) (s
 
 	models, err := c.Ofga.ReadAuthorizationModels(ctx).Options(options).Execute()
 	if err != nil {
-		log.Error().Err(err).Msg("unable to get fga models")
+		logx.FromContext(ctx).Error().Err(err).Msg("unable to get fga models")
 		return "", err
 	}
 
@@ -110,12 +110,12 @@ func (c *Client) checkForExistingModel(ctx context.Context, forceCreate bool) (s
 	if !forceCreate {
 		for _, model := range models.GetAuthorizationModels() {
 			if c.ModelMatcher != nil && !c.ModelMatcher(model) {
-				log.Info().Str("model_id", model.Id).Msg("fga model is stale")
+				logx.FromContext(ctx).Info().Str("model_id", model.Id).Msg("fga model is stale")
 
 				continue
 			}
 
-			log.Info().Str("model_id", model.Id).Msg("fga model exists")
+			logx.FromContext(ctx).Info().Str("model_id", model.Id).Msg("fga model exists")
 
 			return model.Id, nil
 		}

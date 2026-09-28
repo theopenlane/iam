@@ -8,7 +8,7 @@ import (
 
 	openfga "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
-	"github.com/rs/zerolog/log"
+	"github.com/theopenlane/logx"
 
 	"github.com/theopenlane/iam/auth"
 )
@@ -230,7 +230,7 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 		}
 
 		resp, err := c.Ofga.Write(ctx).Body(body).Options(wopts).Execute()
-		if err := c.checkWriteResponse(resp, err); err != nil {
+		if err := c.checkWriteResponse(ctx, resp, err); err != nil {
 			return nil, err
 		}
 
@@ -255,7 +255,7 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 		}
 
 		resp, err = c.Ofga.Write(ctx).Body(body).Options(wopts).Execute()
-		if err := c.checkWriteResponse(resp, err); err != nil {
+		if err := c.checkWriteResponse(ctx, resp, err); err != nil {
 			return nil, err
 		}
 	}
@@ -272,7 +272,7 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 		}
 
 		resp, err = c.Ofga.Write(ctx).Body(body).Options(wopts).Execute()
-		if err := c.checkWriteResponse(resp, err); err != nil {
+		if err := c.checkWriteResponse(ctx, resp, err); err != nil {
 			return nil, err
 		}
 	}
@@ -295,7 +295,7 @@ func (c *Client) UpdateConditionalTupleKey(ctx context.Context, tuple TupleKey, 
 	}
 
 	resp, err := c.Ofga.Write(ctx).Body(body).Options(wopts).Execute()
-	if err := c.checkWriteResponse(resp, err); err != nil {
+	if err := c.checkWriteResponse(ctx, resp, err); err != nil {
 		return nil, err
 	}
 
@@ -304,7 +304,7 @@ func (c *Client) UpdateConditionalTupleKey(ctx context.Context, tuple TupleKey, 
 	}
 
 	resp, err = c.Ofga.Write(ctx).Body(body).Options(wopts).Execute()
-	if err := c.checkWriteResponse(resp, err); err != nil {
+	if err := c.checkWriteResponse(ctx, resp, err); err != nil {
 		return nil, err
 	}
 
@@ -312,12 +312,12 @@ func (c *Client) UpdateConditionalTupleKey(ctx context.Context, tuple TupleKey, 
 }
 
 // checkWriteResponse checks the response from the write request and returns an error if there are any errors
-func (c *Client) checkWriteResponse(resp *ofgaclient.ClientWriteResponse, err error) error {
+func (c *Client) checkWriteResponse(ctx context.Context, resp *ofgaclient.ClientWriteResponse, err error) error {
 	if err == nil {
 		return nil
 	}
 
-	log.Debug().Err(err).Interface("writes", resp.Writes).Interface("deletes", resp.Deletes).Msg("error in relationship tuples operation")
+	logx.FromContext(ctx).Debug().Err(err).Interface("writes", resp.Writes).Interface("deletes", resp.Deletes).Msg("error in relationship tuples operation")
 
 	return err
 }
@@ -335,18 +335,14 @@ func (c *Client) deleteRelationshipTuple(ctx context.Context, tuples []openfga.T
 
 	resp, err := c.Ofga.DeleteTuples(ctx).Body(tuples).Options(wopts).Execute()
 	if err != nil {
-		log.Error().Err(err).Msg("error deleting relationship tuples")
+		requestErrorEvent(ctx, err).Msg("error deleting relationship tuples")
 
 		return resp, err
 	}
 
 	for _, del := range resp.Deletes {
 		if del.Error != nil {
-			log.Error().Err(del.Error).
-				Str("user", del.TupleKey.User).
-				Str("relation", del.TupleKey.Relation).
-				Str("object", del.TupleKey.Object).
-				Msg("error deleting relationship tuples")
+			logx.FromContext(ctx).Error().Err(del.Error).Str("user", del.TupleKey.User).Str("relation", del.TupleKey.Relation).Str("object", del.TupleKey.Object).Msg("error deleting relationship tuples")
 
 			return resp, newWritingTuplesError(del.TupleKey.User, del.TupleKey.Relation, del.TupleKey.Object, "deleting", err)
 		}
@@ -366,7 +362,7 @@ func (c *Client) GetAllTuples(ctx context.Context, opts ...RequestOption) ([]ope
 	for notComplete {
 		resp, err := c.Ofga.Read(ctx).Options(ropts).Execute()
 		if err != nil {
-			log.Error().Err(err).Msg("error getting relationship tuples")
+			requestErrorEvent(ctx, err).Msg("error getting relationship tuples")
 
 			return nil, err
 		}
@@ -401,7 +397,7 @@ func (c *Client) GetTuplesForObject(ctx context.Context, object string) ([]openf
 	for notComplete {
 		resp, err := c.Ofga.Read(ctx).Body(readRequest).Options(opts).Execute()
 		if err != nil {
-			log.Error().Err(err).Str("object", object).Msg("error getting relationship tuples for object")
+			requestErrorEvent(ctx, err).Str("object", object).Msg("error getting relationship tuples for object")
 
 			return nil, err
 		}
