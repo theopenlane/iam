@@ -433,28 +433,6 @@ func TestWithOriginalSystemAdminCallerPreservesActiveCaller(t *testing.T) {
 	}
 }
 
-// TestNewWebhookCaller verifies the org scope, required capabilities, and
-// explicitly absent capabilities for webhook callers.
-func TestNewWebhookCaller(t *testing.T) {
-	c := NewWebhookCaller("org-1")
-
-	if c.OrganizationID != "org-1" {
-		t.Errorf("OrganizationID: want org-1, got %s", c.OrganizationID)
-	}
-
-	for _, cap := range []Capability{CapBypassOrgFilter, CapBypassFGA, CapInternalOperation} {
-		if !c.Has(cap) {
-			t.Errorf("NewWebhookCaller must have cap %d", cap)
-		}
-	}
-
-	for _, cap := range []Capability{CapBypassFeatureCheck, CapBypassSubscriptionCheck, CapBypassAuditLog, CapBypassManagedGroup} {
-		if c.Has(cap) {
-			t.Errorf("NewWebhookCaller must not have cap %d", cap)
-		}
-	}
-}
-
 // TestNewTrustCenterBootstrapCaller verifies the org scope, anonymous role,
 // required caps, and absence of CapInternalOperation for pre-identity bootstrap.
 func TestNewTrustCenterBootstrapCaller(t *testing.T) {

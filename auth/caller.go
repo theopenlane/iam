@@ -179,15 +179,6 @@ func (c *Caller) WithoutCapabilities(caps Capability) *Caller {
 	return &cp
 }
 
-// NewWebhookCaller returns a Caller for an inbound webhook delivery.
-// Bypasses org-filter and FGA checks.
-func NewWebhookCaller(orgID string) *Caller {
-	return &Caller{
-		OrganizationID: orgID,
-		Capabilities:   CapBypassOrgFilter | CapBypassFGA | CapInternalOperation,
-	}
-}
-
 // newAnonymousCaller constructs an anonymous Caller (trust center, questionnaire, etc.)
 // with AnonymousRole and the standard anonymous capability set
 func newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail string, additionalCaps ...Capability) *Caller {
