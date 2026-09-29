@@ -221,14 +221,6 @@ func NewQuestionnaireCaller(orgID, subjectID, subjectName, subjectEmail string) 
 	return newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail, CapQuestionnaireAnonymous)
 }
 
-// NewKeystoreCaller returns a Caller for keystore operations.
-// Bypasses org-filter, FGA, and feature-flag checks.
-func NewKeystoreCaller() *Caller {
-	return &Caller{
-		Capabilities: CapBypassOrgFilter | CapBypassFGA | CapBypassFeatureCheck | CapInternalOperation,
-	}
-}
-
 // NewOrgSupportCaller returns a Caller for an org-scoped support session within orgID.
 // Keeps the org filter and owner assignment; bypasses feature-flag and subscription checks.
 func NewOrgSupportCaller(orgID, subjectID, subjectName, subjectEmail string) *Caller {

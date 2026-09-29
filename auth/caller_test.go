@@ -543,22 +543,6 @@ func TestNewQuestionnaireCaller(t *testing.T) {
 	}
 }
 
-// TestNewKeystoreCaller verifies that the keystore caller has the expected caps
-// and is not scoped to any organization.
-func TestNewKeystoreCaller(t *testing.T) {
-	c := NewKeystoreCaller()
-
-	for _, cap := range []Capability{CapBypassOrgFilter, CapBypassFGA, CapBypassFeatureCheck, CapInternalOperation} {
-		if !c.Has(cap) {
-			t.Errorf("NewKeystoreCaller must have cap %d", cap)
-		}
-	}
-
-	if _, ok := c.ActiveOrg(); ok {
-		t.Error("NewKeystoreCaller must not have an OrganizationID")
-	}
-}
-
 // TestNewSystemAdminCaller verifies that identity fields, CapSystemAdmin, and
 // full bypass caps are set correctly.
 func TestNewSystemAdminCaller(t *testing.T) {
