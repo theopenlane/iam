@@ -158,7 +158,10 @@ func TestEnsureIntegrationCaller(t *testing.T) {
 	})
 
 	t.Run("subject-less caller gains integration actor identity", func(t *testing.T) {
-		original := NewWebhookCaller("org-1")
+		original := &Caller{
+			OrganizationID: "org-1",
+			Capabilities:   CapInternalOperation,
+		}
 		ctx := WithCaller(context.Background(), original)
 		got, _ := CallerFromContext(EnsureIntegrationCaller(ctx, "org-1"))
 
@@ -178,7 +181,7 @@ func TestEnsureIntegrationCaller(t *testing.T) {
 			t.Error("expected CapIntegrationActor to be added")
 		}
 
-		for _, c := range []Capability{CapBypassOrgFilter, CapBypassFGA, CapInternalOperation} {
+		for _, c := range []Capability{CapInternalOperation} {
 			if !got.Has(c) {
 				t.Errorf("existing capability %d must be retained", c)
 			}

@@ -179,24 +179,6 @@ func (c *Caller) WithoutCapabilities(caps Capability) *Caller {
 	return &cp
 }
 
-// NewWebhookCaller returns a Caller for an inbound webhook delivery.
-// Bypasses org-filter and FGA checks.
-func NewWebhookCaller(orgID string) *Caller {
-	return &Caller{
-		OrganizationID: orgID,
-		Capabilities:   CapBypassOrgFilter | CapBypassFGA | CapInternalOperation,
-	}
-}
-
-// NewAcmeSolverCaller returns a Caller for an ACME challenge solver request.
-// Bypasses org-filter and FGA checks but not feature-flag enforcement.
-func NewAcmeSolverCaller(orgID string) *Caller {
-	return &Caller{
-		OrganizationID: orgID,
-		Capabilities:   CapBypassOrgFilter | CapBypassFGA | CapInternalOperation,
-	}
-}
-
 // newAnonymousCaller constructs an anonymous Caller (trust center, questionnaire, etc.)
 // with AnonymousRole and the standard anonymous capability set
 func newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail string, additionalCaps ...Capability) *Caller {
@@ -228,14 +210,6 @@ func NewTrustCenterCaller(orgID, subjectID, subjectName, subjectEmail string) *C
 // Bypasses subscription checks.
 func NewQuestionnaireCaller(orgID, subjectID, subjectName, subjectEmail string) *Caller {
 	return newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail, CapQuestionnaireAnonymous)
-}
-
-// NewKeystoreCaller returns a Caller for keystore operations.
-// Bypasses org-filter, FGA, and feature-flag checks.
-func NewKeystoreCaller() *Caller {
-	return &Caller{
-		Capabilities: CapBypassOrgFilter | CapBypassFGA | CapBypassFeatureCheck | CapInternalOperation,
-	}
 }
 
 // NewOrgSupportCaller returns a Caller for an org-scoped support session within orgID.
