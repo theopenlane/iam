@@ -188,15 +188,6 @@ func NewWebhookCaller(orgID string) *Caller {
 	}
 }
 
-// NewAcmeSolverCaller returns a Caller for an ACME challenge solver request.
-// Bypasses org-filter and FGA checks but not feature-flag enforcement.
-func NewAcmeSolverCaller(orgID string) *Caller {
-	return &Caller{
-		OrganizationID: orgID,
-		Capabilities:   CapBypassOrgFilter | CapBypassFGA | CapInternalOperation,
-	}
-}
-
 // newAnonymousCaller constructs an anonymous Caller (trust center, questionnaire, etc.)
 // with AnonymousRole and the standard anonymous capability set
 func newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail string, additionalCaps ...Capability) *Caller {

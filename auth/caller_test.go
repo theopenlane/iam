@@ -455,26 +455,6 @@ func TestNewWebhookCaller(t *testing.T) {
 	}
 }
 
-// TestNewAcmeSolverCaller verifies the org scope, required capabilities, and
-// that feature-flag enforcement is not bypassed.
-func TestNewAcmeSolverCaller(t *testing.T) {
-	c := NewAcmeSolverCaller("org-2")
-
-	if c.OrganizationID != "org-2" {
-		t.Errorf("OrganizationID: want org-2, got %s", c.OrganizationID)
-	}
-
-	for _, cap := range []Capability{CapBypassOrgFilter, CapBypassFGA, CapInternalOperation} {
-		if !c.Has(cap) {
-			t.Errorf("NewAcmeSolverCaller must have cap %d", cap)
-		}
-	}
-
-	if c.Has(CapBypassFeatureCheck) {
-		t.Error("NewAcmeSolverCaller must not have CapBypassFeatureCheck")
-	}
-}
-
 // TestNewTrustCenterBootstrapCaller verifies the org scope, anonymous role,
 // required caps, and absence of CapInternalOperation for pre-identity bootstrap.
 func TestNewTrustCenterBootstrapCaller(t *testing.T) {
