@@ -1,10 +1,13 @@
 package fgax
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	openfga "github.com/openfga/go-sdk"
+	"github.com/rs/zerolog"
+	"github.com/theopenlane/logx"
 )
 
 var (
@@ -84,4 +87,13 @@ func getCheckErrorType(err openfga.CheckError) string {
 	}
 
 	return errorType
+}
+
+// requestErrorEvent returns an error level log event for a failed fga request, at info level when the caller canceled the request
+func requestErrorEvent(ctx context.Context, err error) *zerolog.Event {
+	if errors.Is(err, context.Canceled) {
+		return logx.FromContext(ctx).Info().Err(err)
+	}
+
+	return logx.FromContext(ctx).Error().Err(err)
 }

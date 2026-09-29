@@ -243,7 +243,7 @@ func (c *Client) ListRelations(ctx context.Context, ac ListAccess, opts ...Reque
 
 		relations, err = c.getRelationsFromModel(ctx, ac.ObjectType.String())
 		if err != nil {
-			logx.FromContext(ctx).Error().Err(err).Msg("error getting relations from model")
+			requestErrorEvent(ctx, err).Msg("error getting relations from model")
 
 			return nil, err
 		}
@@ -311,7 +311,7 @@ func (c *Client) checkTuple(ctx context.Context, check ofgaclient.ClientCheckReq
 	data, err := c.Ofga.Check(ctx).Body(check).
 		Options(options).Execute()
 	if err != nil {
-		logx.FromContext(ctx).Error().Err(err).Interface("tuple", check).Msg("error checking tuple")
+		requestErrorEvent(ctx, err).Interface("tuple", check).Msg("error checking tuple")
 
 		return false, err
 	}

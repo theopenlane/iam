@@ -7,7 +7,7 @@ import (
 
 	fgasdk "github.com/openfga/go-sdk"
 	ofgaclient "github.com/openfga/go-sdk/client"
-	"github.com/rs/zerolog/log"
+	"github.com/theopenlane/logx"
 )
 
 // ListRequest is the fields needed to list objects or users
@@ -53,7 +53,7 @@ func (c *Client) ListObjectsRequestWithConsistency(ctx context.Context, req List
 		listReq.Context = req.ConditionContext
 	}
 
-	log.Debug().Interface("request", listReq).Msg("listing objects")
+	logx.FromContext(ctx).Debug().Interface("request", listReq).Msg("listing objects")
 
 	return c.listObjects(ctx, listReq, consistency)
 }
@@ -81,7 +81,7 @@ func (c *Client) ListUserRequest(ctx context.Context, req ListRequest) (*ofgacli
 		listReq.Context = req.ConditionContext
 	}
 
-	log.Debug().Interface("request", listReq).Msg("listing users")
+	logx.FromContext(ctx).Debug().Interface("request", listReq).Msg("listing users")
 
 	return c.listUsers(ctx, listReq)
 }
@@ -94,7 +94,7 @@ func (c *Client) listObjects(ctx context.Context, req ofgaclient.ClientListObjec
 		}).
 		Execute()
 	if err != nil {
-		log.Error().Err(err).Interface("request", req).Msg("error listing objects")
+		requestErrorEvent(ctx, err).Interface("request", req).Msg("error listing objects")
 
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (c *Client) listUsers(ctx context.Context, req ofgaclient.ClientListUsersRe
 		}).
 		Execute()
 	if err != nil {
-		log.Error().Err(err).Interface("request", req).Msg("error listing users")
+		requestErrorEvent(ctx, err).Interface("request", req).Msg("error listing users")
 
 		return nil, err
 	}

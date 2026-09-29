@@ -5,7 +5,7 @@ import (
 	"crypto/subtle"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/rs/zerolog/log"
+	"github.com/theopenlane/logx"
 )
 
 // Validator are able to verify that access and refresh tokens were issued by
@@ -77,7 +77,7 @@ func (v *validator) checkBlacklist(ctx context.Context, claims *Claims) error {
 		if err != nil {
 			// Log the error but continue with fail-open behavior for availability
 			// This matches the design decision in the blacklist implementation
-			log.Debug().Err(err).Str("token_id", claims.ID).Msg("failed to check token blacklist status")
+			logx.FromContext(ctx).Debug().Err(err).Str("token_id", claims.ID).Msg("failed to check token blacklist status")
 		}
 	}
 
@@ -90,7 +90,7 @@ func (v *validator) checkBlacklist(ctx context.Context, claims *Claims) error {
 
 		if err != nil {
 			// Log the error but continue with fail-open behavior for availability
-			log.Debug().Err(err).Str("user_id", userID).Msg("failed to check user suspension status")
+			logx.FromContext(ctx).Debug().Err(err).Str("user_id", userID).Msg("failed to check user suspension status")
 		}
 	}
 
