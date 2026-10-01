@@ -11,7 +11,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v91 v91.0.0
 	github.com/gorilla/securecookie v1.1.2
-	github.com/gqlgo/gqlgenc v0.40.1
+	github.com/gqlgo/gqlgenc v0.41.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jwx-go/jwkfetch/v4 v4.0.4
 	github.com/labstack/echo/v5 v5.3.1
