@@ -448,7 +448,7 @@ func TestNewWebhookCaller(t *testing.T) {
 		}
 	}
 
-	for _, cap := range []Capability{CapBypassFeatureCheck, CapBypassSubscriptionCheck, CapBypassAuditLog, CapBypassManagedGroup} {
+	for _, cap := range []Capability{CapBypassFeatureCheck, CapBypassFeatureCheck, CapBypassAuditLog, CapBypassManagedGroup} {
 		if c.Has(cap) {
 			t.Errorf("NewWebhookCaller must not have cap %d", cap)
 		}
@@ -488,7 +488,7 @@ func TestNewTrustCenterBootstrapCaller(t *testing.T) {
 		t.Errorf("OrganizationRole: want %s, got %s", AnonymousRole, c.OrganizationRole)
 	}
 
-	for _, cap := range []Capability{CapTrustCenterAnonymous, CapBypassSubscriptionCheck} {
+	for _, cap := range []Capability{CapTrustCenterAnonymous, CapBypassFeatureCheck} {
 		if !c.Has(cap) {
 			t.Errorf("NewTrustCenterBootstrapCaller must have cap %d", cap)
 		}
@@ -524,7 +524,7 @@ func TestNewTrustCenterCaller(t *testing.T) {
 		t.Errorf("OrganizationRole: want %s, got %s", AnonymousRole, c.OrganizationRole)
 	}
 
-	for _, cap := range []Capability{CapTrustCenterAnonymous, CapBypassSubscriptionCheck} {
+	for _, cap := range []Capability{CapTrustCenterAnonymous, CapBypassFeatureCheck} {
 		if !c.Has(cap) {
 			t.Errorf("NewTrustCenterCaller must have cap %d", cap)
 		}
@@ -556,7 +556,7 @@ func TestNewQuestionnaireCaller(t *testing.T) {
 		t.Errorf("OrganizationRole: want %s, got %s", AnonymousRole, c.OrganizationRole)
 	}
 
-	for _, cap := range []Capability{CapQuestionnaireAnonymous, CapBypassSubscriptionCheck} {
+	for _, cap := range []Capability{CapQuestionnaireAnonymous, CapBypassFeatureCheck} {
 		if !c.Has(cap) {
 			t.Errorf("NewQuestionnaireCaller must have cap %d", cap)
 		}
@@ -618,7 +618,6 @@ func TestCapabilityConstantsAreDistinctPowersOfTwo(t *testing.T) {
 		CapBypassManagedGroup,
 		CapBypassAuditLog,
 		CapInternalOperation,
-		CapBypassSubscriptionCheck,
 		CapSystemAdmin,
 		CapTrustCenterAnonymous,
 		CapQuestionnaireAnonymous,

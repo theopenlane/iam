@@ -106,7 +106,7 @@ func IsSelfAccessType(objectType string) bool {
         // and not the actual object id
         if objectID == "" {
             // allow this query to run
-            reqCtx := privacy.DecisionContext(ctx, privacy.Allow)
+            reqCtx := auth.WithInternalOperationContext(ctx)
 
             ob, err := q.Clone().Only(reqCtx)
             if err != nil {
@@ -163,7 +163,7 @@ func IsSelfAccessType(objectType string) bool {
 
             if id != "" {
                 // allow this query to run
-                reqCtx := privacy.DecisionContext(ctx, privacy.Allow)
+                reqCtx := auth.WithInternalOperationContext(ctx)
 
                 ob, err := m.Client().{{ $name }}.Get(reqCtx, id)
                 if err != nil {
@@ -213,7 +213,7 @@ func IsSelfAccessType(objectType string) bool {
             id, ok := gCtx.Args["id"].(string)
             if ok {
                 // allow this query to run
-                reqCtx := privacy.DecisionContext(ctx, privacy.Allow)
+                reqCtx := auth.WithInternalOperationContext(ctx)
                 ob, err := m.Client().{{ $name }}.Query().Where({{ $name | ToLower }}.ID(id)).Only(reqCtx)
                 if err != nil {
                     return privacy.Skipf("nil request, skipping auth check")

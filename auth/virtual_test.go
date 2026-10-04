@@ -116,7 +116,7 @@ func TestNewIntegrationCaller(t *testing.T) {
 		}
 	}
 
-	for _, cap := range []Capability{CapBypassFeatureCheck, CapBypassSubscriptionCheck, CapSystemAdmin} {
+	for _, cap := range []Capability{CapBypassFeatureCheck, CapBypassFeatureCheck, CapSystemAdmin} {
 		if c.Has(cap) {
 			t.Errorf("NewIntegrationCaller must not have cap %d", cap)
 		}

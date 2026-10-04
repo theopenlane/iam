@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 	"regexp"
 
@@ -203,4 +204,10 @@ func GetOrganizationContextHeader(c echo.Context) string {
 // HasOrganizationContextHeader checks if the required organization context header is present
 func HasOrganizationContextHeader(c echo.Context) bool {
 	return OrganizationContextHeader(c.Request()) != ""
+}
+
+// IsUserlessContext returns true for any auth type that is not associated with a real user ID.
+// this includes API tokens, support users via impersonation
+func IsUserlessContext(ctx context.Context) bool {
+	return IsAPITokenAuthentication(ctx) || HasInContextCaller(ctx, CapOrgSupport)
 }

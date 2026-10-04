@@ -31,18 +31,31 @@ var RefreshTokenKey = contextx.NewKey[string]()
 var RequestIDKey = contextx.NewKey[string]()
 
 // WithCaller stores c in ctx and returns the updated context
+// it replaces any existing caller, including its capabilities, so apply capability helpers after calling it
 func WithCaller(ctx context.Context, c *Caller) context.Context {
 	return CallerKey.Set(ctx, c)
 }
 
 // CallerFromContext returns the Caller stored in ctx and true, or nil and false if not set
 func CallerFromContext(ctx context.Context) (*Caller, bool) {
-	return CallerKey.Get(ctx)
+	c, ok := CallerKey.Get(ctx)
+
+	return c, ok && c != nil
 }
 
 // MustCallerFromContext returns the Caller stored in ctx, panicking if not set
 func MustCallerFromContext(ctx context.Context) *Caller {
 	return CallerKey.MustGet(ctx)
+}
+
+// FromContextOrNew returns the caller from the context or initializes a new Caller if one does not exist
+func FromContextOrNew(ctx context.Context) *Caller {
+	caller, ok := CallerFromContext(ctx)
+	if !ok {
+		return &Caller{}
+	}
+
+	return caller
 }
 
 // WithOriginalSystemAdminCaller stores the original admin caller in ctx.
@@ -52,7 +65,7 @@ func WithOriginalSystemAdminCaller(ctx context.Context, c *Caller) context.Conte
 	}
 
 	current, ok := CallerFromContext(ctx)
-	if !ok || current == nil {
+	if !ok {
 		return WithCaller(ctx, &Caller{
 			OriginalSystemAdmin: c,
 		})
@@ -68,7 +81,7 @@ func WithOriginalSystemAdminCaller(ctx context.Context, c *Caller) context.Conte
 // ctx when present.
 func OriginalSystemAdminCallerFromContext(ctx context.Context) (*Caller, bool) {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil || caller.OriginalSystemAdmin == nil {
+	if !ok || caller.OriginalSystemAdmin == nil {
 		return nil, false
 	}
 

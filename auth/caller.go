@@ -1,37 +1,8 @@
 package auth
 
-import "slices"
-
-// Capability is a set of flags describing what a Caller is allowed to bypass.
-// Values are explicit powers of two so they remain stable if constants are
-// reordered, which matters when Caller is serialized by gala.
-type Capability uint64
-
-const (
-	// CapBypassOrgFilter skips org-scoped interceptor filtering
-	CapBypassOrgFilter Capability = 1 << 0
-	// CapBypassFeatureCheck skips feature-flag checks
-	CapBypassFeatureCheck Capability = 1 << 1
-	// CapBypassFGA skips OpenFGA authorization checks
-	CapBypassFGA Capability = 1 << 2
-	// CapBypassManagedGroup bypasses managed-group mutation guards
-	CapBypassManagedGroup Capability = 1 << 3
-	// CapBypassAuditLog suppresses audit log emission, skips writes to history tables
-	CapBypassAuditLog Capability = 1 << 4
-	// CapInternalOperation marks the caller as a trusted internal service operation
-	CapInternalOperation Capability = 1 << 5
-	// CapBypassSubscriptionCheck skips subscription validation
-	CapBypassSubscriptionCheck Capability = 1 << 6
-	// CapSystemAdmin grants global system-administrator privileges
-	CapSystemAdmin Capability = 1 << 7
-	// CapTrustCenterAnonymous gives select bypass to checks
-	CapTrustCenterAnonymous Capability = 1 << 8
-	// CapQuestionnaireAnonymous gives select bypass to checks
-	CapQuestionnaireAnonymous Capability = 1 << 9
-	// CapOrgSupport grants org-scoped support access without bypassing the org filter or owner assignment
-	CapOrgSupport Capability = 1 << 10
-	// CapIntegrationActor is used to identify an integration installation virtual user/actor
-	CapIntegrationActor Capability = 1 << 11
+import (
+	"context"
+	"slices"
 )
 
 // Caller holds the identity and capabilities for any request actor —
@@ -62,29 +33,6 @@ type Caller struct {
 	// OriginalSystemAdmin is set when a system admin is executing as another caller.
 	// This keeps caller lineage in one root identity tree instead of a parallel context key.
 	OriginalSystemAdmin *Caller `json:"original_system_admin,omitempty"`
-}
-
-// Has reports whether the Caller holds all of the specified capabilities
-func (c *Caller) Has(caps Capability) bool {
-	return c.Capabilities&caps == caps
-}
-
-// HasInLineage reports whether the Caller or its original system-admin lineage
-// holds all of the specified capabilities
-func (c *Caller) HasInLineage(caps Capability) bool {
-	if c == nil {
-		return false
-	}
-
-	if c.Has(caps) {
-		return true
-	}
-
-	if c.OriginalSystemAdmin == nil {
-		return false
-	}
-
-	return c.OriginalSystemAdmin.HasInLineage(caps)
 }
 
 // ActiveOrg returns OrganizationID if set, or the single entry in OrganizationIDs
@@ -137,6 +85,20 @@ func (c *Caller) IsImpersonated() bool {
 	return c.Impersonation != nil
 }
 
+// IsImpersonatedCallerContext reports whether the caller in context is acting on behalf of another user and returns the user ID doing the impersonation
+func IsImpersonatedCallerContext(ctx context.Context) (string, bool) {
+	c, ok := CallerFromContext(ctx)
+	if !ok {
+		return "", false
+	}
+
+	if c.Impersonation == nil {
+		return "", false
+	}
+
+	return c.Impersonation.ImpersonatorID, true
+}
+
 // IsAnonymous reports whether this Caller is an anonymous user (trust center visitor,
 // questionnaire respondent, etc.) with no standard authentication type
 func (c *Caller) IsAnonymous() bool {
@@ -153,54 +115,10 @@ func (c *Caller) IsQuestionnaire() bool {
 	return c.IsAnonymous() && c.Has(CapQuestionnaireAnonymous)
 }
 
-// mergeCapabilities ORs a slice of Capability values into a single bitmask
-func mergeCapabilities(caps []Capability) Capability {
-	var merged Capability
-	for _, c := range caps {
-		merged |= c
-	}
-
-	return merged
-}
-
-// WithCapabilities returns a copy of the Caller with the given capabilities added
-func (c *Caller) WithCapabilities(caps Capability) *Caller {
-	cp := *c
-	cp.Capabilities |= caps
-
-	return &cp
-}
-
-// WithoutCapabilities returns a copy of the Caller with the given capabilities removed
-func (c *Caller) WithoutCapabilities(caps Capability) *Caller {
-	cp := *c
-	cp.Capabilities &^= caps
-
-	return &cp
-}
-
-// NewWebhookCaller returns a Caller for an inbound webhook delivery.
-// Bypasses org-filter and FGA checks.
-func NewWebhookCaller(orgID string) *Caller {
-	return &Caller{
-		OrganizationID: orgID,
-		Capabilities:   CapBypassOrgFilter | CapBypassFGA | CapInternalOperation,
-	}
-}
-
-// NewAcmeSolverCaller returns a Caller for an ACME challenge solver request.
-// Bypasses org-filter and FGA checks but not feature-flag enforcement.
-func NewAcmeSolverCaller(orgID string) *Caller {
-	return &Caller{
-		OrganizationID: orgID,
-		Capabilities:   CapBypassOrgFilter | CapBypassFGA | CapInternalOperation,
-	}
-}
-
 // newAnonymousCaller constructs an anonymous Caller (trust center, questionnaire, etc.)
 // with AnonymousRole and the standard anonymous capability set
 func newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail string, additionalCaps ...Capability) *Caller {
-	additionalCaps = append(additionalCaps, CapBypassSubscriptionCheck)
+	additionalCaps = append(additionalCaps, CapBypassFeatureCheck)
 
 	return &Caller{
 		SubjectID:        subjectID,
@@ -212,10 +130,26 @@ func newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail string, addi
 	}
 }
 
+// NewOrgInternalCaller returns a new caller with no user, one org, and internal operation:
+// skips privacy, FGA, module, and edge checks, reads only that org's rows, and new rows are owned by that org
+func NewOrgInternalCaller(orgID string) *Caller {
+	return &Caller{
+		OrganizationID: orgID,
+		Capabilities:   CapInternalOperation,
+	}
+}
+
 // NewTrustCenterBootstrapCaller returns a Caller for trust center initialization
 // before a subject identity is known. Bypasses subscription checks.
 func NewTrustCenterBootstrapCaller(orgID string) *Caller {
 	return newAnonymousCaller(orgID, "", "", "", CapTrustCenterAnonymous)
+}
+
+// NewAnonBootstrapCallerOrgBypass returns an anon caller
+// with org bypass and subscription bypass that can be used
+// for anon callers before authorization to issue the JWT
+func NewAnonBootstrapCallerOrgBypass() *Caller {
+	return newAnonymousCaller("", "", "", "", CapBypassOrgFilter)
 }
 
 // NewTrustCenterCaller returns a Caller for an anonymous trust center viewer
@@ -230,14 +164,6 @@ func NewQuestionnaireCaller(orgID, subjectID, subjectName, subjectEmail string) 
 	return newAnonymousCaller(orgID, subjectID, subjectName, subjectEmail, CapQuestionnaireAnonymous)
 }
 
-// NewKeystoreCaller returns a Caller for keystore operations.
-// Bypasses org-filter, FGA, and feature-flag checks.
-func NewKeystoreCaller() *Caller {
-	return &Caller{
-		Capabilities: CapBypassOrgFilter | CapBypassFGA | CapBypassFeatureCheck | CapInternalOperation,
-	}
-}
-
 // NewOrgSupportCaller returns a Caller for an org-scoped support session within orgID.
 // Keeps the org filter and owner assignment; bypasses feature-flag and subscription checks.
 func NewOrgSupportCaller(orgID, subjectID, subjectName, subjectEmail string) *Caller {
@@ -248,7 +174,7 @@ func NewOrgSupportCaller(orgID, subjectID, subjectName, subjectEmail string) *Ca
 		OrganizationID:     orgID,
 		OrganizationIDs:    []string{orgID},
 		AuthenticationType: JWTAuthentication,
-		Capabilities:       CapOrgSupport | CapBypassFeatureCheck | CapBypassSubscriptionCheck,
+		Capabilities:       CapOrgSupport | CapBypassFeatureCheck,
 	}
 }
 
@@ -261,5 +187,37 @@ func NewSystemAdminCaller(subjectID, subjectName, subjectEmail string) *Caller {
 		SubjectEmail:       subjectEmail,
 		AuthenticationType: JWTAuthentication,
 		Capabilities:       CapBypassOrgFilter | CapBypassFGA | CapBypassFeatureCheck | CapInternalOperation | CapSystemAdmin,
+	}
+}
+
+// NewKeystoreCaller returns a Caller for keystore operations.
+// Bypasses org-filter, FGA, and feature-flag checks.
+//
+// Deprecated: will be removed in a future PR
+func NewKeystoreCaller() *Caller {
+	return &Caller{
+		Capabilities: CapBypassOrgFilter | CapBypassFGA | CapBypassFeatureCheck | CapInternalOperation,
+	}
+}
+
+// NewWebhookCaller returns a Caller for an inbound webhook delivery.
+// Bypasses org-filter and FGA checks.
+//
+// Deprecated: will be removed in a future PR
+func NewWebhookCaller(orgID string) *Caller {
+	return &Caller{
+		OrganizationID: orgID,
+		Capabilities:   CapBypassOrgFilter | CapBypassFGA | CapInternalOperation,
+	}
+}
+
+// NewAcmeSolverCaller returns a Caller for an ACME challenge solver request.
+// Bypasses org-filter and FGA checks but not feature-flag enforcement.
+//
+// Deprecated: will be removed in a future PR
+func NewAcmeSolverCaller(orgID string) *Caller {
+	return &Caller{
+		OrganizationID: orgID,
+		Capabilities:   CapBypassOrgFilter | CapBypassFGA | CapInternalOperation,
 	}
 }
