@@ -179,14 +179,14 @@ func NewOrgSupportCaller(orgID, subjectID, subjectName, subjectEmail string) *Ca
 }
 
 // NewSystemAdminCaller returns a Caller for a system administrator.
-// Bypasses org-filter, FGA, and feature-flag checks.
+// Capabilities match CapabilitiesForSystemAdmin
 func NewSystemAdminCaller(subjectID, subjectName, subjectEmail string) *Caller {
 	return &Caller{
 		SubjectID:          subjectID,
 		SubjectName:        subjectName,
 		SubjectEmail:       subjectEmail,
 		AuthenticationType: JWTAuthentication,
-		Capabilities:       CapBypassOrgFilter | CapBypassFGA | CapBypassFeatureCheck | CapInternalOperation | CapSystemAdmin,
+		Capabilities:       CapabilitiesForSystemAdmin(true),
 	}
 }
 

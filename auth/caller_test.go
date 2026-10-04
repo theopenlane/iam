@@ -579,8 +579,8 @@ func TestNewKeystoreCaller(t *testing.T) {
 	}
 }
 
-// TestNewSystemAdminCaller verifies that identity fields, CapSystemAdmin, and
-// full bypass caps are set correctly.
+// TestNewSystemAdminCaller verifies that identity fields and the system admin
+// caps are set correctly.
 func TestNewSystemAdminCaller(t *testing.T) {
 	c := NewSystemAdminCaller("u-admin", "Admin User", "admin@example.com")
 
@@ -600,9 +600,13 @@ func TestNewSystemAdminCaller(t *testing.T) {
 		t.Errorf("AuthenticationType: want %s, got %s", JWTAuthentication, c.AuthenticationType)
 	}
 
-	for _, cap := range []Capability{CapBypassOrgFilter, CapBypassFGA, CapBypassFeatureCheck, CapInternalOperation, CapSystemAdmin} {
-		if !c.Has(cap) {
-			t.Errorf("NewSystemAdminCaller must have cap %d", cap)
+	if c.Capabilities != CapabilitiesForSystemAdmin(true) {
+		t.Errorf("Capabilities: want %d, got %d", CapabilitiesForSystemAdmin(true), c.Capabilities)
+	}
+
+	for _, cap := range []Capability{CapBypassFGA, CapInternalOperation} {
+		if c.Has(cap) {
+			t.Errorf("NewSystemAdminCaller must not have cap %d", cap)
 		}
 	}
 }

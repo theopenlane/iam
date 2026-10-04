@@ -19,7 +19,7 @@ const (
 	CapBypassOrgFilter Capability = 1 << 0
 	// CapBypassFeatureCheck skips feature-flag checks
 	// This capability is used to skip module checks, it is not needed when
-	// the caller has SystemAdmin or InternalOperation as well
+	// the caller has InternalOperation as well; system admins get it from CapabilitiesForSystemAdmin
 	CapBypassFeatureCheck Capability = 1 << 1
 	// CapBypassFGA skips OpenFGA authorization filter checks
 	// Used to skip FGA filtering on queries
@@ -109,7 +109,7 @@ func (c *Caller) WithoutCapabilities(caps Capability) *Caller {
 // CapabilitiesForSystemAdmin returns capability flags for System Admins
 func CapabilitiesForSystemAdmin(isSystemAdmin bool) Capability {
 	if isSystemAdmin {
-		return CapSystemAdmin | CapBypassOrgFilter
+		return CapSystemAdmin | CapBypassOrgFilter | CapBypassFeatureCheck
 	}
 
 	return 0

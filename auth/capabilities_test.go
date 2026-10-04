@@ -131,7 +131,7 @@ func TestWithSystemSweepContext(t *testing.T) {
 }
 
 func TestCapabilitiesForSystemAdmin(t *testing.T) {
-	assert.Equal(t, auth.CapSystemAdmin|auth.CapBypassOrgFilter, auth.CapabilitiesForSystemAdmin(true))
+	assert.Equal(t, auth.CapSystemAdmin|auth.CapBypassOrgFilter|auth.CapBypassFeatureCheck, auth.CapabilitiesForSystemAdmin(true))
 	assert.Equal(t, auth.Capability(0), auth.CapabilitiesForSystemAdmin(false))
 }
 
