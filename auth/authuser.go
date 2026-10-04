@@ -256,12 +256,12 @@ func IsTrustCenterFromContext(ctx context.Context) bool {
 	return ok
 }
 
-// GetTrustCenterUserCaller verifies that the caller context is for an anonymous
+// GetVerifiedTrustCenterUserCaller verifies that the caller context is for an anonymous
 // trust center user containing a subject email and matches
 // the trust center id being targeted
 // It returns the verified caller or nil if its not valid, along with a boolean check
-func GetTrustCenterUserCaller(ctx context.Context, providedTrustCenterID string) (*Caller, bool) {
-	caller, tcID, ok := IsTrustCenterUserCaller(ctx)
+func GetVerifiedTrustCenterUserCaller(ctx context.Context, providedTrustCenterID string) (*Caller, bool) {
+	caller, tcID, ok := GetTrustCenterUserCaller(ctx)
 	if !ok {
 		return nil, false
 	}
@@ -273,11 +273,10 @@ func GetTrustCenterUserCaller(ctx context.Context, providedTrustCenterID string)
 	return caller, true
 }
 
-// IsTrustCenterUserCaller verifies that the caller context is for an anonymous
-// trust center user containing a subject email
-// It returns the caller or nil if its not valid, the authorized trust center ID,
-// along with a boolean check
-func IsTrustCenterUserCaller(ctx context.Context) (*Caller, string, bool) {
+// GetTrustCenterUserCaller verifies that the caller context is for an
+// anonymous trust center user containing a subject email. It returns the
+// caller or nil if its not valid, the authorized trust center ID, along with a boolean check
+func GetTrustCenterUserCaller(ctx context.Context) (*Caller, string, bool) {
 	tcID, hasTCID := ActiveTrustCenterIDKey.Get(ctx)
 	if !hasTCID || tcID == "" {
 		return nil, "", false

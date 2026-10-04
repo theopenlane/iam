@@ -48,8 +48,8 @@ func MustCallerFromContext(ctx context.Context) *Caller {
 	return CallerKey.MustGet(ctx)
 }
 
-// FromContextOrNew returns the caller from the context or initializes a new Caller if one does not exist
-func FromContextOrNew(ctx context.Context) *Caller {
+// fromContextOrNew returns the caller from the context or initializes a new Caller if one does not exist
+func fromContextOrNew(ctx context.Context) *Caller {
 	caller, ok := CallerFromContext(ctx)
 	if !ok {
 		return &Caller{}

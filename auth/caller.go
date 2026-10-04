@@ -174,7 +174,7 @@ func NewOrgSupportCaller(orgID, subjectID, subjectName, subjectEmail string) *Ca
 		OrganizationID:     orgID,
 		OrganizationIDs:    []string{orgID},
 		AuthenticationType: JWTAuthentication,
-		Capabilities:       CapOrgSupport | CapBypassFeatureCheck,
+		Capabilities:       CapabilitiesForSupportCaller(),
 	}
 }
 

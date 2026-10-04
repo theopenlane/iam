@@ -112,6 +112,11 @@ func CapabilitiesForSystemAdmin(isSystemAdmin bool) Capability {
 	return 0
 }
 
+// CapabilitiesForSupportCaller returns capability flags for support callers
+func CapabilitiesForSupportCaller() Capability {
+	return CapOrgSupport | CapBypassFeatureCheck
+}
+
 // CapabilitiesForOrgBootstrap are the capabilities required to bootstrap an organization
 func CapabilitiesForOrgBootstrap() Capability {
 	return CapBypassOrgFilter | CapSystemSweep | CapInternalOperation | CapBypassManagedGroup
@@ -166,7 +171,7 @@ func WithSystemSweepContext(ctx context.Context) context.Context {
 // WithCallerCapabilities adds the capabilities to a copy of the caller in context, creating an empty caller when none is set
 // the created caller means later "no caller" checks no longer see an empty context, so only use it where a caller is expected
 func WithCallerCapabilities(ctx context.Context, caps Capability) context.Context {
-	caller := FromContextOrNew(ctx)
+	caller := fromContextOrNew(ctx)
 
 	return WithCaller(ctx, caller.WithCapabilities(caps))
 }
