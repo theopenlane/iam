@@ -26,7 +26,7 @@ func EnsureCallerOrg(ctx context.Context, orgID string) context.Context {
 	}
 
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return ctx
 	}
 
@@ -41,6 +41,21 @@ func EnsureCallerOrg(ctx context.Context, orgID string) context.Context {
 	return WithCaller(ctx, &scoped)
 }
 
+// WithCallerScopedToOrg returns ctx with a copy of the caller scoped to orgID as its only organization
+// it does not verify membership, callers must check the subject belongs to orgID first
+func WithCallerScopedToOrg(ctx context.Context, orgID string) context.Context {
+	caller, ok := CallerFromContext(ctx)
+	if !ok || orgID == "" {
+		return ctx
+	}
+
+	scoped := *caller
+	scoped.OrganizationID = orgID
+	scoped.OrganizationIDs = []string{orgID}
+
+	return WithCaller(ctx, &scoped)
+}
+
 // NewIntegrationCaller returns a Caller for the virtual integration user
 func NewIntegrationCaller(orgID string) *Caller {
 	return &Caller{
@@ -48,7 +63,7 @@ func NewIntegrationCaller(orgID string) *Caller {
 		SubjectName:    IntegrationDisplayName,
 		SubjectEmail:   IntegrationEmail,
 		OrganizationID: orgID,
-		Capabilities:   CapIntegrationActor | CapBypassOrgFilter | CapBypassFGA | CapInternalOperation | CapBypassAuditLog,
+		Capabilities:   CapIntegrationActor | CapBypassOrgFilter | CapInternalOperation | CapBypassAuditLog,
 	}
 }
 
@@ -56,7 +71,7 @@ func NewIntegrationCaller(orgID string) *Caller {
 // writes skip history tables
 func EnsureIntegrationCaller(ctx context.Context, orgID string) context.Context {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return WithCaller(ctx, NewIntegrationCaller(orgID))
 	}
 

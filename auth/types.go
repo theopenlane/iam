@@ -12,3 +12,7 @@ const (
 	// APITokenAuthentication is the authentication type for API tokens, commonly used for service authentication for machine-to-machine communication
 	APITokenAuthentication AuthenticationType = "api_token"
 )
+
+func (a AuthenticationType) String() string {
+	return string(a)
+}

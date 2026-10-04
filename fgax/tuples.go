@@ -55,6 +55,8 @@ const (
 
 	// CanView is the relation for viewing an entity
 	CanView = "can_view"
+	// CanViewOrg is the relation held by every member role of an organization, including auditors
+	CanViewOrg = "can_view_org"
 	// CanEdit is the relation for editing an entity
 	CanEdit = "can_edit"
 	// CanDelete is the relation for deleting an entity

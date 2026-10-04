@@ -64,10 +64,9 @@ func NewTestContextWithValidUser(subject string, opts ...CallerOption) context.C
 }
 
 // NewTestContextForSystemAdmin creates a context with system admin capabilities set for testing purposes only.
-// Capabilities match NewSystemAdminCaller: CapBypassOrgFilter, CapSystemAdmin.
+// Capabilities match CapabilitiesForSystemAdmin
 func NewTestContextForSystemAdmin(sub, orgID string, opts ...CallerOption) context.Context {
-	caps := CapBypassOrgFilter | CapSystemAdmin
-	return NewTestContextWithOrgID(sub, orgID, append([]CallerOption{WithCapabilities(caps)}, opts...)...)
+	return NewTestContextWithOrgID(sub, orgID, append([]CallerOption{WithCapabilities(CapabilitiesForSystemAdmin(true))}, opts...)...)
 }
 
 // NewTestContextWithSubscription creates a context with random subject/org IDs and the given

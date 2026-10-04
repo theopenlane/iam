@@ -18,7 +18,7 @@ const (
 // GetAuthzSubjectType returns the subject type based on the authentication type
 func GetAuthzSubjectType(ctx context.Context) string {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return ""
 	}
 
@@ -29,7 +29,7 @@ func GetAuthzSubjectType(ctx context.Context) string {
 // In most cases this will be the user ID, but in the case of an API token it will be the token ID
 func GetSubjectIDFromContext(ctx context.Context) (string, error) {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return "", ErrNoAuthUser
 	}
 
@@ -75,7 +75,7 @@ func GetOrganizationIDFromContext(ctx context.Context) (string, error) {
 // GetOrganizationIDsFromContext returns the organization IDs from context
 func GetOrganizationIDsFromContext(ctx context.Context) ([]string, error) {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return []string{}, ErrNoAuthUser
 	}
 
@@ -99,7 +99,7 @@ func GetOrganizationIDsFromContext(ctx context.Context) ([]string, error) {
 // GetAuthTypeFromContext retrieves the authentication type from the context if it was set
 func GetAuthTypeFromContext(ctx context.Context) AuthenticationType {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return ""
 	}
 
@@ -109,7 +109,7 @@ func GetAuthTypeFromContext(ctx context.Context) AuthenticationType {
 // GetAuthTypeFromEchoContext retrieves the authentication type from the echo context
 func GetAuthTypeFromEchoContext(ctx echo.Context) AuthenticationType {
 	caller, ok := CallerFromContext(ctx.Request().Context())
-	if !ok || caller == nil {
+	if !ok {
 		return ""
 	}
 
@@ -127,7 +127,7 @@ func IsAPITokenAuthentication(ctx context.Context) bool {
 // need to happen in the context of the new organization
 func SetOrganizationIDInAuthContext(ctx context.Context, orgID string) (context.Context, error) {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return ctx, ErrNoAuthUser
 	}
 
@@ -142,7 +142,7 @@ func SetOrganizationIDInAuthContext(ctx context.Context, orgID string) (context.
 // provided org is not in the caller's authorized list.
 func ResolveOrganizationForContext(ctx context.Context, inputOrgID *string) (context.Context, error) {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return ctx, ErrNoAuthUser
 	}
 
@@ -173,7 +173,7 @@ func ResolveOrganizationForContext(ctx context.Context, inputOrgID *string) (con
 // in the token claims
 func AddOrganizationIDToContext(ctx context.Context, orgID string) (context.Context, error) {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return ctx, ErrNoAuthUser
 	}
 
@@ -185,7 +185,7 @@ func AddOrganizationIDToContext(ctx context.Context, orgID string) (context.Cont
 // GetSubscriptionFromContext returns the active subscription from the context
 func GetSubscriptionFromContext(ctx context.Context) bool {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return false
 	}
 
@@ -195,7 +195,7 @@ func GetSubscriptionFromContext(ctx context.Context) bool {
 // IsSystemAdminFromContext checks if the user is a system admin
 func IsSystemAdminFromContext(ctx context.Context) bool {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return false
 	}
 
@@ -207,7 +207,7 @@ func IsSystemAdminFromContext(ctx context.Context) bool {
 // so authorization checks should be done at the resource level as needed
 func HasFullOrgWriteAccessFromContext(ctx context.Context) bool {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return false
 	}
 
@@ -217,7 +217,7 @@ func HasFullOrgWriteAccessFromContext(ctx context.Context) bool {
 // IsAnonymousFromContext reports whether ctx carries an anonymous-role caller
 func IsAnonymousFromContext(ctx context.Context) bool {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return false
 	}
 
@@ -227,7 +227,7 @@ func IsAnonymousFromContext(ctx context.Context) bool {
 // IsQuestionnaireFromContext reports whether ctx carries an anonymous questionnaire caller
 func IsQuestionnaireFromContext(ctx context.Context) bool {
 	caller, ok := CallerFromContext(ctx)
-	if !ok || caller == nil {
+	if !ok {
 		return false
 	}
 
@@ -237,7 +237,7 @@ func IsQuestionnaireFromContext(ctx context.Context) bool {
 // TrustCenterScopeFromContext reports the trust center and org for an anonymous trust center caller
 func TrustCenterScopeFromContext(ctx context.Context) (tcID, orgID string, ok bool) {
 	caller, callerOK := CallerFromContext(ctx)
-	if !callerOK || caller == nil || !caller.IsTrustCenter() {
+	if !callerOK || !caller.IsTrustCenter() {
 		return "", "", false
 	}
 
@@ -254,4 +254,50 @@ func IsTrustCenterFromContext(ctx context.Context) bool {
 	_, _, ok := TrustCenterScopeFromContext(ctx)
 
 	return ok
+}
+
+// GetVerifiedTrustCenterUserCaller verifies that the caller context is for an anonymous
+// trust center user containing a subject email and matches
+// the trust center id being targeted
+// It returns the verified caller or nil if its not valid, along with a boolean check
+func GetVerifiedTrustCenterUserCaller(ctx context.Context, providedTrustCenterID string) (*Caller, bool) {
+	caller, tcID, ok := GetTrustCenterUserCaller(ctx)
+	if !ok {
+		return nil, false
+	}
+
+	if providedTrustCenterID != tcID {
+		return nil, false
+	}
+
+	return caller, true
+}
+
+// GetTrustCenterUserCaller verifies that the caller context is for an
+// anonymous trust center user containing a subject email. It returns the
+// caller or nil if its not valid, the authorized trust center ID, along with a boolean check
+func GetTrustCenterUserCaller(ctx context.Context) (*Caller, string, bool) {
+	tcID, hasTCID := ActiveTrustCenterIDKey.Get(ctx)
+	if !hasTCID || tcID == "" {
+		return nil, "", false
+	}
+
+	caller, hasCaller := CallerFromContext(ctx)
+	if !hasCaller {
+		return nil, "", false
+	}
+
+	if !caller.IsTrustCenter() {
+		return nil, "", false
+	}
+
+	if caller.SubjectEmail == "" {
+		return nil, "", false
+	}
+
+	if caller.OrganizationID == "" {
+		return nil, "", false
+	}
+
+	return caller, tcID, true
 }

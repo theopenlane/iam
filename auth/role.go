@@ -46,6 +46,16 @@ func (ort OrganizationRoleType) HasFullWriteAccess() bool {
 	}
 }
 
+// HasOrgAdminAccess returns true if the user role is admin, super admin or owner
+func (ort OrganizationRoleType) HasOrgAdminAccess() bool {
+	switch ort {
+	case OwnerRole, SuperAdminRole, AdminRole:
+		return true
+	default:
+		return false
+	}
+}
+
 // ToOrganizationRoleType converts a string to an OrganizationRoleType
 func ToOrganizationRoleType(role string) (OrganizationRoleType, bool) {
 	// convert to lower snake case to match the constants

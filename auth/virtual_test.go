@@ -110,13 +110,13 @@ func TestNewIntegrationCaller(t *testing.T) {
 		t.Errorf("OrganizationID: want org-1, got %s", c.OrganizationID)
 	}
 
-	for _, cap := range []Capability{CapIntegrationActor, CapBypassOrgFilter, CapBypassFGA, CapInternalOperation, CapBypassAuditLog} {
+	for _, cap := range []Capability{CapIntegrationActor, CapBypassOrgFilter, CapInternalOperation, CapBypassAuditLog} {
 		if !c.Has(cap) {
 			t.Errorf("NewIntegrationCaller must have cap %d", cap)
 		}
 	}
 
-	for _, cap := range []Capability{CapBypassFeatureCheck, CapBypassSubscriptionCheck, CapSystemAdmin} {
+	for _, cap := range []Capability{CapBypassFeatureCheck, CapSystemSweep, CapSystemAdmin} {
 		if c.Has(cap) {
 			t.Errorf("NewIntegrationCaller must not have cap %d", cap)
 		}
@@ -178,7 +178,7 @@ func TestEnsureIntegrationCaller(t *testing.T) {
 			t.Error("expected CapIntegrationActor to be added")
 		}
 
-		for _, c := range []Capability{CapBypassOrgFilter, CapBypassFGA, CapInternalOperation} {
+		for _, c := range []Capability{CapBypassOrgFilter, CapInternalOperation} {
 			if !got.Has(c) {
 				t.Errorf("existing capability %d must be retained", c)
 			}
