@@ -45,11 +45,8 @@ const (
 	CapOrgSupport Capability = 1 << 10
 	// CapIntegrationActor is used to identify an integration installation virtual user/actor
 	CapIntegrationActor Capability = 1 << 11
-)
-
-const (
-	// CapSystemSweep combines the capabilities needed for system sweep operations
-	CapSystemSweep = CapBypassOrgFilter | CapInternalOperation | CapInternalRead
+	// CapSystemSweep marks a full system job that skips org owner handling, e.g. backfills, org bootstrap and scheduled sweeps
+	CapSystemSweep Capability = 1 << 12
 )
 
 // Has reports whether the Caller holds all of the specified capabilities
@@ -117,7 +114,7 @@ func CapabilitiesForSystemAdmin(isSystemAdmin bool) Capability {
 
 // CapabilitiesForOrgBootstrap are the capabilities required to bootstrap an organization
 func CapabilitiesForOrgBootstrap() Capability {
-	return CapBypassOrgFilter | CapInternalRead | CapInternalOperation | CapBypassManagedGroup
+	return CapBypassOrgFilter | CapSystemSweep | CapInternalOperation | CapBypassManagedGroup
 }
 
 // WithOrganizationBootstrapCapabilities adds the organization bootstrap capabilities to the caller in context
@@ -148,6 +145,12 @@ func WithInternalReadContext(ctx context.Context) context.Context {
 	return WithCallerCapabilities(ctx, CapInternalRead)
 }
 
+// WithInternalReadCrossOrgContext adds internal read and the org filter bypass to the current caller:
+// skips FGA and query privacy checks on reads across every org's rows; only for lookups before the org is known
+func WithInternalReadCrossOrgContext(ctx context.Context) context.Context {
+	return WithCallerCapabilities(ctx, CapInternalRead|CapBypassOrgFilter)
+}
+
 // WithOrgInternalCaller replaces the current caller with OrgInternalCaller, dropping its user and any other capabilities
 func WithOrgInternalCaller(ctx context.Context, orgID string) context.Context {
 	return WithCaller(ctx, NewOrgInternalCaller(orgID))
@@ -156,7 +159,7 @@ func WithOrgInternalCaller(ctx context.Context, orgID string) context.Context {
 // WithSystemSweepContext builds a cross-organization system caller context bypassing org filtering and FGA
 func WithSystemSweepContext(ctx context.Context) context.Context {
 	return WithCaller(ctx, &Caller{
-		Capabilities: CapSystemSweep,
+		Capabilities: CapBypassOrgFilter | CapInternalOperation | CapSystemSweep,
 	})
 }
 
@@ -215,7 +218,7 @@ func HasCrossOrgCapabilities(ctx context.Context) bool {
 
 // HasFullSystemCapabilities reports whether the caller in context has all capabilities required for full system access
 func HasFullSystemCapabilities(ctx context.Context) bool {
-	return HasInContextCaller(ctx, CapBypassOrgFilter|CapInternalOperation|CapInternalRead)
+	return HasInContextCaller(ctx, CapBypassOrgFilter|CapInternalOperation|CapSystemSweep)
 }
 
 // HasAnonymousTrustCenterCapability reports whether the caller in context has the CapTrustCenterAnonymous

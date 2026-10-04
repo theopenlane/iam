@@ -442,7 +442,7 @@ func TestNewWebhookCaller(t *testing.T) {
 		t.Errorf("OrganizationID: want org-1, got %s", c.OrganizationID)
 	}
 
-	for _, cap := range []Capability{CapBypassOrgFilter, CapInternalRead, CapInternalOperation} {
+	for _, cap := range []Capability{CapBypassOrgFilter, CapInternalOperation} {
 		if !c.Has(cap) {
 			t.Errorf("NewWebhookCaller must have cap %d", cap)
 		}
@@ -464,7 +464,7 @@ func TestNewAcmeSolverCaller(t *testing.T) {
 		t.Errorf("OrganizationID: want org-2, got %s", c.OrganizationID)
 	}
 
-	for _, cap := range []Capability{CapBypassOrgFilter, CapInternalRead, CapInternalOperation} {
+	for _, cap := range []Capability{CapBypassOrgFilter, CapInternalOperation} {
 		if !c.Has(cap) {
 			t.Errorf("NewAcmeSolverCaller must have cap %d", cap)
 		}
@@ -568,7 +568,7 @@ func TestNewQuestionnaireCaller(t *testing.T) {
 func TestNewKeystoreCaller(t *testing.T) {
 	c := NewKeystoreCaller()
 
-	for _, cap := range []Capability{CapBypassOrgFilter, CapInternalRead, CapBypassFeatureCheck, CapInternalOperation} {
+	for _, cap := range []Capability{CapBypassOrgFilter, CapBypassFeatureCheck, CapInternalOperation} {
 		if !c.Has(cap) {
 			t.Errorf("NewKeystoreCaller must have cap %d", cap)
 		}
@@ -627,6 +627,7 @@ func TestCapabilityConstantsAreDistinctPowersOfTwo(t *testing.T) {
 		CapQuestionnaireAnonymous,
 		CapOrgSupport,
 		CapIntegrationActor,
+		CapSystemSweep,
 	}
 
 	seen := make(map[Capability]bool, len(all))

@@ -101,6 +101,19 @@ func TestWithInternalReadContext(t *testing.T) {
 	assert.False(t, original.Has(auth.CapInternalRead))
 }
 
+func TestWithInternalReadCrossOrgContext(t *testing.T) {
+	ctx := auth.WithInternalReadCrossOrgContext(auth.WithCaller(context.Background(), &auth.Caller{SubjectID: "user-1"}))
+
+	c, ok := auth.CallerFromContext(ctx)
+	require.True(t, ok)
+
+	assert.Equal(t, "user-1", c.SubjectID)
+	assert.Equal(t, auth.CapInternalRead|auth.CapBypassOrgFilter, c.Capabilities)
+	assert.True(t, auth.IsInternalReadRequest(ctx))
+	assert.True(t, auth.HasCrossOrgCapabilities(ctx))
+	assert.False(t, auth.IsInternalRequest(ctx))
+}
+
 func TestWithCallerReplacesCapabilities(t *testing.T) {
 	ctx := auth.WithInternalOperationContext(context.Background())
 	ctx = auth.WithCaller(ctx, &auth.Caller{SubjectID: "user-1"})
@@ -144,7 +157,7 @@ func TestWithSystemSweepContext(t *testing.T) {
 	c, ok := auth.CallerFromContext(auth.WithSystemSweepContext(context.Background()))
 	require.True(t, ok)
 
-	assert.Equal(t, auth.CapSystemSweep, c.Capabilities)
+	assert.Equal(t, auth.CapBypassOrgFilter|auth.CapInternalOperation|auth.CapSystemSweep, c.Capabilities)
 }
 
 func TestCapabilitiesForSystemAdmin(t *testing.T) {
