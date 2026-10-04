@@ -196,7 +196,7 @@ func NewSystemAdminCaller(subjectID, subjectName, subjectEmail string) *Caller {
 // Deprecated: will be removed in a future PR
 func NewKeystoreCaller() *Caller {
 	return &Caller{
-		Capabilities: CapBypassOrgFilter | CapBypassFGA | CapBypassFeatureCheck | CapInternalOperation,
+		Capabilities: CapBypassOrgFilter | CapInternalRead | CapBypassFeatureCheck | CapInternalOperation,
 	}
 }
 
@@ -207,7 +207,7 @@ func NewKeystoreCaller() *Caller {
 func NewWebhookCaller(orgID string) *Caller {
 	return &Caller{
 		OrganizationID: orgID,
-		Capabilities:   CapBypassOrgFilter | CapBypassFGA | CapInternalOperation,
+		Capabilities:   CapBypassOrgFilter | CapInternalRead | CapInternalOperation,
 	}
 }
 
@@ -218,6 +218,6 @@ func NewWebhookCaller(orgID string) *Caller {
 func NewAcmeSolverCaller(orgID string) *Caller {
 	return &Caller{
 		OrganizationID: orgID,
-		Capabilities:   CapBypassOrgFilter | CapBypassFGA | CapInternalOperation,
+		Capabilities:   CapBypassOrgFilter | CapInternalRead | CapInternalOperation,
 	}
 }

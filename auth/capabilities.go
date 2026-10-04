@@ -21,9 +21,9 @@ const (
 	// This capability is used to skip module checks, it is not needed when
 	// the caller has InternalOperation as well; system admins get it from CapabilitiesForSystemAdmin
 	CapBypassFeatureCheck Capability = 1 << 1
-	// CapBypassFGA skips OpenFGA authorization filter checks
-	// Used to skip FGA filtering on queries
-	CapBypassFGA Capability = 1 << 2
+	// CapInternalRead marks the caller as a trusted internal read
+	// Used to skip FGA filtering and query privacy checks on reads; mutations still require CapInternalOperation
+	CapInternalRead Capability = 1 << 2
 	// CapBypassManagedGroup bypasses managed-group mutation guards
 	// used to allow updates to managed groups, which are only allowed
 	// for internal requests and not all users
@@ -49,7 +49,7 @@ const (
 
 const (
 	// CapSystemSweep combines the capabilities needed for system sweep operations
-	CapSystemSweep = CapBypassOrgFilter | CapInternalOperation | CapBypassFGA
+	CapSystemSweep = CapBypassOrgFilter | CapInternalOperation | CapInternalRead
 )
 
 // Has reports whether the Caller holds all of the specified capabilities
@@ -117,7 +117,7 @@ func CapabilitiesForSystemAdmin(isSystemAdmin bool) Capability {
 
 // CapabilitiesForOrgBootstrap are the capabilities required to bootstrap an organization
 func CapabilitiesForOrgBootstrap() Capability {
-	return CapBypassOrgFilter | CapBypassFGA | CapInternalOperation | CapBypassManagedGroup
+	return CapBypassOrgFilter | CapInternalRead | CapInternalOperation | CapBypassManagedGroup
 }
 
 // WithOrganizationBootstrapCapabilities adds the organization bootstrap capabilities to the caller in context
@@ -140,6 +140,12 @@ func WithInternalCrossOrgContext(ctx context.Context) context.Context {
 // skips privacy, FGA, module, and edge checks but reads stay limited to the caller's orgs
 func WithInternalOperationContext(ctx context.Context) context.Context {
 	return WithCallerCapabilities(ctx, CapInternalOperation)
+}
+
+// WithInternalReadContext adds internal read to the current caller, keeping its user and orgs:
+// skips FGA and query privacy checks on reads only, reads stay limited to the caller's orgs
+func WithInternalReadContext(ctx context.Context) context.Context {
+	return WithCallerCapabilities(ctx, CapInternalRead)
 }
 
 // WithOrgInternalCaller replaces the current caller with OrgInternalCaller, dropping its user and any other capabilities
@@ -165,6 +171,11 @@ func WithCallerCapabilities(ctx context.Context, caps Capability) context.Contex
 // IsInternalRequest checks if the context caller has internal operation capability
 func IsInternalRequest(ctx context.Context) bool {
 	return HasInContextCaller(ctx, CapInternalOperation)
+}
+
+// IsInternalReadRequest checks if the context caller can bypass read authorization, via internal operation or internal read
+func IsInternalReadRequest(ctx context.Context) bool {
+	return HasAnyInContextCaller(ctx, CapInternalOperation|CapInternalRead)
 }
 
 // HasInContextCaller reports whether the caller in context holds all of the specified capabilities
@@ -204,7 +215,7 @@ func HasCrossOrgCapabilities(ctx context.Context) bool {
 
 // HasFullSystemCapabilities reports whether the caller in context has all capabilities required for full system access
 func HasFullSystemCapabilities(ctx context.Context) bool {
-	return HasInContextCaller(ctx, CapBypassOrgFilter|CapInternalOperation|CapBypassFGA)
+	return HasInContextCaller(ctx, CapBypassOrgFilter|CapInternalOperation|CapInternalRead)
 }
 
 // HasAnonymousTrustCenterCapability reports whether the caller in context has the CapTrustCenterAnonymous

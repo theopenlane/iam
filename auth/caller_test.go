@@ -14,17 +14,17 @@ func TestCallerHasSingleCap(t *testing.T) {
 		t.Error("expected CapBypassOrgFilter to be set")
 	}
 
-	if c.Has(CapBypassFGA) {
-		t.Error("expected CapBypassFGA to be absent")
+	if c.Has(CapInternalRead) {
+		t.Error("expected CapInternalRead to be absent")
 	}
 }
 
 // TestCallerHasMultipleCaps verifies that Has requires all bits in the mask to
 // be set, returning false when any one is missing.
 func TestCallerHasMultipleCaps(t *testing.T) {
-	c := &Caller{Capabilities: CapBypassOrgFilter | CapBypassFGA}
+	c := &Caller{Capabilities: CapBypassOrgFilter | CapInternalRead}
 
-	if !c.Has(CapBypassOrgFilter | CapBypassFGA) {
+	if !c.Has(CapBypassOrgFilter | CapInternalRead) {
 		t.Error("expected combined check to pass when both caps are set")
 	}
 
@@ -162,9 +162,9 @@ func TestCallerIsImpersonatedPresent(t *testing.T) {
 // Caller with the additional cap set while leaving the original unchanged.
 func TestCallerWithCapabilitiesAdds(t *testing.T) {
 	base := &Caller{Capabilities: CapBypassOrgFilter}
-	updated := base.WithCapabilities(CapBypassFGA)
+	updated := base.WithCapabilities(CapInternalRead)
 
-	if base.Has(CapBypassFGA) {
+	if base.Has(CapInternalRead) {
 		t.Error("WithCapabilities must not mutate the original")
 	}
 
@@ -172,7 +172,7 @@ func TestCallerWithCapabilitiesAdds(t *testing.T) {
 		t.Error("WithCapabilities must preserve existing caps")
 	}
 
-	if !updated.Has(CapBypassFGA) {
+	if !updated.Has(CapInternalRead) {
 		t.Error("WithCapabilities must add the new cap")
 	}
 }
@@ -207,7 +207,7 @@ func TestCallerWithCapabilitiesPreservesOtherFields(t *testing.T) {
 		OrganizationID: "org-1",
 		Capabilities:   CapBypassOrgFilter | CapSystemAdmin,
 	}
-	updated := base.WithCapabilities(CapBypassFGA)
+	updated := base.WithCapabilities(CapInternalRead)
 
 	if updated.SubjectID != base.SubjectID {
 		t.Errorf("SubjectID: want %s, got %s", base.SubjectID, updated.SubjectID)
@@ -225,14 +225,14 @@ func TestCallerWithCapabilitiesPreservesOtherFields(t *testing.T) {
 // TestCallerWithoutCapabilitiesRemoves verifies that WithoutCapabilities returns
 // a copy with the specified caps cleared and others preserved.
 func TestCallerWithoutCapabilitiesRemoves(t *testing.T) {
-	base := &Caller{Capabilities: CapBypassOrgFilter | CapBypassFGA}
-	updated := base.WithoutCapabilities(CapBypassFGA)
+	base := &Caller{Capabilities: CapBypassOrgFilter | CapInternalRead}
+	updated := base.WithoutCapabilities(CapInternalRead)
 
-	if base.Capabilities != CapBypassOrgFilter|CapBypassFGA {
+	if base.Capabilities != CapBypassOrgFilter|CapInternalRead {
 		t.Error("WithoutCapabilities must not mutate the original")
 	}
 
-	if updated.Has(CapBypassFGA) {
+	if updated.Has(CapInternalRead) {
 		t.Error("WithoutCapabilities must remove the specified cap")
 	}
 
@@ -245,7 +245,7 @@ func TestCallerWithoutCapabilitiesRemoves(t *testing.T) {
 // leaves Capabilities unchanged.
 func TestCallerWithoutCapabilitiesIdempotent(t *testing.T) {
 	base := &Caller{Capabilities: CapBypassOrgFilter}
-	updated := base.WithoutCapabilities(CapBypassFGA)
+	updated := base.WithoutCapabilities(CapInternalRead)
 
 	if updated.Capabilities != CapBypassOrgFilter {
 		t.Errorf("removing absent cap must be idempotent, got %d", updated.Capabilities)
@@ -442,7 +442,7 @@ func TestNewWebhookCaller(t *testing.T) {
 		t.Errorf("OrganizationID: want org-1, got %s", c.OrganizationID)
 	}
 
-	for _, cap := range []Capability{CapBypassOrgFilter, CapBypassFGA, CapInternalOperation} {
+	for _, cap := range []Capability{CapBypassOrgFilter, CapInternalRead, CapInternalOperation} {
 		if !c.Has(cap) {
 			t.Errorf("NewWebhookCaller must have cap %d", cap)
 		}
@@ -464,7 +464,7 @@ func TestNewAcmeSolverCaller(t *testing.T) {
 		t.Errorf("OrganizationID: want org-2, got %s", c.OrganizationID)
 	}
 
-	for _, cap := range []Capability{CapBypassOrgFilter, CapBypassFGA, CapInternalOperation} {
+	for _, cap := range []Capability{CapBypassOrgFilter, CapInternalRead, CapInternalOperation} {
 		if !c.Has(cap) {
 			t.Errorf("NewAcmeSolverCaller must have cap %d", cap)
 		}
@@ -568,7 +568,7 @@ func TestNewQuestionnaireCaller(t *testing.T) {
 func TestNewKeystoreCaller(t *testing.T) {
 	c := NewKeystoreCaller()
 
-	for _, cap := range []Capability{CapBypassOrgFilter, CapBypassFGA, CapBypassFeatureCheck, CapInternalOperation} {
+	for _, cap := range []Capability{CapBypassOrgFilter, CapInternalRead, CapBypassFeatureCheck, CapInternalOperation} {
 		if !c.Has(cap) {
 			t.Errorf("NewKeystoreCaller must have cap %d", cap)
 		}
@@ -604,7 +604,7 @@ func TestNewSystemAdminCaller(t *testing.T) {
 		t.Errorf("Capabilities: want %d, got %d", CapabilitiesForSystemAdmin(true), c.Capabilities)
 	}
 
-	for _, cap := range []Capability{CapBypassFGA, CapInternalOperation} {
+	for _, cap := range []Capability{CapInternalRead, CapInternalOperation} {
 		if c.Has(cap) {
 			t.Errorf("NewSystemAdminCaller must not have cap %d", cap)
 		}
@@ -618,7 +618,7 @@ func TestCapabilityConstantsAreDistinctPowersOfTwo(t *testing.T) {
 	all := []Capability{
 		CapBypassOrgFilter,
 		CapBypassFeatureCheck,
-		CapBypassFGA,
+		CapInternalRead,
 		CapBypassManagedGroup,
 		CapBypassAuditLog,
 		CapInternalOperation,

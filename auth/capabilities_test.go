@@ -14,7 +14,7 @@ func TestCallerHasAny(t *testing.T) {
 	c := &auth.Caller{Capabilities: auth.CapBypassOrgFilter}
 
 	assert.True(t, c.HasAny(auth.CapBypassOrgFilter|auth.CapSystemAdmin))
-	assert.False(t, c.HasAny(auth.CapSystemAdmin|auth.CapBypassFGA))
+	assert.False(t, c.HasAny(auth.CapSystemAdmin|auth.CapInternalRead))
 }
 
 func TestCallerHasInLineage(t *testing.T) {
@@ -26,7 +26,7 @@ func TestCallerHasInLineage(t *testing.T) {
 		{name: "nil caller", caller: nil, want: false},
 		{name: "held directly", caller: &auth.Caller{Capabilities: auth.CapSystemAdmin}, want: true},
 		{name: "held by original system admin", caller: &auth.Caller{OriginalSystemAdmin: &auth.Caller{Capabilities: auth.CapSystemAdmin}}, want: true},
-		{name: "not held", caller: &auth.Caller{Capabilities: auth.CapBypassFGA}, want: false},
+		{name: "not held", caller: &auth.Caller{Capabilities: auth.CapInternalRead}, want: false},
 	}
 
 	for _, tc := range tests {
@@ -37,23 +37,23 @@ func TestCallerHasInLineage(t *testing.T) {
 }
 
 func TestWithCapabilitiesReturnsCopy(t *testing.T) {
-	original := &auth.Caller{SubjectID: "user-1", Capabilities: auth.CapBypassFGA}
+	original := &auth.Caller{SubjectID: "user-1", Capabilities: auth.CapInternalRead}
 
 	updated := original.WithCapabilities(auth.CapInternalOperation)
 
 	assert.False(t, original.Has(auth.CapInternalOperation))
-	assert.True(t, updated.Has(auth.CapBypassFGA|auth.CapInternalOperation))
+	assert.True(t, updated.Has(auth.CapInternalRead|auth.CapInternalOperation))
 	assert.Equal(t, "user-1", updated.SubjectID)
 }
 
 func TestWithoutCapabilitiesReturnsCopy(t *testing.T) {
-	original := &auth.Caller{Capabilities: auth.CapBypassFGA | auth.CapInternalOperation}
+	original := &auth.Caller{Capabilities: auth.CapInternalRead | auth.CapInternalOperation}
 
 	updated := original.WithoutCapabilities(auth.CapInternalOperation)
 
 	assert.True(t, original.Has(auth.CapInternalOperation))
 	assert.False(t, updated.Has(auth.CapInternalOperation))
-	assert.True(t, updated.Has(auth.CapBypassFGA))
+	assert.True(t, updated.Has(auth.CapInternalRead))
 }
 
 func TestWithCallerCapabilitiesCreatesCallerWhenMissing(t *testing.T) {
@@ -82,6 +82,23 @@ func TestWithInternalCrossOrgContext(t *testing.T) {
 	require.True(t, ok)
 
 	assert.True(t, c.Has(auth.CapInternalOperation|auth.CapBypassOrgFilter))
+}
+
+func TestWithInternalReadContext(t *testing.T) {
+	original := &auth.Caller{SubjectID: "user-1", OrganizationID: "org-1", OrganizationIDs: []string{"org-1"}}
+
+	ctx := auth.WithInternalReadContext(auth.WithCaller(context.Background(), original))
+
+	c, ok := auth.CallerFromContext(ctx)
+	require.True(t, ok)
+
+	assert.Equal(t, "user-1", c.SubjectID)
+	assert.Equal(t, "org-1", c.OrganizationID)
+	assert.Equal(t, auth.CapInternalRead, c.Capabilities)
+	assert.True(t, auth.IsInternalReadRequest(ctx))
+	assert.False(t, auth.IsInternalRequest(ctx))
+	assert.False(t, auth.HasCrossOrgCapabilities(ctx))
+	assert.False(t, original.Has(auth.CapInternalRead))
 }
 
 func TestWithCallerReplacesCapabilities(t *testing.T) {
@@ -140,6 +157,7 @@ func TestContextCapabilityChecks(t *testing.T) {
 		name             string
 		ctx              context.Context
 		wantInternal     bool
+		wantInternalRead bool
 		wantCrossOrg     bool
 		wantFullSystem   bool
 		wantLineageAdmin bool
@@ -149,9 +167,15 @@ func TestContextCapabilityChecks(t *testing.T) {
 			ctx:  context.Background(),
 		},
 		{
-			name:         "internal operation",
-			ctx:          auth.WithCaller(context.Background(), &auth.Caller{Capabilities: auth.CapInternalOperation}),
-			wantInternal: true,
+			name:             "internal operation",
+			ctx:              auth.WithCaller(context.Background(), &auth.Caller{Capabilities: auth.CapInternalOperation}),
+			wantInternal:     true,
+			wantInternalRead: true,
+		},
+		{
+			name:             "fga bypass",
+			ctx:              auth.WithCaller(context.Background(), &auth.Caller{Capabilities: auth.CapInternalRead}),
+			wantInternalRead: true,
 		},
 		{
 			name:         "org filter bypass",
@@ -165,11 +189,12 @@ func TestContextCapabilityChecks(t *testing.T) {
 			wantLineageAdmin: true,
 		},
 		{
-			name:           "system sweep",
-			ctx:            auth.WithSystemSweepContext(context.Background()),
-			wantInternal:   true,
-			wantCrossOrg:   true,
-			wantFullSystem: true,
+			name:             "system sweep",
+			ctx:              auth.WithSystemSweepContext(context.Background()),
+			wantInternal:     true,
+			wantInternalRead: true,
+			wantCrossOrg:     true,
+			wantFullSystem:   true,
 		},
 		{
 			name:             "impersonating system admin",
@@ -181,6 +206,7 @@ func TestContextCapabilityChecks(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.wantInternal, auth.IsInternalRequest(tc.ctx))
+			assert.Equal(t, tc.wantInternalRead, auth.IsInternalReadRequest(tc.ctx))
 			assert.Equal(t, tc.wantCrossOrg, auth.HasCrossOrgCapabilities(tc.ctx))
 			assert.Equal(t, tc.wantFullSystem, auth.HasFullSystemCapabilities(tc.ctx))
 			assert.Equal(t, tc.wantLineageAdmin, auth.HasInLineageContextCaller(tc.ctx, auth.CapSystemAdmin))
