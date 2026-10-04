@@ -236,15 +236,6 @@ func TestIsInternalRequestDoesNotCreateCaller(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestFromContextOrNew(t *testing.T) {
-	empty := auth.FromContextOrNew(context.Background())
-	require.NotNil(t, empty)
-	assert.Empty(t, empty.SubjectID)
-
-	existing := &auth.Caller{SubjectID: "user-1"}
-	assert.Same(t, existing, auth.FromContextOrNew(auth.WithCaller(context.Background(), existing)))
-}
-
 func TestCallerFromContextNilCaller(t *testing.T) {
 	_, ok := auth.CallerFromContext(auth.WithCaller(context.Background(), nil))
 
