@@ -297,7 +297,7 @@ func TestIsTrustCenterUserCaller(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			c, tcID, ok := auth.IsTrustCenterUserCaller(tc.ctx)
+			c, tcID, ok := auth.GetTrustCenterUserCaller(tc.ctx)
 
 			assert.Equal(t, tc.wantOK, ok)
 			assert.Equal(t, tc.wantTC, tcID)
@@ -313,10 +313,10 @@ func TestGetTrustCenterUserCaller(t *testing.T) {
 	visitor := auth.NewTrustCenterCaller("org-1", "anon-1", "Visitor", "visitor@example.com")
 	ctx := auth.ActiveTrustCenterIDKey.Set(auth.WithCaller(context.Background(), visitor), "tc-1")
 
-	_, ok := auth.GetTrustCenterUserCaller(ctx, "tc-1")
+	_, ok := auth.GetVerifiedTrustCenterUserCaller(ctx, "tc-1")
 	assert.True(t, ok)
 
-	_, ok = auth.GetTrustCenterUserCaller(ctx, "tc-2")
+	_, ok = auth.GetVerifiedTrustCenterUserCaller(ctx, "tc-2")
 	assert.False(t, ok)
 }
 
