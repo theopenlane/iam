@@ -24,7 +24,7 @@ require (
 	github.com/openfga/openfga v1.21.0
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.5.0
-	github.com/redis/go-redis/v9 v9.22.0
+	github.com/redis/go-redis/v9 v9.23.0
 	github.com/rs/zerolog v1.35.1
 	github.com/samber/lo v1.53.0
 	github.com/stoewer/go-strcase v1.3.1
@@ -104,7 +104,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.24.0 // indirect
 	github.com/klauspost/compress v1.19.1 // indirect
-	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
 	github.com/labstack/gommon v0.5.0 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
@@ -172,7 +172,7 @@ require (
 	go.opentelemetry.io/otel v1.46.0 // indirect
 	go.opentelemetry.io/otel/metric v1.46.0 // indirect
 	go.opentelemetry.io/otel/trace v1.46.0 // indirect
-	go.uber.org/atomic v1.11.0 // indirect
+	go.uber.org/atomic v1.12.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/exp v0.0.0-20260824195058-e88cd73687aa // indirect
