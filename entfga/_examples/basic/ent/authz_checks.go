@@ -83,7 +83,7 @@ func (q *OrgMembershipQuery) CheckAccess(ctx context.Context) error {
 	// and not the actual object id
 	if objectID == "" {
 		// allow this query to run
-		reqCtx := privacy.DecisionContext(ctx, privacy.Allow)
+		reqCtx := auth.WithInternalReadContext(ctx)
 
 		ob, err := q.Clone().Only(reqCtx)
 		if err != nil {
@@ -147,7 +147,7 @@ func (m *OrgMembershipMutation) CheckAccessForEdit(ctx context.Context) error {
 		id, ok := gCtx.Args["id"].(string)
 		if ok {
 			// allow this query to run
-			reqCtx := privacy.DecisionContext(ctx, privacy.Allow)
+			reqCtx := auth.WithInternalReadContext(ctx)
 			ob, err := m.Client().OrgMembership.Query().Where(orgmembership.ID(id)).Only(reqCtx)
 			if err != nil {
 				return privacy.Skipf("nil request, skipping auth check")

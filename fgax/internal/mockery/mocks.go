@@ -18,10 +18,19 @@ func NewMockSdkClient(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockSdkClient {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockSdkClient{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
@@ -2898,10 +2907,19 @@ func NewMockSdkClientReadAuthorizationModelRequestInterface(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockSdkClientReadAuthorizationModelRequestInterface {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockSdkClientReadAuthorizationModelRequestInterface{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
@@ -3316,10 +3334,19 @@ func NewMockSdkClientReadRequestInterface(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockSdkClientReadRequestInterface {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockSdkClientReadRequestInterface{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
@@ -3688,10 +3715,19 @@ func NewMockSdkClientWriteRequestInterface(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockSdkClientWriteRequestInterface {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockSdkClientWriteRequestInterface{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
@@ -4106,10 +4142,19 @@ func NewMockSdkClientDeleteTuplesRequestInterface(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockSdkClientDeleteTuplesRequestInterface {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockSdkClientDeleteTuplesRequestInterface{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
@@ -4432,10 +4477,19 @@ func NewMockSdkClientCheckRequestInterface(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockSdkClientCheckRequestInterface {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockSdkClientCheckRequestInterface{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
@@ -4850,10 +4904,19 @@ func NewMockSdkClientBatchCheckRequestInterface(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockSdkClientBatchCheckRequestInterface {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockSdkClientBatchCheckRequestInterface{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
@@ -5176,10 +5239,19 @@ func NewMockSdkClientListObjectsRequestInterface(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockSdkClientListObjectsRequestInterface {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockSdkClientListObjectsRequestInterface{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
@@ -5594,10 +5666,19 @@ func NewMockSdkClientListUsersRequestInterface(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockSdkClientListUsersRequestInterface {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockSdkClientListUsersRequestInterface{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
@@ -6012,10 +6093,19 @@ func NewMockSdkClientStreamedListObjectsRequestInterface(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockSdkClientStreamedListObjectsRequestInterface {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockSdkClientStreamedListObjectsRequestInterface{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
