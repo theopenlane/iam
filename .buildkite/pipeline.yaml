@@ -1,55 +1,123 @@
 env:
   APP_NAME: ${BUILDKITE_PIPELINE_SLUG}
   SONAR_HOST: "https://sonarcloud.io"
+
+  # build settings
+  BK_HOME: /var/lib/buildkite-agent
+  GOCACHE: $BK_HOME/.cache/go-build
+  GOMODCACHE: $BK_HOME/.cache/go/pkg/mod
+  GOLANGCI_LINT_CACHE: $BK_HOME/.cache/golangci-lint
+  HOME: /tmp
+  GIT_CONFIG_GLOBAL: $HOME/.gitconfig
+  APOLLO_CONFIG_HOME: $HOME
+  SONAR_USER_HOME: $HOME/.sonar"
+  SCANNER_WORKDIR_PATH: $HOME/sonar-scanner-work
+
+  # runner vars
+  LARGE_RUNNER_QUEUE: ${LARGE_RUNNER_QUEUE:-self-hosted-garage-vms}
+  SMALL_RUNNER_QUEUE: ${SMALL_RUNNER_QUEUE:-self-hosted-garage-vms}
+  RUNNER_WORKLOAD_LIGHTWEIGHT: "lightweight"
+  RUNNER_WORKLOAD_STANDARD: "standard"
+
+# cache for hosted runners
+cache:
+  name: go-cache
+  size: 100g
+  paths:
+    - $GOCACHE
+    - $GOMODCACHE
+    - $GOLANGCI_LINT_CACHE
+
 steps:
   - group: ":knife: Pre-check"
     key: "precheck"
+    if_changed:
+      - go.{mod,sum}
+      - fgax/internal/mockery/**
     steps:
       - label: ":golang: go generate"
         key: "generate"
+        agents:
+          queue: $SMALL_RUNNER_QUEUE
+          workload: $RUNNER_WORKLOAD_LIGHTWEIGHT
         plugins:
           - docker#v5.14.0:
               image: "ghcr.io/theopenlane/build-image:latest"
               always-pull: true
               command: ["task", "ci"]
+              propagate-environment: true
+              propagate-uid-gid: true
+              volumes:
+                - $GOCACHE:$GOCACHE
+                - $GOMODCACHE:$GOMODCACHE
               environment:
                 - "GOTOOLCHAIN=auto"
   - group: ":test_tube: Tests"
     key: "tests"
     depends_on: "precheck"
+    if_changed:
+      - go.{mod,sum}
+      - "**.go"
     steps:
       - label: ":golangci-lint: lint :lint-roller:"
         key: "lint"
+        agents:
+          queue: $LARGE_RUNNER_QUEUE
+          workload: $RUNNER_WORKLOAD_STANDARD
         plugins:
           - docker#v5.14.0:
               image: "ghcr.io/theopenlane/build-image:latest"
               always-pull: true
               cancel_on_build_failing: true
               command: ["task", "go:lint"]
+              propagate-environment: true
+              propagate-uid-gid: true
+              volumes:
+                - $GOCACHE:$GOCACHE
+                - $GOMODCACHE:$GOMODCACHE
               environment:
                 - "GOTOOLCHAIN=auto"
       - label: ":golang: go test"
         key: "go_test"
+        agents:
+          queue: $LARGE_RUNNER_QUEUE
+          workload: $RUNNER_WORKLOAD_STANDARD
         plugins:
           - docker#v5.14.0:
               image: "ghcr.io/theopenlane/build-image:latest"
               always-pull: true
               command: ["task", "go:test:cover"]
+              propagate-environment: true
+              propagate-uid-gid: true
+              volumes:
+                - $GOCACHE:$GOCACHE
+                - $GOMODCACHE:$GOMODCACHE
         artifact_paths: ["coverage.out"]
       - label: ":test_tube: generate example"
         key: "example_generate"
+        agents:
+          queue: $LARGE_RUNNER_QUEUE
+          workload: $RUNNER_WORKLOAD_STANDARD
         plugins:
           - docker#v5.14.0:
               image: "ghcr.io/theopenlane/build-image:latest"
               always-pull: true
               workdir: "/fgax"
               command: ["task", "example:generate"]
+              propagate-environment: true
+              propagate-uid-gid: true
+              volumes:
+                - $GOCACHE:$GOCACHE
+                - $GOMODCACHE:$GOMODCACHE
               environment:
                 - "GOTOOLCHAIN=auto"
       - label: ":github: upload PR reports"
         key: "scan-upload-pr"
         if: build.pull_request.id != null
         depends_on: ["go_test"]
+        agents:
+          queue: $SMALL_RUNNER_QUEUE
+          workload: $RUNNER_WORKLOAD_LIGHTWEIGHT
         plugins:
           - cluster-secrets#v1.0.0:
               variables:
@@ -59,6 +127,8 @@ steps:
               step: "go_test"
           - docker#v5.14.0:
               image: "sonarsource/sonar-scanner-cli:12.1"
+              propagate-environment: true
+              propagate-uid-gid: true
               environment:
                 - "SONAR_TOKEN"
                 - "SONAR_HOST_URL=$SONAR_HOST"
@@ -67,6 +137,9 @@ steps:
         key: "scan-upload"
         if: build.branch == "main"
         depends_on: ["go_test"]
+        agents:
+          queue: $SMALL_RUNNER_QUEUE
+          workload: $RUNNER_WORKLOAD_LIGHTWEIGHT
         plugins:
           - cluster-secrets#v1.0.0:
               variables:
@@ -76,6 +149,8 @@ steps:
               step: "go_test"
           - docker#v5.14.0:
               image: "sonarsource/sonar-scanner-cli:12.1"
+              propagate-environment: true
+              propagate-uid-gid: true
               environment:
                 - "SONAR_TOKEN"
                 - "SONAR_HOST_URL=$SONAR_HOST"
