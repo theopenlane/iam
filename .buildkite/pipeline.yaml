@@ -75,6 +75,7 @@ steps:
               volumes:
                 - $GOCACHE:$GOCACHE
                 - $GOMODCACHE:$GOMODCACHE
+                - $GOLANGCI_LINT_CACHE:$GOLANGCI_LINT_CACHE
               environment:
                 - "GOTOOLCHAIN=auto"
       - label: ":golang: go test"
