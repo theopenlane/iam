@@ -111,6 +111,16 @@ func (c *Caller) IsInteractiveUser() bool {
 	return c.AuthenticationType == JWTAuthentication && !c.IsAnonymous() && !c.IsImpersonated()
 }
 
+// InteractiveUserCallerFromContext returns the caller in context when it is a user signed in with their own session
+func InteractiveUserCallerFromContext(ctx context.Context) (*Caller, bool) {
+	c, ok := CallerFromContext(ctx)
+	if !ok || !c.IsInteractiveUser() {
+		return nil, false
+	}
+
+	return c, true
+}
+
 // IsTrustCenter reports whether this Caller is an anonymous trust center visitor
 func (c *Caller) IsTrustCenter() bool {
 	return c.IsAnonymous() && c.Has(CapTrustCenterAnonymous)

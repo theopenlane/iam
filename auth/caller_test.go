@@ -192,7 +192,22 @@ func TestCallerIsInteractiveUser(t *testing.T) {
 			if got := tc.caller.IsInteractiveUser(); got != tc.want {
 				t.Errorf("IsInteractiveUser() = %v, want %v", got, tc.want)
 			}
+
+			got, ok := InteractiveUserCallerFromContext(WithCaller(context.Background(), tc.caller))
+			if ok != tc.want {
+				t.Errorf("InteractiveUserCallerFromContext() ok = %v, want %v", ok, tc.want)
+			}
+
+			if tc.want && got != tc.caller {
+				t.Error("expected InteractiveUserCallerFromContext to return the caller in context")
+			}
 		})
+	}
+}
+
+func TestInteractiveUserCallerFromContextAbsent(t *testing.T) {
+	if _, ok := InteractiveUserCallerFromContext(context.Background()); ok {
+		t.Error("expected ok=false when no caller is in context")
 	}
 }
 
