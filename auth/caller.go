@@ -105,6 +105,12 @@ func (c *Caller) IsAnonymous() bool {
 	return c.OrganizationRole == AnonymousRole
 }
 
+// IsInteractiveUser reports whether this Caller is a user signed in with their own session,
+// rather than an API token, personal access token, anonymous visitor, or impersonation session
+func (c *Caller) IsInteractiveUser() bool {
+	return c.AuthenticationType == JWTAuthentication && !c.IsAnonymous() && !c.IsImpersonated()
+}
+
 // IsTrustCenter reports whether this Caller is an anonymous trust center visitor
 func (c *Caller) IsTrustCenter() bool {
 	return c.IsAnonymous() && c.Has(CapTrustCenterAnonymous)
