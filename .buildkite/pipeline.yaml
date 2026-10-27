@@ -123,7 +123,7 @@ steps:
           - cluster-secrets#v1.0.0:
               variables:
                 SONAR_TOKEN: SONAR_TOKEN
-          - artifacts#v1.10.0:
+          - artifacts#v1.11.0:
               download: "coverage.out"
               step: "go_test"
           - docker#v5.14.0:
@@ -145,7 +145,7 @@ steps:
           - cluster-secrets#v1.0.0:
               variables:
                 SONAR_TOKEN: SONAR_TOKEN
-          - artifacts#v1.10.0:
+          - artifacts#v1.11.0:
               download: coverage.out
               step: "go_test"
           - docker#v5.14.0:
