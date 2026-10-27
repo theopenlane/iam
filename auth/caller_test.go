@@ -158,6 +158,59 @@ func TestCallerIsImpersonatedPresent(t *testing.T) {
 	}
 }
 
+func TestCallerIsInteractiveUser(t *testing.T) {
+	tests := []struct {
+		name   string
+		caller *Caller
+		want   bool
+	}{
+		{
+			name:   "jwt user",
+			caller: &Caller{AuthenticationType: JWTAuthentication},
+			want:   true,
+		},
+		{
+			name:   "api token",
+			caller: &Caller{AuthenticationType: APITokenAuthentication},
+		},
+		{
+			name:   "personal access token",
+			caller: &Caller{AuthenticationType: PATAuthentication},
+		},
+		{
+			name:   "anonymous jwt",
+			caller: &Caller{AuthenticationType: JWTAuthentication, OrganizationRole: AnonymousRole},
+		},
+		{
+			name:   "impersonation session",
+			caller: &Caller{AuthenticationType: JWTAuthentication, Impersonation: &ImpersonationContext{}},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.caller.IsInteractiveUser(); got != tc.want {
+				t.Errorf("IsInteractiveUser() = %v, want %v", got, tc.want)
+			}
+
+			got, ok := InteractiveUserCallerFromContext(WithCaller(context.Background(), tc.caller))
+			if ok != tc.want {
+				t.Errorf("InteractiveUserCallerFromContext() ok = %v, want %v", ok, tc.want)
+			}
+
+			if tc.want && got != tc.caller {
+				t.Error("expected InteractiveUserCallerFromContext to return the caller in context")
+			}
+		})
+	}
+}
+
+func TestInteractiveUserCallerFromContextAbsent(t *testing.T) {
+	if _, ok := InteractiveUserCallerFromContext(context.Background()); ok {
+		t.Error("expected ok=false when no caller is in context")
+	}
+}
+
 // TestCallerWithCapabilitiesAdds verifies that WithCapabilities returns a new
 // Caller with the additional cap set while leaving the original unchanged.
 func TestCallerWithCapabilitiesAdds(t *testing.T) {
