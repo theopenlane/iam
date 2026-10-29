@@ -39,7 +39,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.37.0
 	golang.org/x/tools v0.52.0
-	google.golang.org/api v0.305.0
+	google.golang.org/api v0.308.0
 	google.golang.org/protobuf v1.36.12
 )
 
