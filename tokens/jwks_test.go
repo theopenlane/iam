@@ -2,6 +2,8 @@ package tokens_test
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +15,8 @@ import (
 	"github.com/jwx-go/jwkfetch/v4"
 	"github.com/lestrrat-go/httprc/v3"
 	"github.com/lestrrat-go/jwx/v4/jwk"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/theopenlane/iam/tokens"
 )
@@ -139,4 +143,26 @@ func (s *TokenTestSuite) TestCachedJWKSValidator() {
 	require.Equal(claims, actualClaims, "expected the correct claims to be returned")
 
 	require.NoError(validator.Shutdown(context.Background()), "could not shut down the cached validator")
+}
+
+func TestJWKSValidatorRejectsNonStringKid(t *testing.T) {
+	_, key, err := ed25519.GenerateKey(rand.Reader)
+	require.NoError(t, err)
+
+	tm, err := tokens.NewWithKey(key, tokens.Config{Audience: "aud", Issuer: "iss", AccessDuration: time.Hour, RefreshDuration: 2 * time.Hour, RefreshOverlap: -15 * time.Minute})
+	require.NoError(t, err)
+
+	keys, err := tm.Keys()
+	require.NoError(t, err)
+
+	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, &tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Audience: jwt.ClaimStrings{"aud"}, Issuer: "iss", ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour))}})
+	token.Header["kid"] = 123
+
+	signed, err := token.SignedString(key)
+	require.NoError(t, err)
+
+	validator := tokens.NewJWKSValidator(keys, "aud", "iss")
+
+	_, err = validator.Verify(signed)
+	assert.ErrorIs(t, err, tokens.ErrFailedParsingKid)
 }

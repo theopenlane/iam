@@ -5,6 +5,8 @@ import "errors"
 var (
 	// ErrInvalidSession is returned when the session is invalid
 	ErrInvalidSession = errors.New("invalid session provided")
+	// ErrSessionExpired is returned when the session has exceeded its absolute lifetime
+	ErrSessionExpired = errors.New("session has exceeded its absolute lifetime")
 	// ErrSigningKeyIsRequired is returned when the signing key is not provided
 	ErrSigningKeyIsRequired = errors.New("signing key is required - use GenerateSecureKey() to create one or configure Redis for persistent key management")
 	// ErrEncryptionKeyIsRequired is returned when the encryption key is not provided

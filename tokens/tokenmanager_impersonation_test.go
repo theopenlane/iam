@@ -7,8 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/theopenlane/utils/ulids"
 
 	"github.com/theopenlane/iam/tokens"
@@ -579,4 +582,47 @@ func TestTokenManager_ImpersonationTokenWithDifferentKeyIDs(t *testing.T) {
 	claims2, err := tm.ValidateImpersonationToken(ctx, token2)
 	assert.NoError(t, err)
 	assert.NotNil(t, claims2)
+}
+
+func TestTokenManager_ValidateImpersonationTokenSuspendedUser(t *testing.T) {
+	ctx := context.Background()
+
+	mr, err := miniredis.Run()
+	require.NoError(t, err)
+
+	defer mr.Close()
+
+	client := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	defer client.Close()
+
+	tm := setupTestTokenManager(t)
+	tm.WithBlacklist(tokens.NewRedisTokenBlacklist(client, "test:impersonation"))
+
+	opts := tokens.CreateImpersonationTokenOptions{
+		ImpersonatorID:    ulids.New().String(),
+		ImpersonatorEmail: "support@example.com",
+		TargetUserID:      ulids.New().String(),
+		TargetUserEmail:   "user@example.com",
+		OrganizationID:    ulids.New().String(),
+		Type:              "support",
+		Reason:            "debugging",
+		Duration:          time.Hour,
+	}
+
+	for name, suspended := range map[string]string{"impersonator": opts.ImpersonatorID, "target user": opts.TargetUserID} {
+		t.Run(name+" suspended", func(t *testing.T) {
+			token, err := tm.CreateImpersonationToken(ctx, opts)
+			require.NoError(t, err)
+
+			_, err = tm.ValidateImpersonationToken(ctx, token)
+			require.NoError(t, err)
+
+			require.NoError(t, tm.SuspendUser(ctx, suspended, time.Hour))
+
+			_, err = tm.ValidateImpersonationToken(ctx, token)
+			assert.ErrorIs(t, err, tokens.ErrTokenInvalid)
+
+			mr.FlushAll()
+		})
+	}
 }

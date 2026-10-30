@@ -45,6 +45,11 @@ func IsSelfAccessType(objectType string) bool {
 }
 
 func (q *OrgMembershipQuery) CheckAccess(ctx context.Context) error {
+	// internal reads bypass the access check, which also stops the nested lookup below from recursing
+	if auth.IsInternalReadRequest(ctx) {
+		return privacy.Allowf("internal read request, bypassing auth check")
+	}
+
 	gCtx := graphql.GetFieldContext(ctx)
 
 	if gCtx == nil {
@@ -233,6 +238,11 @@ func (m *OrgMembershipMutation) CheckAccessForDelete(ctx context.Context) error 
 }
 
 func (q *OrganizationQuery) CheckAccess(ctx context.Context) error {
+	// internal reads bypass the access check, which also stops the nested lookup below from recursing
+	if auth.IsInternalReadRequest(ctx) {
+		return privacy.Allowf("internal read request, bypassing auth check")
+	}
+
 	gCtx := graphql.GetFieldContext(ctx)
 
 	if gCtx == nil {

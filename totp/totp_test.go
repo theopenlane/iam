@@ -1,11 +1,17 @@
 package totp
 
 import (
+	"context"
 	"database/sql"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/alicebob/miniredis/v2"
+	"github.com/pquerna/otp/totp"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestOTPManager(t *testing.T) {
@@ -133,4 +139,39 @@ func TestGenerateOTP(t *testing.T) {
 	otp, err := GenerateOTP("ABCDEFGHIJKL", "issuer", "user@example.com")
 	assert.NoError(t, err)
 	assert.Len(t, otp, 6, "incorrect otp length")
+}
+
+func TestValidateTOTPRejectsReplay(t *testing.T) {
+	mr, err := miniredis.Run()
+	require.NoError(t, err)
+
+	defer mr.Close()
+
+	rc := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	defer rc.Close()
+
+	svc := NewOTP(
+		WithIssuer("authenticator.local"),
+		WithSecret(Secret{Version: 1, Key: "9f0c6da662f018b58b04a093e2dbb2e1"}),
+		WithRedis(rc),
+	)
+
+	user := &User{ID: "user-1", Email: sql.NullString{String: "mitb@theopenlane.io", Valid: true}}
+
+	encrypted, err := svc.TOTPSecret(user)
+	require.NoError(t, err)
+
+	user.TFASecret = encrypted
+
+	plain, err := svc.TOTPDecryptedSecret(encrypted)
+	require.NoError(t, err)
+
+	code, err := totp.GenerateCode(plain, time.Now())
+	require.NoError(t, err)
+
+	require.NoError(t, svc.ValidateTOTP(context.Background(), user, code))
+	assert.ErrorIs(t, svc.ValidateTOTP(context.Background(), user, code), ErrCodeIsNoLongerValid)
+
+	// the claim must outlive the full validation window of the previous period
+	assert.Equal(t, keyTTL, mr.TTL("user-1_"+code))
 }

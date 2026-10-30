@@ -272,13 +272,13 @@ func (i *Issuer) Keys() (jwk.Set, error) {
 		return cached, nil
 	}
 
+	// hold the read lock through the cache set so a concurrent key removal cannot be overwritten by a stale set
 	i.mu.RLock()
-	snapshot := maps.Clone(i.keys)
-	i.mu.RUnlock()
+	defer i.mu.RUnlock()
 
 	keys := jwk.NewSet()
 
-	for kid, pubkey := range snapshot {
+	for kid, pubkey := range i.keys {
 		key, err := jwk.Import[jwk.Key](pubkey)
 		if err != nil {
 			return nil, err

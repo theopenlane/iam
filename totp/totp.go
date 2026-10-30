@@ -9,7 +9,6 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -24,20 +23,19 @@ import (
 )
 
 const (
-	// keyTTL is the expiration time for a key in redis
-	keyTTL = 30 * time.Second
+	// keyTTL covers the full TOTP validation window (period * (2*skew + 1)) so a code cannot be replayed within it
+	keyTTL = 90 * time.Second
 	// otpExpiration is the expiration time for an OTP code
 	otpExpiration = 5 * time.Minute
 	// numericCode is a string of numbers
-	numericCode = "0123456"
+	numericCode = "0123456789"
 	// alphanumericCode is a string of numbers and letters
 	alphanumericCode = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
-// otpRedos is a minimal interface for go-redis with OTP codes
+// otpRedis is a minimal interface for go-redis with OTP codes
 type otpRedis interface {
-	Get(ctx context.Context, key string) *redis.StringCmd
-	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+	SetNX(ctx context.Context, key string, value any, expiration time.Duration) *redis.BoolCmd
 	Close() error
 }
 
@@ -168,8 +166,7 @@ func (o *OTP) ValidateOTP(code string, hash string) error {
 }
 
 // ValidateTOTP checks if a User's TOTP is valid - first validate the TOTP against the user's secret key
-// and then check if the code has been set in redis, indicating that it has been used in the past thirty seconds
-// codes that have been validated are cached to prevent immediate reuse
+// and then atomically record the code in redis for the validation window so it cannot be reused
 func (o *OTP) ValidateTOTP(ctx context.Context, user *User, code string) error {
 	secret, err := o.decrypt(user.TFASecret)
 	if err != nil {
@@ -189,18 +186,17 @@ func (o *OTP) ValidateTOTP(ctx context.Context, user *User, code string) error {
 		return nil
 	}
 
-	// Validated code has previously been used in the past thirty seconds
-	if err = o.db.Get(ctx, key).Err(); err == nil {
+	// atomically claim the code for the validation window; a second claim is a replay
+	claimed, err := o.db.SetNX(ctx, key, true, keyTTL).Result()
+	if err != nil {
+		return ErrFailedToValidateCode
+	}
+
+	if !claimed {
 		return ErrCodeIsNoLongerValid
 	}
 
-	// No code found in redis, indicating the code is valid. Set it to the
-	// DB to prevent reuse
-	if errors.Is(err, redis.Nil) {
-		return o.db.Set(ctx, key, true, keyTTL).Err()
-	}
-
-	return ErrFailedToValidateCode
+	return nil
 }
 
 // latestSecret returns the most recent versioned secret key

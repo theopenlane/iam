@@ -15,6 +15,10 @@ const (
 	UsernameKey       = "username"
 	EmailKey          = "email"
 	WebAuthnKey       = "webauthn"
+	// CreatedAtKey holds the unix time the session was first authenticated, used for the absolute timeout
+	CreatedAtKey = "createdAt"
+	// RenewedAtKey holds the unix time the current session id was issued, used for the renewal interval
+	RenewedAtKey = "renewedAt"
 )
 
 // Store is an interface that defines methods for managing sessions

@@ -32,7 +32,7 @@ func Middleware(config SessionConfig, skipper func(c *echo.Context) bool) echo.M
 			}
 
 			res.Before(func() {
-				refreshed, ok := config.writeRefreshedSession(c.Request().Context(), c.Response(), loaded.userID)
+				refreshed, ok := config.writeRefreshedSession(c.Request().Context(), c.Response(), loaded)
 				if !ok {
 					return
 				}

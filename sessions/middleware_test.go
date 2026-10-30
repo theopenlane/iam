@@ -427,3 +427,173 @@ type failingStoreSession struct {
 func (failingStoreSession) StoreSessionWithExpiration(context.Context, string, string, time.Duration) error {
 	return errStoreSession
 }
+
+// requestWithCraftedSession persists a session with the given timestamps and returns a request carrying its cookie
+func requestWithCraftedSession(t *testing.T, sc sessions.SessionConfig, sm sessions.Store[map[string]any], userID string, values map[string]any) (*http.Request, string) {
+	t.Helper()
+
+	id := sessions.GenerateSessionID()
+	values[sessions.UserIDKey] = userID
+
+	session := sm.New(sc.CookieConfig.Name)
+	session.Set(id, values)
+
+	rec := httptest.NewRecorder()
+	require.NoError(t, sm.Save(rec, session))
+	require.NoError(t, sc.RedisStore.StoreSessionWithExpiration(context.Background(), id, userID, time.Hour))
+
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+	for _, c := range rec.Result().Cookies() {
+		req.AddCookie(c)
+	}
+
+	return req, id
+}
+
+// cookieSessionValues returns the session map carried by a response cookie
+func cookieSessionValues(t *testing.T, sc sessions.SessionConfig, cookie *http.Cookie) map[string]any {
+	t.Helper()
+
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+	req.AddCookie(cookie)
+
+	session, err := sc.SessionManager.Get(req, sc.CookieConfig.Name)
+	require.NoError(t, err)
+
+	return sc.SessionManager.GetSessionDataFromCookie(session).(map[string]any)
+}
+
+func TestLoadAndSaveWithConfig_Lifecycle(t *testing.T) {
+	const userID = "user-123"
+
+	ok := func(c echo.Context) error { return c.String(http.StatusOK, "ok") }
+
+	t.Run("slides a recently renewed session without changing its id", func(t *testing.T) {
+		sc, _, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		req := requestWithSessionCookie(t, sc, userID)
+		id := sessionIDFromCookie(t, sc, req.Cookies()[0])
+
+		mr.FastForward(10 * time.Minute)
+
+		before := mr.TTL(id)
+
+		rec := httptest.NewRecorder()
+		require.NoError(t, sessions.LoadAndSaveWithConfig(sc)(ok)(echo.New().NewContext(req, rec)))
+
+		cookies := sessionCookies(rec, sc.CookieConfig.Name)
+		require.Len(t, cookies, 1)
+		assert.Equal(t, id, sessionIDFromCookie(t, sc, cookies[0]))
+		assert.Greater(t, mr.TTL(id), before)
+	})
+
+	t.Run("renews the session id after the renewal interval", func(t *testing.T) {
+		sc, sm, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		created := time.Now().Add(-time.Hour).Unix()
+		req, id := requestWithCraftedSession(t, sc, sm, userID, map[string]any{
+			sessions.CreatedAtKey: created,
+			sessions.RenewedAtKey: time.Now().Add(-sc.RenewalInterval - time.Minute).Unix(),
+		})
+
+		rec := httptest.NewRecorder()
+		require.NoError(t, sessions.LoadAndSaveWithConfig(sc)(ok)(echo.New().NewContext(req, rec)))
+
+		cookies := sessionCookies(rec, sc.CookieConfig.Name)
+		require.Len(t, cookies, 1)
+		assert.NotEqual(t, id, sessionIDFromCookie(t, sc, cookies[0]))
+
+		values := cookieSessionValues(t, sc, cookies[0])
+		assert.Equal(t, created, values[sessions.CreatedAtKey])
+		assert.Greater(t, values[sessions.RenewedAtKey], created)
+
+		assert.Positive(t, mr.TTL(id))
+		assert.LessOrEqual(t, mr.TTL(id), sc.RenewalGrace)
+
+		mr.FastForward(sc.RenewalGrace + time.Second)
+		assert.False(t, mr.Exists(id))
+	})
+
+	t.Run("renews on every request when the renewal interval is zero", func(t *testing.T) {
+		sc, _, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		sc.RenewalInterval = 0
+
+		req := requestWithSessionCookie(t, sc, userID)
+		id := sessionIDFromCookie(t, sc, req.Cookies()[0])
+
+		rec := httptest.NewRecorder()
+		require.NoError(t, sessions.LoadAndSaveWithConfig(sc)(ok)(echo.New().NewContext(req, rec)))
+
+		cookies := sessionCookies(rec, sc.CookieConfig.Name)
+		require.Len(t, cookies, 1)
+		assert.NotEqual(t, id, sessionIDFromCookie(t, sc, cookies[0]))
+	})
+
+	t.Run("rejects a session past its absolute timeout and deletes it", func(t *testing.T) {
+		sc, sm, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		req, id := requestWithCraftedSession(t, sc, sm, userID, map[string]any{
+			sessions.CreatedAtKey: time.Now().Add(-sc.AbsoluteTimeout - time.Minute).Unix(),
+			sessions.RenewedAtKey: time.Now().Unix(),
+		})
+
+		rec := httptest.NewRecorder()
+		err := sessions.LoadAndSaveWithConfig(sc)(ok)(echo.New().NewContext(req, rec))
+		assert.ErrorIs(t, err, sessions.ErrSessionExpired)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.False(t, mr.Exists(id))
+	})
+
+	t.Run("rejects a legacy session without a created time", func(t *testing.T) {
+		sc, sm, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		req, id := requestWithCraftedSession(t, sc, sm, userID, map[string]any{})
+
+		rec := httptest.NewRecorder()
+		err := sessions.LoadAndSaveWithConfig(sc)(ok)(echo.New().NewContext(req, rec))
+		assert.ErrorIs(t, err, sessions.ErrSessionExpired)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.False(t, mr.Exists(id))
+	})
+
+	t.Run("caps the store ttl at the absolute timeout", func(t *testing.T) {
+		sc, _, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		sc.AbsoluteTimeout = 10 * time.Minute
+
+		req := requestWithSessionCookie(t, sc, userID)
+		id := sessionIDFromCookie(t, sc, req.Cookies()[0])
+
+		assert.Positive(t, mr.TTL(id))
+		assert.LessOrEqual(t, mr.TTL(id), sc.AbsoluteTimeout)
+	})
+
+	t.Run("does not re-mint a session the handler destroyed", func(t *testing.T) {
+		sc, _, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		sc.RenewalInterval = 0
+
+		req := requestWithSessionCookie(t, sc, userID)
+		rec := httptest.NewRecorder()
+
+		err := sessions.LoadAndSaveWithConfig(sc)(func(c echo.Context) error {
+			require.NoError(t, sc.DestroySession(c.Request().Context(), c.Response(), c.Request()))
+
+			return c.NoContent(http.StatusNoContent)
+		})(echo.New().NewContext(req, rec))
+		require.NoError(t, err)
+
+		cookies := sessionCookies(rec, sc.CookieConfig.Name)
+		require.Len(t, cookies, 1)
+		assert.Negative(t, cookies[0].MaxAge)
+		assert.Empty(t, mr.Keys())
+	})
+}

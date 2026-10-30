@@ -5,6 +5,7 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
+	"math/big"
 	"strings"
 )
 
@@ -27,13 +28,17 @@ func BytesFromSample(length int, samples ...string) ([]byte, error) {
 			"[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 	}
 
-	bytes, err := Bytes(length)
-	if err != nil {
-		return nil, err
-	}
+	bytes := make([]byte, length)
+	sampleSize := big.NewInt(int64(len(sample)))
 
-	for i, b := range bytes {
-		bytes[i] = sample[int(b)%len(sample)]
+	for i := range bytes {
+		// rand.Int is uniform over the sample, unlike a modulo of a random byte
+		n, err := rand.Int(rand.Reader, sampleSize)
+		if err != nil {
+			return nil, err
+		}
+
+		bytes[i] = sample[n.Int64()]
 	}
 
 	return bytes, nil

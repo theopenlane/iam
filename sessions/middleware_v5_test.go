@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	echo "github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -106,4 +107,52 @@ func TestMiddlewareFallbackUserID(t *testing.T) {
 	stored, err := sc.RedisStore.GetSession(context.Background(), sessionIDFromCookie(t, sc, cookies[0]))
 	require.NoError(t, err)
 	assert.Equal(t, userID, stored)
+}
+
+func TestMiddlewareDoesNotRemintDestroyedSession(t *testing.T) {
+	sc, _, mr := newDestroyTestConfig(t)
+	defer mr.Close()
+
+	req := requestWithSessionCookie(t, sc, "user-123")
+
+	e := echo.New()
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	err := sessions.Middleware(sc, nil)(func(c *echo.Context) error {
+		require.NoError(t, sc.DestroySession(c.Request().Context(), c.Response(), c.Request()))
+
+		return c.NoContent(http.StatusNoContent)
+	})(c)
+	require.NoError(t, err)
+
+	cookies := sessionCookies(rec, sc.CookieConfig.Name)
+	require.Len(t, cookies, 1)
+	assert.Negative(t, cookies[0].MaxAge)
+	assert.Empty(t, mr.Keys())
+}
+
+func TestMiddlewareSlidesRecentSession(t *testing.T) {
+	sc, _, mr := newDestroyTestConfig(t)
+	defer mr.Close()
+
+	req := requestWithSessionCookie(t, sc, "user-123")
+	id := sessionIDFromCookie(t, sc, req.Cookies()[0])
+
+	mr.FastForward(10 * time.Minute)
+
+	before := mr.TTL(id)
+
+	rec := httptest.NewRecorder()
+	c := echo.New().NewContext(req, rec)
+
+	err := sessions.Middleware(sc, nil)(func(c *echo.Context) error {
+		return c.String(http.StatusOK, "ok")
+	})(c)
+	require.NoError(t, err)
+
+	cookies := sessionCookies(rec, sc.CookieConfig.Name)
+	require.Len(t, cookies, 1)
+	assert.Equal(t, id, sessionIDFromCookie(t, sc, cookies[0]))
+	assert.Greater(t, mr.TTL(id), before)
 }

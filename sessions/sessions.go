@@ -3,6 +3,7 @@ package sessions
 import (
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/theopenlane/utils/ulids"
 )
@@ -23,6 +24,12 @@ type Config struct {
 	HTTPOnly bool `json:"httponly" koanf:"httponly" default:"true"`
 	// SameSite indicates the SameSite attribute for the session cookie
 	SameSite string `json:"samesite" koanf:"samesite" default:"Strict"`
+	// AbsoluteTimeout is the maximum session lifetime from first authentication regardless of activity
+	AbsoluteTimeout time.Duration `json:"absolutetimeout" koanf:"absolutetimeout" default:"24h"`
+	// RenewalInterval is how often the session id is reissued while the session stays active
+	RenewalInterval time.Duration `json:"renewalinterval" koanf:"renewalinterval" default:"15m"`
+	// RenewalGrace is how long a superseded session id stays valid so in-flight requests still succeed
+	RenewalGrace time.Duration `json:"renewalgrace" koanf:"renewalgrace" default:"30s"`
 }
 
 // Session represents state values maintained in a sessions Store
