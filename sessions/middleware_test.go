@@ -596,4 +596,56 @@ func TestLoadAndSaveWithConfig_Lifecycle(t *testing.T) {
 		assert.Negative(t, cookies[0].MaxAge)
 		assert.Empty(t, mr.Keys())
 	})
+
+	t.Run("keeps the current session when the store rejects a reissue", func(t *testing.T) {
+		sc, sm, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		req, id := requestWithCraftedSession(t, sc, sm, userID, map[string]any{
+			sessions.CreatedAtKey: time.Now().Add(-time.Hour).Unix(),
+			sessions.RenewedAtKey: time.Now().Add(-sc.RenewalInterval - time.Minute).Unix(),
+		})
+		before := mr.TTL(id)
+
+		sc.RedisStore = failingStoreSession{sc.RedisStore}
+
+		rec := httptest.NewRecorder()
+
+		var err error
+
+		require.NotPanics(t, func() {
+			err = sessions.LoadAndSaveWithConfig(sc)(ok)(echo.New().NewContext(req, rec))
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Empty(t, sessionCookies(rec, sc.CookieConfig.Name))
+		assert.True(t, mr.Exists(id))
+		assert.Equal(t, before, mr.TTL(id))
+	})
+
+	t.Run("keeps the current session when the store rejects an idle extension", func(t *testing.T) {
+		sc, _, mr := newDestroyTestConfig(t)
+		defer mr.Close()
+
+		req := requestWithSessionCookie(t, sc, userID)
+		id := sessionIDFromCookie(t, sc, req.Cookies()[0])
+		before := mr.TTL(id)
+
+		sc.RedisStore = failingStoreSession{sc.RedisStore}
+
+		rec := httptest.NewRecorder()
+
+		var err error
+
+		require.NotPanics(t, func() {
+			err = sessions.LoadAndSaveWithConfig(sc)(ok)(echo.New().NewContext(req, rec))
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Empty(t, sessionCookies(rec, sc.CookieConfig.Name))
+		assert.True(t, mr.Exists(id))
+		assert.Equal(t, before, mr.TTL(id))
+	})
 }

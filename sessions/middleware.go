@@ -428,7 +428,7 @@ func (sc *SessionConfig) writeRefreshedSession(ctx context.Context, w http.Respo
 	if err != nil {
 		logx.FromContext(ctx).Error().Err(err).Msg("unable to create and store new session")
 
-		panic(err)
+		return ctx, false
 	}
 
 	// the superseded id stays valid only for in-flight requests, not for the remainder of its original ttl
