@@ -17,10 +17,12 @@ func StateHandler(config sessions.CookieConfig, success http.Handler) http.Handl
 	funk := func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
-		queryParams := req.URL.Query()
-		if queryParams.Get("state") != "" {
-			ctx = WithState(ctx, queryParams.Get("state"))
-		} else {
+		cookie, err := req.Cookie(config.Name)
+
+		switch {
+		case err == nil && cookie.Value != "":
+			ctx = WithState(ctx, cookie.Value)
+		default:
 			val, err := auth.GenerateOAuthState(32) //nolint:mnd
 			if err != nil {
 				ctx = WithError(ctx, ErrFailedToGenerateToken)

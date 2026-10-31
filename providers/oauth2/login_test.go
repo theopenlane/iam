@@ -12,6 +12,8 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/theopenlane/utils/testutils"
+
+	"github.com/theopenlane/iam/sessions"
 )
 
 const (
@@ -204,4 +206,56 @@ func TestTokenExchange(t *testing.T) {
 	ctx := WithState(context.Background(), "d4e5f6")
 	callbackHandler.ServeHTTP(w, req.WithContext(ctx))
 	assert.Equal(t, FailureHandlerCalled, w.Body.String())
+}
+
+func TestStateHandlerBindsStateToCookie(t *testing.T) {
+	cookieConfig := sessions.CookieConfig{Name: "oauth_state", Path: "/", MaxAge: 60, HTTPOnly: true, SameSite: http.SameSiteLaxMode}
+
+	t.Run("callback state must match the cookie, not the query", func(t *testing.T) {
+		success := testutils.AssertSuccessNotCalled(t)
+		failure := func(w http.ResponseWriter, req *http.Request) {
+			assert.Equal(t, ErrInvalidState, ErrorFromContext(req.Context()))
+			fmt.Fprint(w, FailureHandlerCalled)
+		}
+
+		handler := StateHandler(cookieConfig, CallbackHandler(&oauth2.Config{}, success, http.HandlerFunc(failure)))
+
+		// attacker-controlled state in the query with no cookie must not satisfy the check
+		w := httptest.NewRecorder()
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/?code=any_code&state=attacker", nil)
+		handler.ServeHTTP(w, req)
+		assert.Equal(t, FailureHandlerCalled, w.Body.String())
+	})
+
+	t.Run("state cookie issued on login is accepted on callback", func(t *testing.T) {
+		var issued string
+
+		capture := http.HandlerFunc(func(_ http.ResponseWriter, req *http.Request) {
+			state, err := StateFromContext(req.Context())
+			assert.NoError(t, err)
+
+			issued = state
+		})
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/login", nil)
+		StateHandler(cookieConfig, capture).ServeHTTP(w, req)
+
+		cookies := w.Result().Cookies() //nolint:bodyclose
+		assert.Len(t, cookies, 1)
+		assert.Equal(t, issued, cookies[0].Value)
+
+		server := NewAccessTokenServer(t, `{"access_token":"tok","token_type":"bearer"}`)
+		defer server.Close()
+
+		config := &oauth2.Config{Endpoint: oauth2.Endpoint{TokenURL: server.URL}}
+		success := func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, SuccessHandlerCalled) }
+		failure := testutils.AssertFailureNotCalled(t)
+
+		w = httptest.NewRecorder()
+		req = httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/callback?code=any_code&state="+issued, nil)
+		req.AddCookie(cookies[0])
+		StateHandler(cookieConfig, CallbackHandler(config, http.HandlerFunc(success), failure)).ServeHTTP(w, req)
+		assert.Equal(t, SuccessHandlerCalled, w.Body.String())
+	})
 }

@@ -16,7 +16,7 @@ var (
 	// ErrTokenMissingKid returns when the kid cannot be found in the header of the token
 	ErrTokenMissingKid = errors.New("token does not have kid in header")
 	// ErrFailedParsingKid returns when the kid could not be parsed
-	ErrFailedParsingKid = errors.New("could not parse kid: %s")
+	ErrFailedParsingKid = errors.New("could not parse kid")
 	// ErrUnknownSigningKey returns when the signing key fetched does not match the loaded managed keys
 	ErrUnknownSigningKey = errors.New("unknown signing key")
 	// ErrConfigIsInvalid returns when the token manager configuration is invalid

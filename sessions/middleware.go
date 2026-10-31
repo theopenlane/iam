@@ -3,15 +3,24 @@ package sessions
 import (
 	"context"
 	"errors"
+	"maps"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/samber/lo"
 	echo "github.com/theopenlane/echox"
 	"github.com/theopenlane/echox/middleware"
 	"github.com/theopenlane/logx"
 	"github.com/theopenlane/utils/rout"
+)
+
+const (
+	defaultAbsoluteTimeout = 24 * time.Hour
+	defaultRenewalInterval = 15 * time.Minute
+	defaultRenewalGrace    = 30 * time.Second
 )
 
 // SessionConfig is used to configure session management
@@ -31,6 +40,12 @@ type SessionConfig struct {
 	RedisClient *redis.Client
 	// FallbackUserID resolves the user to mint a session for when the request carries no valid one
 	FallbackUserID func(ctx context.Context) (string, bool)
+	// AbsoluteTimeout is the maximum session lifetime from first authentication regardless of activity
+	AbsoluteTimeout time.Duration
+	// RenewalInterval is how often the session id is reissued while the session stays active
+	RenewalInterval time.Duration
+	// RenewalGrace is how long a superseded session id stays valid so in-flight requests still succeed
+	RenewalGrace time.Duration
 }
 
 // Option allows users to optionally supply configuration to the session middleware.
@@ -41,6 +56,10 @@ func NewSessionConfig(sm Store[map[string]any], opts ...Option) (c SessionConfig
 	c = SessionConfig{
 		Skipper:        middleware.DefaultSkipper, // default skipper always returns false
 		SessionManager: sm,                        // session manager should always be provided
+
+		AbsoluteTimeout: defaultAbsoluteTimeout,
+		RenewalInterval: defaultRenewalInterval,
+		RenewalGrace:    defaultRenewalGrace,
 	}
 
 	for _, opt := range opts {
@@ -94,6 +113,27 @@ func WithMaxAge(maxAge int) Option {
 	}
 }
 
+// WithAbsoluteTimeout sets the maximum session lifetime from first authentication, defaults to 24 hours
+func WithAbsoluteTimeout(d time.Duration) Option {
+	return func(opts *SessionConfig) {
+		opts.AbsoluteTimeout = d
+	}
+}
+
+// WithRenewalInterval sets how often the session id is reissued while active, defaults to 15 minutes
+func WithRenewalInterval(d time.Duration) Option {
+	return func(opts *SessionConfig) {
+		opts.RenewalInterval = d
+	}
+}
+
+// WithRenewalGrace sets how long a superseded session id stays valid, defaults to 30 seconds
+func WithRenewalGrace(d time.Duration) Option {
+	return func(opts *SessionConfig) {
+		opts.RenewalGrace = d
+	}
+}
+
 // CreateAndStoreSession creates the session values with user ID and sets the cookie stores the session in
 // the persistent store (redis)
 func (sc *SessionConfig) CreateAndStoreSession(ctx context.Context, w http.ResponseWriter, userID string) (context.Context, error) {
@@ -107,14 +147,22 @@ func (sc *SessionConfig) CreateAndStoreSession(ctx context.Context, w http.Respo
 func (sc *SessionConfig) SaveAndStoreSession(ctx context.Context, w http.ResponseWriter, sessionMap map[string]any, userID string) (context.Context, error) {
 	session := sc.SessionManager.New(sc.CookieConfig.Name)
 	sessionID := GenerateSessionID()
+	now := time.Now()
+
+	sessionMap[RenewedAtKey] = now.Unix()
+
+	createdAt, ok := unixFromSessionData(sessionMap, CreatedAtKey)
+	if !ok {
+		createdAt = now
+		sessionMap[CreatedAtKey] = now.Unix()
+	}
 
 	session.Set(sessionID, sessionMap)
 
 	// Add session to context
 	c := session.addSessionDataToContext(ctx)
 
-	ttl := time.Duration(sc.CookieConfig.MaxAge * int(time.Second))
-	if err := sc.RedisStore.StoreSessionWithExpiration(c, sessionID, userID, ttl); err != nil {
+	if err := sc.RedisStore.StoreSessionWithExpiration(c, sessionID, userID, sc.sessionTTL(createdAt, now)); err != nil {
 		return c, err
 	}
 
@@ -201,7 +249,7 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 
 			if !loaded.created {
 				c.Response().Before(func() {
-					refreshed, ok := config.writeRefreshedSession(c.Request().Context(), c.Response(), loaded.userID)
+					refreshed, ok := config.writeRefreshedSession(c.Request().Context(), c.Response(), loaded)
 					if !ok {
 						return
 					}
@@ -215,18 +263,40 @@ func LoadAndSaveWithConfig(config SessionConfig) echo.MiddlewareFunc {
 	}
 }
 
-// loadedSession is a resolved session and whether it was minted on this request
+// loadedSession is a resolved session, how it was presented, and whether it was minted on this request
 type loadedSession struct {
-	ctx     context.Context
-	userID  string
-	created bool
+	ctx       context.Context
+	session   *Session[map[string]any]
+	values    map[string]any
+	userID    string
+	sessionID string
+	createdAt time.Time
+	renewedAt time.Time
+	created   bool
+}
+
+// sessionTTL is the shorter of the idle max age and the time left before the absolute timeout
+func (sc *SessionConfig) sessionTTL(createdAt, now time.Time) time.Duration {
+	return min(time.Duration(sc.CookieConfig.MaxAge)*time.Second, sc.AbsoluteTimeout-now.Sub(createdAt))
+}
+
+// unixFromSessionData reads an int64 unix seconds value from the session data
+func unixFromSessionData(data map[string]any, key string) (time.Time, bool) {
+	secs, ok := data[key].(int64)
+	if !ok {
+		return time.Time{}, false
+	}
+
+	return time.Unix(secs, 0), true
 }
 
 // loadSession resolves the session on the request, minting one via FallbackUserID when it is invalid
 func (sc *SessionConfig) loadSession(ctx context.Context, w http.ResponseWriter, r *http.Request) (loadedSession, error) {
-	session, userID, err := sc.requestSession(r)
+	loaded, err := sc.requestSession(r)
 	if err == nil {
-		return loadedSession{ctx: session.addSessionDataToContext(ctx), userID: userID}, nil
+		loaded.ctx = loaded.session.addSessionDataToContext(ctx)
+
+		return loaded, nil
 	}
 
 	if sc.FallbackUserID == nil {
@@ -253,8 +323,8 @@ func (sc *SessionConfig) loadSession(ctx context.Context, w http.ResponseWriter,
 }
 
 // requestSession resolves the session presented on the request and verifies it against the
-// persistent store, returning the session and the user id the store holds for it
-func (sc *SessionConfig) requestSession(r *http.Request) (*Session[map[string]any], string, error) {
+// persistent store and its absolute lifetime, returning the resolved session without ctx set
+func (sc *SessionConfig) requestSession(r *http.Request) (loadedSession, error) {
 	// get session from request cookies
 	session, err := sc.SessionManager.Get(r, sc.CookieConfig.Name)
 	if err != nil {
@@ -265,36 +335,59 @@ func (sc *SessionConfig) requestSession(r *http.Request) (*Session[map[string]an
 			logx.FromContext(r.Context()).Error().Err(err).Msg("unable to get session")
 		}
 
-		return nil, "", ErrInvalidSession
+		return loadedSession{}, ErrInvalidSession
 	}
 
 	// get the session id from the session data
 	sessionID := sc.SessionManager.GetSessionIDFromCookie(session)
-	sessionData := sc.SessionManager.GetSessionDataFromCookie(session)
+	values := sc.SessionManager.GetSessionDataFromCookie(session).(map[string]any)
 
 	// check session token on request matches cache
-	userIDFromCookie := sessionData.(map[string]any)[UserIDKey]
+	userIDFromCookie := values[UserIDKey]
 
 	// lookup userID in cache to ensure tokens match
 	userID, err := sc.RedisStore.GetSession(r.Context(), sessionID)
 	if err != nil {
 		logx.FromContext(r.Context()).Error().Err(err).Msg("unable to get session from store")
 
-		return nil, "", ErrInvalidSession
+		return loadedSession{}, ErrInvalidSession
 	}
 
 	if userIDFromCookie != userID {
 		logx.FromContext(r.Context()).Error().Interface("cookie", userIDFromCookie).Str("store", userID).Msg("sessions do not match")
 
-		return nil, "", ErrInvalidSession
+		return loadedSession{}, ErrInvalidSession
 	}
 
-	return session, userID, nil
+	// a missing created time (legacy cookie) is treated as expired
+	createdAt, ok := unixFromSessionData(values, CreatedAtKey)
+	now := time.Now()
+
+	if !ok || now.Sub(createdAt) >= sc.AbsoluteTimeout {
+		if err := sc.RedisStore.DeleteSession(r.Context(), sessionID); err != nil {
+			logx.FromContext(r.Context()).Error().Err(err).Msg("unable to delete expired session")
+		}
+
+		logx.FromContext(r.Context()).Debug().Msg("session reached its absolute lifetime")
+
+		return loadedSession{}, ErrSessionExpired
+	}
+
+	renewedAt, _ := unixFromSessionData(values, RenewedAtKey)
+
+	return loadedSession{
+		session:   session,
+		values:    values,
+		userID:    userID,
+		sessionID: sessionID,
+		createdAt: createdAt,
+		renewedAt: renewedAt,
+	}, nil
 }
 
-// writeRefreshedSession refreshes and saves the session cookie and store entry unless the request
-// context is already cancelled, returning the refreshed context and whether a refresh occurred
-func (sc *SessionConfig) writeRefreshedSession(ctx context.Context, w http.ResponseWriter, userID string) (context.Context, bool) {
+// writeRefreshedSession slides the idle deadline of the presented session and reissues its id once the renewal
+// interval has elapsed; it is skipped when the context is cancelled or the handler already set the session cookie
+func (sc *SessionConfig) writeRefreshedSession(ctx context.Context, w http.ResponseWriter, loaded loadedSession) (context.Context, bool) {
 	// do not write session/cookie if context is cancelled
 	select {
 	case <-ctx.Done():
@@ -305,17 +398,54 @@ func (sc *SessionConfig) writeRefreshedSession(ctx context.Context, w http.Respo
 		// context is still active, proceed to write session/cookie
 	}
 
-	// refresh and save session cookie
-	refreshed, err := sc.CreateAndStoreSession(ctx, w, userID)
+	if responseSetsCookie(w, sc.CookieConfig.Name) {
+		logx.FromContext(ctx).Debug().Msg("handler already set the session cookie, skipping session refresh")
+
+		return ctx, false
+	}
+
+	now := time.Now()
+
+	if now.Sub(loaded.renewedAt) < sc.RenewalInterval {
+		if err := sc.RedisStore.StoreSessionWithExpiration(ctx, loaded.sessionID, loaded.userID, sc.sessionTTL(loaded.createdAt, now)); err != nil {
+			logx.FromContext(ctx).Error().Err(err).Msg("unable to extend session idle deadline")
+
+			return ctx, false
+		}
+
+		if err := sc.SessionManager.Save(w, loaded.session); err != nil {
+			logx.FromContext(ctx).Error().Err(err).Msg("unable to resend session cookie")
+
+			return ctx, false
+		}
+
+		markSessionCookieResponse(w)
+
+		return ctx, false
+	}
+
+	refreshed, err := sc.SaveAndStoreSession(ctx, w, maps.Clone(loaded.values), loaded.userID)
 	if err != nil {
 		logx.FromContext(ctx).Error().Err(err).Msg("unable to create and store new session")
 
 		panic(err)
 	}
 
+	// the superseded id stays valid only for in-flight requests, not for the remainder of its original ttl
+	if err := sc.RedisStore.StoreSessionWithExpiration(ctx, loaded.sessionID, loaded.userID, sc.RenewalGrace); err != nil {
+		logx.FromContext(ctx).Error().Err(err).Msg("unable to retire superseded session")
+	}
+
 	markSessionCookieResponse(w)
 
 	return refreshed, true
+}
+
+// responseSetsCookie reports whether the response already carries a Set-Cookie header for the named cookie
+func responseSetsCookie(w http.ResponseWriter, name string) bool {
+	return lo.SomeBy(w.Header().Values("Set-Cookie"), func(v string) bool {
+		return strings.HasPrefix(v, name+"=")
+	})
 }
 
 // markSessionCookieResponse adds the headers that keep a response carrying a session cookie out of shared caches

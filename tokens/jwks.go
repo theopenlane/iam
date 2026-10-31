@@ -52,7 +52,12 @@ func (v *JWKSValidator) keyFunc(token *jwt.Token) (publicKey any, err error) {
 		return nil, ErrTokenMissingKid
 	}
 
-	key, found := v.keys.LookupKeyID(kid.(string))
+	kidStr, ok := kid.(string)
+	if !ok {
+		return nil, ErrFailedParsingKid
+	}
+
+	key, found := v.keys.LookupKeyID(kidStr)
 	if !found {
 		return nil, ErrUnknownSigningKey
 	}

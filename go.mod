@@ -4,19 +4,19 @@ go 1.27.2
 
 require (
 	entgo.io/ent v0.14.6
-	github.com/99designs/gqlgen v0.17.97
-	github.com/alicebob/miniredis/v2 v2.39.0
-	github.com/brianvoe/gofakeit/v7 v7.18.0
+	github.com/99designs/gqlgen v0.17.98
+	github.com/alicebob/miniredis/v2 v2.40.0
+	github.com/brianvoe/gofakeit/v7 v7.18.1
 	github.com/go-webauthn/webauthn v0.18.2
 	github.com/golang-jwt/jwt/v5 v5.3.1
-	github.com/google/go-github/v91 v91.0.0
+	github.com/google/go-github/v93 v93.0.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/gqlgo/gqlgenc v0.44.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jwx-go/jwkfetch/v4 v4.0.4
-	github.com/labstack/echo/v5 v5.4.0
+	github.com/labstack/echo/v5 v5.4.1
 	github.com/lestrrat-go/httprc/v3 v3.0.6
-	github.com/lestrrat-go/jwx/v4 v4.5.0
+	github.com/lestrrat-go/jwx/v4 v4.6.0
 	github.com/moby/moby/api v1.56.1
 	github.com/oklog/ulid/v2 v2.1.2
 	github.com/openfga/go-sdk v0.8.3
@@ -32,14 +32,14 @@ require (
 	github.com/testcontainers/testcontainers-go v0.44.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.44.0
 	github.com/theopenlane/echox v0.3.0
-	github.com/theopenlane/entx v0.36.2
-	github.com/theopenlane/logx v0.1.0
-	github.com/theopenlane/utils v0.7.3
+	github.com/theopenlane/entx v0.36.3
+	github.com/theopenlane/logx v0.1.1
+	github.com/theopenlane/utils v0.7.4
 	github.com/urfave/cli/v3 v3.14.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/oauth2 v0.37.0
 	golang.org/x/tools v0.52.0
-	google.golang.org/api v0.305.0
+	google.golang.org/api v0.308.0
 	google.golang.org/protobuf v1.36.12
 )
 
@@ -155,9 +155,8 @@ require (
 	github.com/tklauser/go-sysconf v0.4.0 // indirect
 	github.com/tklauser/numcpus v0.12.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fastjson v1.6.10 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/vektah/gqlparser/v2 v2.5.63 // indirect
+	github.com/vektah/gqlparser/v2 v2.5.64 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect

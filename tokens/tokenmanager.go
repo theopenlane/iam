@@ -10,6 +10,7 @@ import (
 
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/oklog/ulid/v2"
+	"github.com/samber/lo"
 	"github.com/theopenlane/logx"
 	"github.com/theopenlane/utils/cache"
 	"github.com/theopenlane/utils/ulids"
@@ -254,6 +255,22 @@ func (tm *TokenManager) ValidateImpersonationToken(ctx context.Context, tokenStr
 		// swallow this error intentionally, we don't want to block validation if blacklist check fails - auth should still succeed
 		if err != nil {
 			logx.FromContext(ctx).Warn().Msgf("failed to check blacklist for session %s: %v", claims.SessionID, err)
+		}
+	}
+
+	// a suspended impersonator or target user invalidates the token
+	if tm.blacklist != nil {
+		for _, userID := range lo.Compact([]string{claims.UserID, claims.ImpersonatorID}) {
+			suspended, err := tm.blacklist.IsUserRevoked(ctx, userID)
+			if suspended {
+				logx.FromContext(ctx).Warn().Str("user_id", userID).Msg("impersonation token user is suspended")
+
+				return nil, ErrTokenInvalid
+			}
+
+			if err != nil {
+				logx.FromContext(ctx).Warn().Err(err).Str("user_id", userID).Msg("failed to check user suspension status")
+			}
 		}
 	}
 
