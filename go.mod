@@ -1,6 +1,6 @@
 module github.com/theopenlane/iam
 
-go 1.27.2
+go 1.27.3
 
 require (
 	entgo.io/ent v0.14.6
@@ -14,7 +14,7 @@ require (
 	github.com/gqlgo/gqlgenc v0.44.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jwx-go/jwkfetch/v4 v4.0.4
-	github.com/labstack/echo/v5 v5.4.1
+	github.com/labstack/echo/v5 v5.4.2
 	github.com/lestrrat-go/httprc/v3 v3.0.6
 	github.com/lestrrat-go/jwx/v4 v4.6.0
 	github.com/moby/moby/api v1.56.1
