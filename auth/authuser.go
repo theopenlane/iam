@@ -224,6 +224,16 @@ func IsAnonymousFromContext(ctx context.Context) bool {
 	return caller.IsAnonymous()
 }
 
+// IsTFAEnrollmentRequiredFromContext reports whether the caller in context holds an enrolment-only session
+func IsTFAEnrollmentRequiredFromContext(ctx context.Context) bool {
+	caller, ok := CallerFromContext(ctx)
+	if !ok {
+		return false
+	}
+
+	return caller.TFAEnrollmentRequired
+}
+
 // IsQuestionnaireFromContext reports whether ctx carries an anonymous questionnaire caller
 func IsQuestionnaireFromContext(ctx context.Context) bool {
 	caller, ok := CallerFromContext(ctx)

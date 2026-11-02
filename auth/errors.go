@@ -37,4 +37,8 @@ var (
 	ErrUnauthorizedOrg = errors.New("organization is not authorized for the current caller")
 	// ErrRandomStateGeneration is returned when random OAuth state generation fails
 	ErrRandomStateGeneration = errors.New("oauth state generation failed")
+	// ErrSecondFactorRequired is returned when a login must complete two factor validation before a session is issued
+	ErrSecondFactorRequired = errors.New("second factor required")
+	// ErrTFAEnrollmentRequired is returned when the organization enforces two factor authentication and the user has not enrolled
+	ErrTFAEnrollmentRequired = errors.New("two factor enrollment required")
 )

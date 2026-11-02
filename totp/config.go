@@ -1,5 +1,7 @@
 package totp
 
+import "time"
+
 const (
 	defaultLength             = 6
 	defaultRecoveryCodeCount  = 16
@@ -22,6 +24,10 @@ type Config struct {
 	RecoveryCodeCount int `json:"recoverycodecount" koanf:"recoverycodecount" default:"16"`
 	// RecoveryCodeLength is the length of a recovery code
 	RecoveryCodeLength int `json:"recoverycodelength" koanf:"recoverycodelength" default:"8"`
+	// MaxFailedAttempts is the number of failed TOTP codes allowed per user within the failure window
+	MaxFailedAttempts int `json:"maxfailedattempts" koanf:"maxfailedattempts" default:"5"`
+	// FailureWindow is how long failed TOTP attempts are counted before the counter resets
+	FailureWindow time.Duration `json:"failurewindow" koanf:"failurewindow" default:"15m"`
 }
 
 // NewOTP returns a new OTP validator
@@ -31,6 +37,8 @@ func NewOTP(options ...ConfigOption) Manager {
 		ttl:                codePeriod,
 		recoveryCodeCount:  defaultRecoveryCodeCount,
 		recoveryCodeLength: defaultRecoveryCodeLength,
+		maxFailedAttempts:  defaultMaxFailedAttempts,
+		failureWindow:      defaultFailureWindow,
 	}
 
 	for _, opt := range options {
@@ -68,6 +76,24 @@ func WithRecoveryCodeCount(count int) ConfigOption {
 func WithRecoveryCodeLength(length int) ConfigOption {
 	return func(s *OTP) {
 		s.recoveryCodeLength = length
+	}
+}
+
+// WithMaxFailedAttempts configures the service with the number of failed TOTP codes allowed per user within the failure window; non-positive values keep the default
+func WithMaxFailedAttempts(count int) ConfigOption {
+	return func(s *OTP) {
+		if count > 0 {
+			s.maxFailedAttempts = count
+		}
+	}
+}
+
+// WithFailureWindow configures the service with how long failed TOTP attempts are counted; non-positive values keep the default
+func WithFailureWindow(window time.Duration) ConfigOption {
+	return func(s *OTP) {
+		if window > 0 {
+			s.failureWindow = window
+		}
 	}
 }
 

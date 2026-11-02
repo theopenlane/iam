@@ -65,6 +65,9 @@ var (
 	// ErrIncorrectCodeProvided is an error representing an incorrect code provided
 	ErrIncorrectCodeProvided = errors.New("incorrect code provided")
 
+	// ErrTooManyFailedAttempts is an error representing too many failed code attempts within the failure window
+	ErrTooManyFailedAttempts = errors.New("too many failed attempts, try again later")
+
 	// ErrCannotEncryptSecret is an error representing a failure to encrypt secret
 	ErrCannotEncryptSecret = errors.New("cannot encrypt secret")
 

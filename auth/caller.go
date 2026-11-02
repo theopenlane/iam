@@ -26,6 +26,8 @@ type Caller struct {
 	OrganizationRole OrganizationRoleType `json:"organization_role,omitempty"`
 	// ActiveSubscription reports whether the active org has a current subscription
 	ActiveSubscription bool `json:"active_subscription,omitempty"`
+	// TFAEnrollmentRequired is set when the session may only be used to enroll in two factor authentication
+	TFAEnrollmentRequired bool `json:"tfa_enrollment_required,omitempty"`
 	// Capabilities is the set of bypass flags granted to this caller
 	Capabilities Capability `json:"capabilities,omitempty"`
 	// Impersonation is set when this Caller is acting on behalf of another user
@@ -106,9 +108,10 @@ func (c *Caller) IsAnonymous() bool {
 }
 
 // IsInteractiveUser reports whether this Caller is a user signed in with their own session,
-// rather than an API token, personal access token, anonymous visitor, or impersonation session
+// rather than an API token, personal access token, anonymous visitor, impersonation session, or
+// enrollment-only session
 func (c *Caller) IsInteractiveUser() bool {
-	return c.AuthenticationType == JWTAuthentication && !c.IsAnonymous() && !c.IsImpersonated()
+	return c.AuthenticationType == JWTAuthentication && !c.IsAnonymous() && !c.IsImpersonated() && !c.TFAEnrollmentRequired
 }
 
 // InteractiveUserCallerFromContext returns the caller in context when it is a user signed in with their own session

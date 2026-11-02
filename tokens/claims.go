@@ -31,6 +31,8 @@ type Claims struct {
 	Modules []string `json:"modules,omitempty"`
 	// Email is the email address of the user
 	Email string `json:"email,omitempty"`
+	// TFAEnrollmentRequired marks a session that may only be used to enroll in two factor authentication
+	TFAEnrollmentRequired bool `json:"tfa_enrollment_required,omitempty"`
 	// AssessmentID is the id of the questionnaire to fill
 	AssessmentID string `json:"assessment_id,omitempty"`
 	// AssessmentPreview marks the token as a sender preview (is_test) so the questionnaire

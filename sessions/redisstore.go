@@ -15,6 +15,8 @@ type PersistentStore interface {
 	StoreSession(ctx context.Context, key, value string) error
 	StoreSessionWithExpiration(ctx context.Context, key, value string, ttl time.Duration) error
 	DeleteSession(ctx context.Context, key string) error
+	// TakeSession returns the value for the key and deletes it in one atomic operation
+	TakeSession(ctx context.Context, key string) (string, error)
 }
 
 var _ PersistentStore = &persistentStore{}
@@ -71,4 +73,12 @@ func (s *persistentStore) DeleteSession(ctx context.Context, userID string) erro
 	defer s.mu.Unlock()
 
 	return s.client.Del(ctx, userID).Err()
+}
+
+// TakeSession returns the value for the key and deletes it in one atomic operation
+func (s *persistentStore) TakeSession(ctx context.Context, key string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.client.GetDel(ctx, key).Result()
 }
