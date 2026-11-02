@@ -9,6 +9,7 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -25,6 +26,10 @@ import (
 const (
 	// keyTTL covers the full TOTP validation window (period * (2*skew + 1)) so a code cannot be replayed within it
 	keyTTL = 90 * time.Second
+	// defaultMaxFailedAttempts is the number of failed TOTP codes allowed per user within the failure window
+	defaultMaxFailedAttempts = 5
+	// defaultFailureWindow is how long failed TOTP attempts are counted before the counter resets
+	defaultFailureWindow = 15 * time.Minute
 	// otpExpiration is the expiration time for an OTP code
 	otpExpiration = 5 * time.Minute
 	// numericCode is a string of numbers
@@ -36,6 +41,10 @@ const (
 // otpRedis is a minimal interface for go-redis with OTP codes
 type otpRedis interface {
 	SetNX(ctx context.Context, key string, value any, expiration time.Duration) *redis.BoolCmd
+	Get(ctx context.Context, key string) *redis.StringCmd
+	Incr(ctx context.Context, key string) *redis.IntCmd
+	Expire(ctx context.Context, key string, expiration time.Duration) *redis.BoolCmd
+	Del(ctx context.Context, keys ...string) *redis.IntCmd
 	Close() error
 }
 
@@ -63,6 +72,8 @@ type OTP struct {
 	db                 otpRedis
 	recoveryCodeCount  int
 	recoveryCodeLength int
+	maxFailedAttempts  int
+	failureWindow      time.Duration
 }
 
 // OTPCode creates a random code and hash
@@ -166,28 +177,58 @@ func (o *OTP) ValidateOTP(code string, hash string) error {
 }
 
 // ValidateTOTP checks if a User's TOTP is valid - first validate the TOTP against the user's secret key
-// and then atomically record the code in redis for the validation window so it cannot be reused
+// and then atomically record the code in redis for the validation window so it cannot be reused;
+// it also enforces a per user failed attempt limit when redis is configured
 func (o *OTP) ValidateTOTP(ctx context.Context, user *User, code string) error {
 	secret, err := o.decrypt(user.TFASecret)
 	if err != nil {
 		return ErrCannotDecryptSecret
 	}
 
-	if !totp.Validate(code, secret) {
-		return ErrIncorrectCodeProvided
-	}
-
-	key := fmt.Sprintf("%s_%s", user.ID, code)
-
 	// redis is not configured, we can't invalidate the code for future checks
 	if o.db == nil {
 		log.Debug().Msg("redis is not configured, code will not be invalidated")
 
+		if !totp.Validate(code, secret) {
+			return ErrIncorrectCodeProvided
+		}
+
 		return nil
 	}
 
+	failuresKey := fmt.Sprintf("%s_failures", user.ID)
+	replayKey := fmt.Sprintf("%s_%s", user.ID, code)
+
+	failures, err := o.db.Get(ctx, failuresKey).Int()
+	if err != nil && !errors.Is(err, redis.Nil) {
+		return ErrFailedToValidateCode
+	}
+
+	if failures >= o.maxFailedAttempts {
+		return ErrTooManyFailedAttempts
+	}
+
+	if !totp.Validate(code, secret) {
+		count, err := o.db.Incr(ctx, failuresKey).Result()
+		if err != nil {
+			return ErrFailedToValidateCode
+		}
+
+		if count == 1 {
+			if err := o.db.Expire(ctx, failuresKey, o.failureWindow).Err(); err != nil {
+				return ErrFailedToValidateCode
+			}
+		}
+
+		return ErrIncorrectCodeProvided
+	}
+
+	if err := o.db.Del(ctx, failuresKey).Err(); err != nil {
+		return ErrFailedToValidateCode
+	}
+
 	// atomically claim the code for the validation window; a second claim is a replay
-	claimed, err := o.db.SetNX(ctx, key, true, keyTTL).Result()
+	claimed, err := o.db.SetNX(ctx, replayKey, true, keyTTL).Result()
 	if err != nil {
 		return ErrFailedToValidateCode
 	}
