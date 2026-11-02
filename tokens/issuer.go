@@ -239,16 +239,15 @@ func (i *Issuer) CreateRefreshToken(accessToken *jwt.Token) (*jwt.Token, error) 
 	audience = append(audience, i.RefreshAudience())
 
 	claims := &Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        accessClaims.ID,
-			Audience:  audience,
-			Issuer:    accessClaims.Issuer,
-			Subject:   accessClaims.Subject,
-			IssuedAt:  accessClaims.IssuedAt,
-			NotBefore: jwt.NewNumericDate(accessClaims.ExpiresAt.Add(i.conf.RefreshOverlap)),
-			ExpiresAt: jwt.NewNumericDate(accessClaims.IssuedAt.Add(i.conf.RefreshDuration)),
-		},
-		OrgID: accessClaims.OrgID,
+		ID:                    accessClaims.ID,
+		Audience:              audience,
+		Issuer:                accessClaims.Issuer,
+		Subject:               accessClaims.Subject,
+		IssuedAt:              accessClaims.IssuedAt,
+		NotBefore:             jwt.NewNumericDate(accessClaims.ExpiresAt.Add(i.conf.RefreshOverlap)),
+		ExpiresAt:             jwt.NewNumericDate(accessClaims.IssuedAt.Add(i.conf.RefreshDuration)),
+		OrgID:                 accessClaims.OrgID,
+		TFAEnrollmentRequired: accessClaims.TFAEnrollmentRequired,
 	}
 
 	return jwt.NewWithClaims(i.signingMethod(), claims), nil
