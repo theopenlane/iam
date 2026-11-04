@@ -18,7 +18,7 @@ var qrCodeBase64 = ""
 
 func GenerateTOTP(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles("./templates/totp.html"))
-	context := map[string]interface{}{}
+	context := map[string]any{}
 
 	dataAction := r.FormValue("data_action")
 	issuer := r.FormValue("issuer")

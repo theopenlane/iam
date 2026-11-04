@@ -5,7 +5,6 @@ import (
 
 	openfga "github.com/openfga/go-sdk"
 	typesystem "github.com/openfga/openfga/pkg/typesystem"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +18,7 @@ func TestNewDirectRelation(t *testing.T) {
 			name: "new admin role",
 			role: "admin",
 			expectedRes: openfga.Userset{
-				This: &map[string]interface{}{
+				This: &map[string]any{
 					"admin": typesystem.This(),
 				},
 			},
@@ -45,7 +44,7 @@ func TestNewComputedUsersetRelation(t *testing.T) {
 			relation: "meow",
 			expectedRes: openfga.Userset{
 				ComputedUserset: &openfga.ObjectRelation{
-					Relation: lo.ToPtr("meow"),
+					Relation: new("meow"),
 				},
 			},
 		},
@@ -74,10 +73,10 @@ func TestNewTupleUsersetRelation(t *testing.T) {
 			expectedRes: openfga.Userset{
 				TupleToUserset: &openfga.TupleToUserset{
 					Tupleset: openfga.ObjectRelation{
-						Relation: lo.ToPtr("fromRelation"),
+						Relation: new("fromRelation"),
 					},
 					ComputedUserset: openfga.ObjectRelation{
-						Relation: lo.ToPtr("relation"),
+						Relation: new("relation"),
 					},
 				},
 			},
@@ -154,7 +153,7 @@ func TestCreateUsersets(t *testing.T) {
 			},
 			expectedUses: []openfga.Userset{
 				{
-					This: &map[string]interface{}{
+					This: &map[string]any{
 						"admin": typesystem.This(),
 					},
 				},
@@ -174,10 +173,10 @@ func TestCreateUsersets(t *testing.T) {
 				{
 					TupleToUserset: &openfga.TupleToUserset{
 						Tupleset: openfga.ObjectRelation{
-							Relation: lo.ToPtr("fromRelation"),
+							Relation: new("fromRelation"),
 						},
 						ComputedUserset: openfga.ObjectRelation{
-							Relation: lo.ToPtr("relation"),
+							Relation: new("relation"),
 						},
 					},
 				},
@@ -195,7 +194,7 @@ func TestCreateUsersets(t *testing.T) {
 			expectedUses: []openfga.Userset{
 				{
 					ComputedUserset: &openfga.ObjectRelation{
-						Relation: lo.ToPtr("relation"),
+						Relation: new("relation"),
 					},
 				},
 			},
@@ -216,11 +215,11 @@ func TestCreateUsersets(t *testing.T) {
 			expectedUses: []openfga.Userset{
 				{
 					ComputedUserset: &openfga.ObjectRelation{
-						Relation: lo.ToPtr("relation"),
+						Relation: new("relation"),
 					},
 				},
 				{
-					This: &map[string]interface{}{
+					This: &map[string]any{
 						"user": typesystem.This(),
 					},
 				},
@@ -268,13 +267,13 @@ func TestGenerateUserset(t *testing.T) {
 				Intersection: &openfga.Usersets{
 					Child: []openfga.Userset{
 						{
-							This: &map[string]interface{}{
+							This: &map[string]any{
 								"admin": typesystem.This(),
 							},
 						},
 						{
 							ComputedUserset: &openfga.ObjectRelation{
-								Relation: lo.ToPtr("member"),
+								Relation: new("member"),
 							},
 						},
 					},
@@ -311,16 +310,16 @@ func TestGenerateUserset(t *testing.T) {
 						{
 							TupleToUserset: &openfga.TupleToUserset{
 								Tupleset: openfga.ObjectRelation{
-									Relation: lo.ToPtr("fromRelation"),
+									Relation: new("fromRelation"),
 								},
 								ComputedUserset: openfga.ObjectRelation{
-									Relation: lo.ToPtr("relation"),
+									Relation: new("relation"),
 								},
 							},
 						},
 						{
 							ComputedUserset: &openfga.ObjectRelation{
-								Relation: lo.ToPtr("member"),
+								Relation: new("member"),
 							},
 						},
 					},
@@ -345,7 +344,7 @@ func TestGenerateUserset(t *testing.T) {
 			relationCombination: "",
 			expectedUserset: openfga.Userset{
 				ComputedUserset: &openfga.ObjectRelation{
-					Relation: lo.ToPtr("relation"),
+					Relation: new("relation"),
 				},
 			},
 			expectedMetadata: &openfga.Metadata{
@@ -374,11 +373,11 @@ func TestGenerateUserset(t *testing.T) {
 					Child: []openfga.Userset{
 						{
 							ComputedUserset: &openfga.ObjectRelation{
-								Relation: lo.ToPtr("relation"),
+								Relation: new("relation"),
 							},
 						},
 						{
-							This: &map[string]interface{}{
+							This: &map[string]any{
 								"user": typesystem.This(),
 							},
 						},

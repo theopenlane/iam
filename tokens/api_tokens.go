@@ -477,12 +477,12 @@ func buildOpaqueToken(cfg APITokenConfig, tokenID ulid.ULID, secret string) stri
 
 // splitStatusAndSecret divides the optional status prefix from the secret payload in environment values
 func splitStatusAndSecret(raw string) (string, string) {
-	idx := strings.Index(raw, statusSecretDelimiter)
-	if idx == -1 {
+	before, after, ok := strings.Cut(raw, statusSecretDelimiter)
+	if !ok {
 		return "", raw
 	}
 
-	return strings.TrimSpace(raw[:idx]), raw[idx+1:]
+	return strings.TrimSpace(before), after
 }
 
 // parseEnvKey converts a prefixed environment variable into an API token key definition

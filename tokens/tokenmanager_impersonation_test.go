@@ -325,12 +325,10 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 			setupFunc: func() string {
 				// Create claims without type
 				claims := &tokens.ImpersonationClaims{
-					RegisteredClaims: jwt.RegisteredClaims{
-						IssuedAt:  jwt.NewNumericDate(time.Now()),
-						ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
-						Issuer:    tm.Config().Issuer,
-						Audience:  jwt.ClaimStrings{tm.Config().Audience},
-					},
+					IssuedAt:       jwt.NewNumericDate(time.Now()),
+					ExpiresAt:      jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+					Issuer:         tm.Config().Issuer,
+					Audience:       jwt.ClaimStrings{tm.Config().Audience},
 					ImpersonatorID: "test",
 					UserID:         "test",
 					// Type is missing
@@ -351,14 +349,12 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 			name: "token missing impersonator ID",
 			setupFunc: func() string {
 				claims := &tokens.ImpersonationClaims{
-					RegisteredClaims: jwt.RegisteredClaims{
-						IssuedAt:  jwt.NewNumericDate(time.Now()),
-						ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
-						Issuer:    tm.Config().Issuer,
-						Audience:  jwt.ClaimStrings{tm.Config().Audience},
-					},
-					Type:   "support",
-					UserID: "test",
+					IssuedAt:  jwt.NewNumericDate(time.Now()),
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+					Issuer:    tm.Config().Issuer,
+					Audience:  jwt.ClaimStrings{tm.Config().Audience},
+					Type:      "support",
+					UserID:    "test",
 					// ImpersonatorID is missing
 				}
 
@@ -377,12 +373,10 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 			name: "token missing target user ID",
 			setupFunc: func() string {
 				claims := &tokens.ImpersonationClaims{
-					RegisteredClaims: jwt.RegisteredClaims{
-						IssuedAt:  jwt.NewNumericDate(time.Now()),
-						ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
-						Issuer:    tm.Config().Issuer,
-						Audience:  jwt.ClaimStrings{tm.Config().Audience},
-					},
+					IssuedAt:       jwt.NewNumericDate(time.Now()),
+					ExpiresAt:      jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+					Issuer:         tm.Config().Issuer,
+					Audience:       jwt.ClaimStrings{tm.Config().Audience},
 					Type:           "support",
 					ImpersonatorID: "test",
 					// UserID is missing
@@ -403,12 +397,10 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 			name: "token with invalid audience",
 			setupFunc: func() string {
 				claims := &tokens.ImpersonationClaims{
-					RegisteredClaims: jwt.RegisteredClaims{
-						IssuedAt:  jwt.NewNumericDate(time.Now()),
-						ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
-						Issuer:    tm.Config().Issuer,
-						Audience:  jwt.ClaimStrings{"https://wrong.example.com"},
-					},
+					IssuedAt:       jwt.NewNumericDate(time.Now()),
+					ExpiresAt:      jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+					Issuer:         tm.Config().Issuer,
+					Audience:       jwt.ClaimStrings{"https://wrong.example.com"},
 					Type:           "support",
 					ImpersonatorID: "test",
 					UserID:         "test",
@@ -429,12 +421,10 @@ func TestTokenManager_ValidateImpersonationToken(t *testing.T) {
 			name: "token with invalid issuer",
 			setupFunc: func() string {
 				claims := &tokens.ImpersonationClaims{
-					RegisteredClaims: jwt.RegisteredClaims{
-						IssuedAt:  jwt.NewNumericDate(time.Now()),
-						ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
-						Issuer:    "https://wrong-issuer.example.com",
-						Audience:  jwt.ClaimStrings{tm.Config().Audience},
-					},
+					IssuedAt:       jwt.NewNumericDate(time.Now()),
+					ExpiresAt:      jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+					Issuer:         "https://wrong-issuer.example.com",
+					Audience:       jwt.ClaimStrings{tm.Config().Audience},
 					Type:           "support",
 					ImpersonatorID: "test",
 					UserID:         "test",

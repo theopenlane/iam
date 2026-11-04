@@ -105,7 +105,7 @@ func hasCreateID(val any) bool {
 // `entgql.Mutations(entgql.MutationCreate(), entgql.MutationUpdate()),`
 // on an ent schema
 func hasMutationInputSet(val any) bool {
-	annotation, ok := val.(map[string]interface{})
+	annotation, ok := val.(map[string]any)
 	if !ok {
 		return false
 	}

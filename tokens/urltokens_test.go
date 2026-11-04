@@ -37,9 +37,7 @@ func TestVerificationToken(t *testing.T) {
 
 	// Verification should fail if the token is missing an email address
 	verify := &tokens.VerificationToken{
-		SigningInfo: tokens.SigningInfo{
-			ExpiresAt: time.Now().AddDate(0, 0, 7),
-		},
+		ExpiresAt: time.Now().AddDate(0, 0, 7),
 	}
 	require.ErrorIs(t, verify.Verify(signature, secret), tokens.ErrTokenMissingEmail, "expected error when token is missing email address")
 
@@ -107,10 +105,8 @@ func TestResetToken(t *testing.T) {
 	t.Run("Token Expired", func(t *testing.T) {
 		// Token that is expired should be an error
 		token := &tokens.ResetToken{
-			SigningInfo: tokens.SigningInfo{
-				ExpiresAt: time.Now().AddDate(0, 0, -1),
-			},
-			UserID: ulids.New(),
+			ExpiresAt: time.Now().AddDate(0, 0, -1),
+			UserID:    ulids.New(),
 		}
 		require.ErrorIs(t, token.Verify("", nil), tokens.ErrTokenExpired, "expected error when token is expired")
 	})
@@ -201,11 +197,9 @@ func TestInviteToken(t *testing.T) {
 	t.Run("Token Expired", func(t *testing.T) {
 		// Token that is expired should be an error
 		token := &tokens.OrgInviteToken{
-			SigningInfo: tokens.SigningInfo{
-				ExpiresAt: time.Now().AddDate(0, 0, -1),
-			},
-			OrgID: ulids.New(),
-			Email: rusty,
+			ExpiresAt: time.Now().AddDate(0, 0, -1),
+			OrgID:     ulids.New(),
+			Email:     rusty,
 		}
 		require.ErrorIs(t, token.Verify("", nil), tokens.ErrTokenExpired, "expected error when token is expired")
 	})

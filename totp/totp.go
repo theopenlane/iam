@@ -311,7 +311,7 @@ func (o *OTP) encrypt(s string) (string, error) {
 // decrypt decrypts an encrypted string using a versioned secret
 func (o *OTP) decrypt(encryptedTxt string) (string, error) {
 	// Split and parse the version prefix
-	v := strings.Split(encryptedTxt, ":")[0]
+	v, _, _ := strings.Cut(encryptedTxt, ":")
 	encryptedTxt = strings.TrimPrefix(encryptedTxt, fmt.Sprintf("%s:", v))
 
 	version, err := strconv.Atoi(v)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path"
 
@@ -251,9 +252,7 @@ func (c *Client) AddOrReplaceRole(ctx context.Context, r RoleRequest) error {
 			// t.SetMetadata(metadata)
 
 			metadataRelations := t.Metadata.GetRelations()
-			for k, v := range *metadata.Relations {
-				metadataRelations[k] = v
-			}
+			maps.Copy(metadataRelations, *metadata.Relations)
 
 			t.Metadata.SetRelations(metadataRelations)
 
@@ -390,7 +389,7 @@ func createNewMetadata(r string, userType string) map[string]openfga.RelationMet
 // newDirectRelation creates a new relation to an existing object
 func newDirectRelation(role string) openfga.Userset {
 	// create the user set
-	thisRelation := make(map[string]interface{})
+	thisRelation := make(map[string]any)
 	thisRelation[role] = typesystem.This()
 
 	us := openfga.Userset{

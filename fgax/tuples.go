@@ -78,7 +78,7 @@ type TupleKey struct {
 	// Relation is the relationship between the subject and object
 	Relation Relation `json:"relation"`
 	// Condition for the relationship
-	Condition Condition `json:"condition,omitempty"`
+	Condition Condition `json:"condition"`
 }
 
 // TupleRequest is the fields needed to check a tuple in the FGA store
@@ -247,10 +247,7 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 
 	// process deletes first
 	for i := 0; i < len(deletes); i += c.MaxBatchWriteSize {
-		end := i + c.MaxBatchWriteSize
-		if end > len(deletes) {
-			end = len(deletes)
-		}
+		end := min(i+c.MaxBatchWriteSize, len(deletes))
 
 		body := ofgaclient.ClientWriteRequest{
 			Deletes: tupleKeyToDeleteRequest(deletes[i:end]),
@@ -264,10 +261,7 @@ func (c *Client) WriteTupleKeys(ctx context.Context, writes []TupleKey, deletes 
 
 	// process writes next
 	for i := 0; i < len(writes); i += c.MaxBatchWriteSize {
-		end := i + c.MaxBatchWriteSize
-		if end > len(writes) {
-			end = len(writes)
-		}
+		end := min(i+c.MaxBatchWriteSize, len(writes))
 
 		body := ofgaclient.ClientWriteRequest{
 			Writes: tupleKeyToWriteRequest(writes[i:end]),
@@ -453,10 +447,7 @@ func (c *Client) DeleteAllObjectRelations(ctx context.Context, object string, ex
 
 	// delete the tuples in batches of 100, the max supported by the OpenFGA transactional write api unless configured otherwise
 	for i := 0; i < len(tuplesToDelete); i += c.MaxBatchWriteSize {
-		end := i + c.MaxBatchWriteSize
-		if end > len(tuplesToDelete) {
-			end = len(tuplesToDelete)
-		}
+		end := min(i+c.MaxBatchWriteSize, len(tuplesToDelete))
 
 		allTuples := tuplesToDelete[i:end]
 

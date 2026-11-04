@@ -441,7 +441,7 @@ func TestGetBearerTokenFromWebsocketRequest(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			payload := map[string]interface{}{
+			payload := map[string]any{
 				"Authorization": tc.authHeader,
 			}
 

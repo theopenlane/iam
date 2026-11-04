@@ -196,15 +196,13 @@ func (tm *TokenManager) CreateImpersonationToken(_ context.Context, opts CreateI
 	sessionID := ulids.New().String()
 
 	claims := &ImpersonationClaims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(opts.Duration)),
-			NotBefore: jwt.NewNumericDate(now),
-			Issuer:    tm.Issuer.conf.Issuer,
-			Subject:   opts.TargetUserID,
-			Audience:  jwt.ClaimStrings{tm.Issuer.conf.Audience},
-			ID:        sessionID,
-		},
+		IssuedAt:          jwt.NewNumericDate(now),
+		ExpiresAt:         jwt.NewNumericDate(now.Add(opts.Duration)),
+		NotBefore:         jwt.NewNumericDate(now),
+		Issuer:            tm.Issuer.conf.Issuer,
+		Subject:           opts.TargetUserID,
+		Audience:          jwt.ClaimStrings{tm.Issuer.conf.Audience},
+		ID:                sessionID,
 		UserID:            opts.TargetUserID,
 		OrgID:             opts.OrganizationID,
 		ImpersonatorID:    opts.ImpersonatorID,

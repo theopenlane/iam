@@ -35,7 +35,7 @@ func newSigner(t *testing.T) crypto.Signer {
 
 func keySetClaims() *tokens.Claims {
 	return &tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{Subject: "01H6PGFB4T34D4WWEXQMAGJNMK"},
+		Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
 	}
 }
 
@@ -173,11 +173,8 @@ func TestSetKeySetConcurrentWithTokenTraffic(t *testing.T) {
 
 	// rotate the key set underneath live traffic; without the issuer lock this races
 	// with every reader below
-	rotator.Add(1)
 
-	go func() {
-		defer rotator.Done()
-
+	rotator.Go(func() {
 		for i := 0; ; i++ {
 			select {
 			case <-done:
@@ -187,14 +184,10 @@ func TestSetKeySetConcurrentWithTokenTraffic(t *testing.T) {
 
 			require.NoError(t, tm.SetKeySet(rotations[i%len(rotations)]))
 		}
-	}()
+	})
 
 	for range 8 {
-		readers.Add(1)
-
-		go func() {
-			defer readers.Done()
-
+		readers.Go(func() {
 			for range 200 {
 				atks, _, err := tm.CreateTokenPair(keySetClaims())
 				require.NoError(t, err)
@@ -208,7 +201,7 @@ func TestSetKeySetConcurrentWithTokenTraffic(t *testing.T) {
 
 				require.NotEmpty(t, tm.CurrentKeyID())
 			}
-		}()
+		})
 	}
 
 	readers.Wait()

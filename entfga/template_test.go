@@ -14,17 +14,17 @@ func TestHasMutationInputSet(t *testing.T) {
 	}{
 		{
 			name:     "mutation inputs set",
-			input:    map[string]interface{}{"MutationInputs": map[string]interface{}{"IsCreate": true}},
+			input:    map[string]any{"MutationInputs": map[string]any{"IsCreate": true}},
 			expected: true,
 		},
 		{
 			name:     "mutation inputs not set",
-			input:    map[string]interface{}{},
+			input:    map[string]any{},
 			expected: false,
 		},
 		{
 			name:     "mutation inputs set to nil",
-			input:    map[string]interface{}{"MutationInputs": nil},
+			input:    map[string]any{"MutationInputs": nil},
 			expected: false,
 		},
 		{

@@ -59,11 +59,9 @@ func (s *TokenTestSuite) TestCreateTokenPair() {
 	require.NoError(err, "could not initialize token manager")
 
 	claims := &tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
-		},
-		UserID: "Rusty Shackleford",
-		OrgID:  "01H6PGFG71N0AFEVTK3NJB71T9",
+		Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
+		UserID:  "Rusty Shackleford",
+		OrgID:   "01H6PGFG71N0AFEVTK3NJB71T9",
 	}
 
 	atks, rtks, err := tm.CreateTokenPair(claims)
@@ -94,11 +92,9 @@ func (s *TokenTestSuite) TestTokenManager() {
 
 	// Create an access token from simple claims
 	creds := &tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
-		},
-		UserID: "Rusty Shackleford",
-		OrgID:  "01H6PGFG71N0AFEVTK3NJB71T9",
+		Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
+		UserID:  "Rusty Shackleford",
+		OrgID:   "01H6PGFG71N0AFEVTK3NJB71T9",
 	}
 
 	accessToken, err := tm.CreateAccessToken(creds)
@@ -170,11 +166,9 @@ func (s *TokenTestSuite) TestValidTokens() {
 
 	// Default creds
 	creds := &tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
-		},
-		UserID: "Rusty Shackleford",
-		OrgID:  "01H6PGFG71N0AFEVTK3NJB71T9",
+		Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
+		UserID:  "Rusty Shackleford",
+		OrgID:   "01H6PGFG71N0AFEVTK3NJB71T9",
 	}
 
 	// TODO: add validation steps and test
@@ -198,11 +192,9 @@ func (s *TokenTestSuite) TestCreateTokenPairWithCustomDuration() {
 	require.NoError(err, "could not initialize token manager")
 
 	creds := &tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
-		},
-		UserID: "Rusty Shackleford",
-		OrgID:  "01H6PGFG71N0AFEVTK3NJB71T9",
+		Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
+		UserID:  "Rusty Shackleford",
+		OrgID:   "01H6PGFG71N0AFEVTK3NJB71T9",
 	}
 
 	s.T().Run("default duration", func(_ *testing.T) {
@@ -323,11 +315,9 @@ func (s *TokenTestSuite) TestKeyRotation() {
 
 	// Create a valid token with the "old token manager"
 	token, err := oldTM.CreateAccessToken(&tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
-		},
-		UserID: "Rusty Shackleford",
-		OrgID:  "01H6PGFG71N0AFEVTK3NJB71T9",
+		Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
+		UserID:  "Rusty Shackleford",
+		OrgID:   "01H6PGFG71N0AFEVTK3NJB71T9",
 	})
 	require.NoError(err)
 
@@ -369,7 +359,7 @@ func (s *TokenTestSuite) TestSigningKeyManagement() {
 	kid1 := tm.CurrentKey()
 
 	// Sign a token with the first key
-	tok1, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
+	tok1, err := tm.CreateAccessToken(&tokens.Claims{Subject: "user"})
 	require.NoError(err, "could not create access token with key1")
 	sig1, err := tm.Sign(tok1)
 	require.NoError(err, "could not sign token with key1")
@@ -390,7 +380,7 @@ func (s *TokenTestSuite) TestSigningKeyManagement() {
 	require.Equal(2, jwks.Len())
 
 	// Sign another token with the new key.
-	tok2, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
+	tok2, err := tm.CreateAccessToken(&tokens.Claims{Subject: "user"})
 	require.NoError(err)
 	sig2, err := tm.Sign(tok2)
 	require.NoError(err)
@@ -408,7 +398,7 @@ func (s *TokenTestSuite) TestSigningKeyManagement() {
 	require.Equal(kid1, tm.CurrentKey())
 	require.Equal(kid1.String(), tm.CurrentKeyID())
 
-	tok3, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
+	tok3, err := tm.CreateAccessToken(&tokens.Claims{Subject: "user"})
 	require.NoError(err)
 	sig3, err := tm.Sign(tok3)
 	require.NoError(err)
@@ -429,7 +419,7 @@ func (s *TokenTestSuite) TestSigningKeyRemovalInvalidatesTokens() {
 	require.NoError(err, "could not initialize token manager")
 
 	// Create and sign a token with the current key
-	tok, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
+	tok, err := tm.CreateAccessToken(&tokens.Claims{Subject: "user"})
 	require.NoError(err)
 	signed, err := tm.Sign(tok)
 	require.NoError(err)
@@ -448,7 +438,7 @@ func (s *TokenTestSuite) TestSigningKeyRemovalInvalidatesTokens() {
 	require.EqualError(err, "token is unverifiable: error while executing keyfunc: unknown signing key")
 
 	// Tokens signed with the remaining key should still verify.
-	tok2, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
+	tok2, err := tm.CreateAccessToken(&tokens.Claims{Subject: "user"})
 	require.NoError(err)
 	sig2, err := tm.Sign(tok2)
 	require.NoError(err)
@@ -465,11 +455,9 @@ func (s *TokenTestSuite) TestParseExpiredToken() {
 
 	// Default creds
 	creds := &tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
-		},
-		UserID: "Rusty Shackleford",
-		OrgID:  "01H6PGFG71N0AFEVTK3NJB71T9",
+		Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
+		UserID:  "Rusty Shackleford",
+		OrgID:   "01H6PGFG71N0AFEVTK3NJB71T9",
 	}
 
 	accessToken, err := tm.CreateAccessToken(creds)
@@ -592,7 +580,7 @@ func TestTokenManagerAllowsNonULIDKeyID(t *testing.T) {
 	require.Equal(t, "primary", tm.CurrentKeyID())
 	require.Equal(t, ulids.Null, tm.CurrentKey())
 
-	claims := &tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}}
+	claims := &tokens.Claims{Subject: "user"}
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 	signed, err := tm.Sign(token)
 	require.NoError(t, err)
