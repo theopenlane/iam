@@ -3,16 +3,15 @@ env:
   SONAR_HOST: "https://sonarcloud.io"
 
   # build settings
-  BK_HOME: ${BK_HOME:-/var/lib/buildkite-agent}
-  CACHE_HOME: ${CACHE_HOME:-$BK_HOME/.cache}
+  CACHE_HOME: ${CACHE_HOME:-/var/lib/buildkite-agent/.cache}
   GOCACHE: ${GOCACHE:-$CACHE_HOME/go-build}
   GOMODCACHE: ${GOMODCACHE:-$CACHE_HOME/go/pkg/mod}
   GOLANGCI_LINT_CACHE: ${GOLANGCI_LINT_CACHE:-$CACHE_HOME/golangci-lint}
-  HOME: /tmp
-  GIT_CONFIG_GLOBAL: ${GIT_CONFIG_GLOBAL:-$HOME/.gitconfig}
-  APOLLO_CONFIG_HOME: ${APOLLO_CONFIG_HOME:-$HOME}
-  SONAR_USER_HOME: ${SONAR_USER_HOME:-$HOME/.sonar}
-  SCANNER_WORKDIR_PATH: ${SCANNER_WORKDIR_PATH:-$HOME/sonar-scanner-work}
+  CONFIG_HOME: /tmp
+  GIT_CONFIG_GLOBAL: ${GIT_CONFIG_GLOBAL:-$CONFIG_HOME/.gitconfig}
+  APOLLO_CONFIG_HOME: ${APOLLO_CONFIG_HOME:-$CONFIG_HOME}
+  SONAR_USER_HOME: ${SONAR_USER_HOME:-$CONFIG_HOME/.sonar}
+  SCANNER_WORKDIR_PATH: ${SCANNER_WORKDIR_PATH:-$CONFIG_HOME/sonar-scanner-work}
 
   # runner vars
   LARGE_RUNNER_QUEUE: ${LARGE_RUNNER_QUEUE:-self-hosted-garage-vms}
