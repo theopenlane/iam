@@ -24,9 +24,7 @@ type JWKSValidator struct {
 // It initializes a new `JWKSValidator` with the provided JWKS, audience, and issuer
 func NewJWKSValidator(keys jwk.Set, audience, issuer string) *JWKSValidator {
 	validator := &JWKSValidator{
-		validator: validator{
-			conf: NewConfig(WithAudience(audience), WithIssuer(issuer)),
-		},
+		conf: NewConfig(WithAudience(audience), WithIssuer(issuer)),
 		keys: keys,
 	}
 	validator.validator.keyFunc = validator.keyFunc

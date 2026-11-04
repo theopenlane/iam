@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/theopenlane/iam/tokens"
@@ -79,7 +78,7 @@ func TestIsExpired(t *testing.T) {
 		tm, err := tokens.NewWithKey(key, conf)
 		assert.NoError(t, err)
 
-		token, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "user"}})
+		token, err := tm.CreateAccessToken(&tokens.Claims{Subject: "user"})
 		assert.NoError(t, err)
 		signed, err := tm.Sign(token)
 		assert.NoError(t, err)

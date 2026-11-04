@@ -24,7 +24,7 @@ type Claims struct {
 	// OrgID is the internal generated mapping ID for the organization the JWT token is valid for
 	OrgID string `json:"org,omitempty"`
 	// Scopes lists objects that can be accessed for each permission level
-	Scopes PermissionScopes `json:"scopes,omitempty"`
+	Scopes PermissionScopes `json:"scopes"`
 	// TrustCenterID is the internal generated mapping ID for the trust center the JWT token is valid for
 	TrustCenterID string `json:"trust_center_id,omitempty"`
 	// Modules is a list of modules that are enabled for the user in their current organization

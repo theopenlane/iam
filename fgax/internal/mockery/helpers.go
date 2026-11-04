@@ -201,9 +201,7 @@ func CheckAny(t *testing.T, c *MockSdkClient, allowed bool) {
 	cr := NewMockSdkClientCheckRequestInterface(t)
 
 	resp := ofgaclient.ClientCheckResponse{
-		CheckResponse: openfga.CheckResponse{
-			Allowed: openfga.PtrBool(allowed),
-		},
+		Allowed: openfga.PtrBool(allowed),
 	}
 
 	cr.EXPECT().Execute().Return(&resp, nil)

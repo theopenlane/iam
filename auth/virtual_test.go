@@ -158,7 +158,7 @@ func TestEnsureIntegrationCaller(t *testing.T) {
 	})
 
 	t.Run("subject-less caller gains integration actor identity", func(t *testing.T) {
-		original := NewWebhookCaller("org-1")
+		original := &Caller{OrganizationID: "org-1", Capabilities: CapBypassOrgFilter | CapInternalOperation}
 		ctx := WithCaller(context.Background(), original)
 		got, _ := CallerFromContext(EnsureIntegrationCaller(ctx, "org-1"))
 

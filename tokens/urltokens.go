@@ -196,7 +196,7 @@ func verifyURLToken[T managedURLToken](token T, signature string, secret []byte)
 }
 
 // SignToken marshals and signs any token that embeds SigningInfo
-func (d SigningInfo) SignToken(token interface{}) (string, []byte, error) {
+func (d SigningInfo) SignToken(token any) (string, []byte, error) {
 	data, err := msgpack.Marshal(token)
 	if err != nil {
 		return "", nil, err

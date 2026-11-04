@@ -3,25 +3,22 @@ env:
   SONAR_HOST: "https://sonarcloud.io"
 
   # build settings
-  BK_HOME: /var/lib/buildkite-agent
-  GOCACHE: $BK_HOME/.cache/go-build
-  GOMODCACHE: $BK_HOME/.cache/go/pkg/mod
-  GOLANGCI_LINT_CACHE: $BK_HOME/.cache/golangci-lint
-  HOME: /tmp
-  GIT_CONFIG_GLOBAL: $HOME/.gitconfig
-  APOLLO_CONFIG_HOME: $HOME
-  SONAR_USER_HOME: $HOME/.sonar"
-  SCANNER_WORKDIR_PATH: $HOME/sonar-scanner-work
+  CACHE_HOME: ${CACHE_HOME:-/var/lib/buildkite-agent/.cache}
+  GOCACHE: ${GOCACHE:-$CACHE_HOME/go-build}
+  GOMODCACHE: ${GOMODCACHE:-$CACHE_HOME/go/pkg/mod}
+  GOLANGCI_LINT_CACHE: ${GOLANGCI_LINT_CACHE:-$CACHE_HOME/golangci-lint}
+  CONFIG_HOME: ${CONFIG_HOME:-/tmp}
+  GIT_CONFIG_GLOBAL: ${GIT_CONFIG_GLOBAL:-$CONFIG_HOME/.gitconfig}
+  SONAR_USER_HOME: ${SONAR_USER_HOME:-$CONFIG_HOME/.sonar}
+  SCANNER_WORKDIR_PATH: ${SCANNER_WORKDIR_PATH:-$CONFIG_HOME/sonar-scanner-work}
 
   # runner vars
   LARGE_RUNNER_QUEUE: ${LARGE_RUNNER_QUEUE:-self-hosted-garage-vms}
   SMALL_RUNNER_QUEUE: ${SMALL_RUNNER_QUEUE:-self-hosted-garage-vms}
-  RUNNER_WORKLOAD_LIGHTWEIGHT: "lightweight"
-  RUNNER_WORKLOAD_STANDARD: "standard"
 
 # cache for hosted runners
 cache:
-  name: go-cache
+  name: iam-go-cache
   size: 100g
   paths:
     - $GOCACHE
@@ -34,12 +31,13 @@ steps:
     if_changed:
       - go.{mod,sum}
       - fgax/internal/mockery/**
+      - Taskfile.yaml
+      - .buildkite/**
     steps:
       - label: ":golang: go generate"
         key: "generate"
         agents:
           queue: $SMALL_RUNNER_QUEUE
-          workload: $RUNNER_WORKLOAD_LIGHTWEIGHT
         plugins:
           - docker#v5.14.0:
               image: "ghcr.io/theopenlane/build-image:latest"
@@ -58,17 +56,20 @@ steps:
     if_changed:
       - go.{mod,sum}
       - "**.go"
+      - entfga/templates/**
+      - Taskfile.yaml
+      - .golangci.yaml
+      - .buildkite/**
     steps:
       - label: ":golangci-lint: lint :lint-roller:"
         key: "lint"
+        cancel_on_build_failing: true
         agents:
           queue: $LARGE_RUNNER_QUEUE
-          workload: $RUNNER_WORKLOAD_STANDARD
         plugins:
           - docker#v5.14.0:
               image: "ghcr.io/theopenlane/build-image:latest"
               always-pull: true
-              cancel_on_build_failing: true
               command: ["task", "go:lint"]
               propagate-environment: true
               propagate-uid-gid: true
@@ -82,7 +83,6 @@ steps:
         key: "go_test"
         agents:
           queue: $LARGE_RUNNER_QUEUE
-          workload: $RUNNER_WORKLOAD_STANDARD
         plugins:
           - docker#v5.14.0:
               image: "ghcr.io/theopenlane/build-image:latest"
@@ -98,7 +98,6 @@ steps:
         key: "example_generate"
         agents:
           queue: $LARGE_RUNNER_QUEUE
-          workload: $RUNNER_WORKLOAD_STANDARD
         plugins:
           - docker#v5.14.0:
               image: "ghcr.io/theopenlane/build-image:latest"
@@ -118,7 +117,6 @@ steps:
         depends_on: ["go_test"]
         agents:
           queue: $SMALL_RUNNER_QUEUE
-          workload: $RUNNER_WORKLOAD_LIGHTWEIGHT
         plugins:
           - cluster-secrets#v1.0.0:
               variables:
@@ -127,7 +125,7 @@ steps:
               download: "coverage.out"
               step: "go_test"
           - docker#v5.14.0:
-              image: "sonarsource/sonar-scanner-cli:12.1"
+              image: "sonarsource/sonar-scanner-cli:12.3"
               propagate-environment: true
               propagate-uid-gid: true
               environment:
@@ -140,7 +138,6 @@ steps:
         depends_on: ["go_test"]
         agents:
           queue: $SMALL_RUNNER_QUEUE
-          workload: $RUNNER_WORKLOAD_LIGHTWEIGHT
         plugins:
           - cluster-secrets#v1.0.0:
               variables:
@@ -149,7 +146,7 @@ steps:
               download: coverage.out
               step: "go_test"
           - docker#v5.14.0:
-              image: "sonarsource/sonar-scanner-cli:12.1"
+              image: "sonarsource/sonar-scanner-cli:12.3"
               propagate-environment: true
               propagate-uid-gid: true
               environment:

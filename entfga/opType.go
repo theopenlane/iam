@@ -70,6 +70,6 @@ func (op OpType) MarshalGQL(w io.Writer) {
 }
 
 // UnmarshalGQL implement the Unmarshaler interface for gqlgen
-func (op *OpType) UnmarshalGQL(v interface{}) error {
+func (op *OpType) UnmarshalGQL(v any) error {
 	return op.Scan(v)
 }

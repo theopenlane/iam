@@ -233,7 +233,7 @@ func TestTokenBlacklistIntegration(t *testing.T) {
 		// Check concurrently
 		results := make(chan bool, 10)
 
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			go func() {
 				revoked, err := bl.IsRevoked(ctx, tokenID)
 				assert.NoError(t, err)
@@ -243,7 +243,7 @@ func TestTokenBlacklistIntegration(t *testing.T) {
 		}
 
 		// All checks should return true
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			assert.True(t, <-results)
 		}
 	})

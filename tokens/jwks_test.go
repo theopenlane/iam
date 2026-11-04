@@ -35,11 +35,9 @@ func (s *TokenTestSuite) TestJWKSValidator() {
 	require.NoError(err, "could not initialize token manager")
 
 	claims := &tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
-		},
-		UserID: "Rusty Shackleford",
-		OrgID:  "01H6PGFG71N0AFEVTK3NJB71T9",
+		Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
+		UserID:  "Rusty Shackleford",
+		OrgID:   "01H6PGFG71N0AFEVTK3NJB71T9",
 	}
 
 	atks, rtks, err := tm.CreateTokenPair(claims)
@@ -107,11 +105,9 @@ func (s *TokenTestSuite) TestCachedJWKSValidator() {
 	require.NoError(err, "could not initialize token manager")
 
 	claims := &tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
-		},
-		UserID: "Rusty Shackleford",
-		OrgID:  "01H6PGFG71N0AFEVTK3NJB71T9",
+		Subject: "01H6PGFB4T34D4WWEXQMAGJNMK",
+		UserID:  "Rusty Shackleford",
+		OrgID:   "01H6PGFG71N0AFEVTK3NJB71T9",
 	}
 
 	atks, _, err := tm.CreateTokenPair(claims)
@@ -155,7 +151,7 @@ func TestJWKSValidatorRejectsNonStringKid(t *testing.T) {
 	keys, err := tm.Keys()
 	require.NoError(t, err)
 
-	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, &tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Audience: jwt.ClaimStrings{"aud"}, Issuer: "iss", ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour))}})
+	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, &tokens.Claims{Audience: jwt.ClaimStrings{"aud"}, Issuer: "iss", ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour))})
 	token.Header["kid"] = 123
 
 	signed, err := token.SignedString(key)
