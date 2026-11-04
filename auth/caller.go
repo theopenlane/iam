@@ -208,35 +208,3 @@ func NewSystemAdminCaller(subjectID, subjectName, subjectEmail string) *Caller {
 		Capabilities:       CapabilitiesForSystemAdmin(true),
 	}
 }
-
-// NewKeystoreCaller returns a Caller for keystore operations.
-// Bypasses org-filter, FGA, and feature-flag checks.
-//
-// Deprecated: will be removed in a future PR
-func NewKeystoreCaller() *Caller {
-	return &Caller{
-		Capabilities: CapBypassOrgFilter | CapBypassFeatureCheck | CapInternalOperation,
-	}
-}
-
-// NewWebhookCaller returns a Caller for an inbound webhook delivery.
-// Bypasses org-filter and FGA checks.
-//
-// Deprecated: will be removed in a future PR
-func NewWebhookCaller(orgID string) *Caller {
-	return &Caller{
-		OrganizationID: orgID,
-		Capabilities:   CapBypassOrgFilter | CapInternalOperation,
-	}
-}
-
-// NewAcmeSolverCaller returns a Caller for an ACME challenge solver request.
-// Bypasses org-filter and FGA checks but not feature-flag enforcement.
-//
-// Deprecated: will be removed in a future PR
-func NewAcmeSolverCaller(orgID string) *Caller {
-	return &Caller{
-		OrganizationID: orgID,
-		Capabilities:   CapBypassOrgFilter | CapInternalOperation,
-	}
-}
