@@ -3,15 +3,16 @@ env:
   SONAR_HOST: "https://sonarcloud.io"
 
   # build settings
-  BK_HOME: /var/lib/buildkite-agent
-  GOCACHE: $BK_HOME/.cache/go-build
-  GOMODCACHE: $BK_HOME/.cache/go/pkg/mod
-  GOLANGCI_LINT_CACHE: $BK_HOME/.cache/golangci-lint
+  BK_HOME: ${BK_HOME:-/var/lib/buildkite-agent}
+  CACHE_HOME: ${CACHE_HOME:-$BK_HOME/.cache}
+  GOCACHE: ${GOCACHE:-$CACHE_HOME/go-build}
+  GOMODCACHE: ${GOMODCACHE:-$CACHE_HOME/go/pkg/mod}
+  GOLANGCI_LINT_CACHE: ${GOLANGCI_LINT_CACHE:-$CACHE_HOME/golangci-lint}
   HOME: /tmp
-  GIT_CONFIG_GLOBAL: $HOME/.gitconfig
-  APOLLO_CONFIG_HOME: $HOME
-  SONAR_USER_HOME: $HOME/.sonar"
-  SCANNER_WORKDIR_PATH: $HOME/sonar-scanner-work
+  GIT_CONFIG_GLOBAL: ${GIT_CONFIG_GLOBAL:-$HOME/.gitconfig}
+  APOLLO_CONFIG_HOME: ${APOLLO_CONFIG_HOME:-$HOME}
+  SONAR_USER_HOME: ${SONAR_USER_HOME:-$HOME/.sonar}
+  SCANNER_WORKDIR_PATH: ${SCANNER_WORKDIR_PATH:-$HOME/sonar-scanner-work}
 
   # runner vars
   LARGE_RUNNER_QUEUE: ${LARGE_RUNNER_QUEUE:-self-hosted-garage-vms}
@@ -21,7 +22,7 @@ env:
 
 # cache for hosted runners
 cache:
-  name: go-cache
+  name: iam-go-cache
   size: 100g
   paths:
     - $GOCACHE
