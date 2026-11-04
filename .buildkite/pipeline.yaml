@@ -12,6 +12,7 @@ env:
   APOLLO_CONFIG_HOME: ${APOLLO_CONFIG_HOME:-$CONFIG_HOME}
   SONAR_USER_HOME: ${SONAR_USER_HOME:-$CONFIG_HOME/.sonar}
   SCANNER_WORKDIR_PATH: ${SCANNER_WORKDIR_PATH:-$CONFIG_HOME/sonar-scanner-work}
+  GIT_MIRRORS_PATH: ${GIT_MIRRORS_PATH:-/var/lib/buildkite-agent/git-mirrors}
 
   # runner vars
   LARGE_RUNNER_QUEUE: ${LARGE_RUNNER_QUEUE:-self-hosted-garage-vms}
