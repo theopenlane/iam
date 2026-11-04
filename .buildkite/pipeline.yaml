@@ -9,16 +9,12 @@ env:
   GOLANGCI_LINT_CACHE: ${GOLANGCI_LINT_CACHE:-$CACHE_HOME/golangci-lint}
   CONFIG_HOME: /tmp
   GIT_CONFIG_GLOBAL: ${GIT_CONFIG_GLOBAL:-$CONFIG_HOME/.gitconfig}
-  APOLLO_CONFIG_HOME: ${APOLLO_CONFIG_HOME:-$CONFIG_HOME}
   SONAR_USER_HOME: ${SONAR_USER_HOME:-$CONFIG_HOME/.sonar}
   SCANNER_WORKDIR_PATH: ${SCANNER_WORKDIR_PATH:-$CONFIG_HOME/sonar-scanner-work}
-  GIT_MIRRORS_PATH: ${GIT_MIRRORS_PATH:-/var/lib/buildkite-agent/git-mirrors}
 
   # runner vars
   LARGE_RUNNER_QUEUE: ${LARGE_RUNNER_QUEUE:-self-hosted-garage-vms}
   SMALL_RUNNER_QUEUE: ${SMALL_RUNNER_QUEUE:-self-hosted-garage-vms}
-  RUNNER_WORKLOAD_LIGHTWEIGHT: "lightweight"
-  RUNNER_WORKLOAD_STANDARD: "standard"
 
 # cache for hosted runners
 cache:
@@ -35,12 +31,13 @@ steps:
     if_changed:
       - go.{mod,sum}
       - fgax/internal/mockery/**
+      - Taskfile.yaml
+      - .buildkite/**
     steps:
       - label: ":golang: go generate"
         key: "generate"
         agents:
           queue: $SMALL_RUNNER_QUEUE
-          workload: $RUNNER_WORKLOAD_LIGHTWEIGHT
         plugins:
           - docker#v5.14.0:
               image: "ghcr.io/theopenlane/build-image:latest"
@@ -59,17 +56,20 @@ steps:
     if_changed:
       - go.{mod,sum}
       - "**.go"
+      - entfga/templates/**
+      - Taskfile.yaml
+      - .golangci.yaml
+      - .buildkite/**
     steps:
       - label: ":golangci-lint: lint :lint-roller:"
         key: "lint"
+        cancel_on_build_failing: true
         agents:
           queue: $LARGE_RUNNER_QUEUE
-          workload: $RUNNER_WORKLOAD_STANDARD
         plugins:
           - docker#v5.14.0:
               image: "ghcr.io/theopenlane/build-image:latest"
               always-pull: true
-              cancel_on_build_failing: true
               command: ["task", "go:lint"]
               propagate-environment: true
               propagate-uid-gid: true
@@ -83,7 +83,6 @@ steps:
         key: "go_test"
         agents:
           queue: $LARGE_RUNNER_QUEUE
-          workload: $RUNNER_WORKLOAD_STANDARD
         plugins:
           - docker#v5.14.0:
               image: "ghcr.io/theopenlane/build-image:latest"
@@ -99,7 +98,6 @@ steps:
         key: "example_generate"
         agents:
           queue: $LARGE_RUNNER_QUEUE
-          workload: $RUNNER_WORKLOAD_STANDARD
         plugins:
           - docker#v5.14.0:
               image: "ghcr.io/theopenlane/build-image:latest"
@@ -119,7 +117,6 @@ steps:
         depends_on: ["go_test"]
         agents:
           queue: $SMALL_RUNNER_QUEUE
-          workload: $RUNNER_WORKLOAD_LIGHTWEIGHT
         plugins:
           - cluster-secrets#v1.0.0:
               variables:
@@ -141,7 +138,6 @@ steps:
         depends_on: ["go_test"]
         agents:
           queue: $SMALL_RUNNER_QUEUE
-          workload: $RUNNER_WORKLOAD_LIGHTWEIGHT
         plugins:
           - cluster-secrets#v1.0.0:
               variables:
