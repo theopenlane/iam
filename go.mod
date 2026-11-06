@@ -14,7 +14,7 @@ require (
 	github.com/gqlgo/gqlgenc v0.44.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jwx-go/jwkfetch/v4 v4.0.4
-	github.com/labstack/echo/v5 v5.4.2
+	github.com/labstack/echo/v5 v5.4.4
 	github.com/lestrrat-go/httprc/v3 v3.0.6
 	github.com/lestrrat-go/jwx/v4 v4.6.0
 	github.com/moby/moby/api v1.56.1
@@ -32,7 +32,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.44.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.44.0
 	github.com/theopenlane/echox v0.3.0
-	github.com/theopenlane/entx v0.36.3
+	github.com/theopenlane/entx v0.36.4
 	github.com/theopenlane/logx v0.1.1
 	github.com/theopenlane/utils v0.7.4
 	github.com/urfave/cli/v3 v3.14.0
