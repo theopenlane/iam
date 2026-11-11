@@ -6,7 +6,7 @@ require (
 	entgo.io/ent v0.14.6
 	github.com/99designs/gqlgen v0.17.98
 	github.com/alicebob/miniredis/v2 v2.40.0
-	github.com/brianvoe/gofakeit/v7 v7.18.1
+	github.com/brianvoe/gofakeit/v7 v7.18.2
 	github.com/go-webauthn/webauthn v0.18.2
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v93 v93.0.0
@@ -14,7 +14,7 @@ require (
 	github.com/gqlgo/gqlgenc v0.44.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jwx-go/jwkfetch/v4 v4.0.4
-	github.com/labstack/echo/v5 v5.4.2
+	github.com/labstack/echo/v5 v5.4.4
 	github.com/lestrrat-go/httprc/v3 v3.0.6
 	github.com/lestrrat-go/jwx/v4 v4.6.0
 	github.com/moby/moby/api v1.56.1
