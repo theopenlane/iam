@@ -93,6 +93,17 @@ func (v *validator) checkBlacklist(ctx context.Context, claims *Claims) error {
 			// Log the error but continue with fail-open behavior for availability
 			logx.FromContext(ctx).Debug().Err(err).Str("user_id", userID).Msg("failed to check user suspension status")
 		}
+
+		if claims.IssuedAt != nil {
+			cutoff, ok, err := v.blacklist.RevokedBefore(ctx, userID)
+			if ok && claims.IssuedAt.Before(cutoff) {
+				return ErrTokenInvalid
+			}
+
+			if err != nil {
+				logx.FromContext(ctx).Debug().Err(err).Str("user_id", userID).Msg("failed to check user revocation cutoff")
+			}
+		}
 	}
 
 	return nil

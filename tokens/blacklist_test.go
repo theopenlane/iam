@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 
@@ -577,5 +578,159 @@ func TestTokenBlacklistUserSuspension(t *testing.T) {
 		suspended, err := bl.IsUserRevoked(ctx, userID)
 		assert.NoError(t, err)
 		assert.False(t, suspended)
+	})
+}
+
+func TestRevokeIssuedBefore(t *testing.T) {
+	mr, err := miniredis.Run()
+	assert.NoError(t, err)
+
+	defer mr.Close()
+
+	client := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	defer client.Close()
+
+	_, key, err := ed25519.GenerateKey(rand.Reader)
+	assert.NoError(t, err)
+
+	conf := tokens.Config{
+		Audience:        "test-audience",
+		Issuer:          "test-issuer",
+		AccessDuration:  1 * time.Hour,
+		RefreshDuration: 24 * time.Hour,
+		RefreshOverlap:  -15 * time.Minute,
+	}
+
+	ctx := context.Background()
+	userID := "user-cutoff"
+
+	bl := tokens.NewRedisTokenBlacklist(client, "test:cutoff")
+
+	newToken := func(tm *tokens.TokenManager) string {
+		jwtTok, err := tm.CreateAccessToken(&tokens.Claims{UserID: userID, OrgID: "org"})
+		assert.NoError(t, err)
+
+		s, err := tm.Sign(jwtTok)
+		assert.NoError(t, err)
+
+		return s
+	}
+
+	t.Run("stores and reads the cutoff", func(t *testing.T) {
+		_, ok, err := bl.RevokedBefore(ctx, userID)
+		assert.NoError(t, err)
+		assert.False(t, ok)
+
+		cutoff := time.Unix(1_700_000_000, 0)
+		assert.NoError(t, bl.RevokeIssuedBefore(ctx, userID, cutoff, time.Hour))
+
+		got, ok, err := bl.RevokedBefore(ctx, userID)
+		assert.NoError(t, err)
+		assert.True(t, ok)
+		assert.True(t, cutoff.Equal(got))
+
+		mr.FastForward(2 * time.Hour)
+
+		_, ok, err = bl.RevokedBefore(ctx, userID)
+		assert.NoError(t, err)
+		assert.False(t, ok)
+	})
+
+	t.Run("invalid inputs", func(t *testing.T) {
+		assert.ErrorIs(t, bl.RevokeIssuedBefore(ctx, "", time.Now(), time.Hour), tokens.ErrInvalidTokenID)
+
+		_, _, err := bl.RevokedBefore(ctx, "")
+		assert.ErrorIs(t, err, tokens.ErrInvalidTokenID)
+
+		assert.NoError(t, bl.RevokeIssuedBefore(ctx, "ttl-zero", time.Now(), 0))
+
+		_, ok, err := bl.RevokedBefore(ctx, "ttl-zero")
+		assert.NoError(t, err)
+		assert.False(t, ok)
+	})
+
+	t.Run("no-op blacklist reports not revoked", func(t *testing.T) {
+		noop := tokens.NewNoOpTokenBlacklist()
+		assert.NoError(t, noop.RevokeIssuedBefore(ctx, userID, time.Now(), time.Hour))
+
+		cutoff, ok, err := noop.RevokedBefore(ctx, userID)
+		assert.NoError(t, err)
+		assert.False(t, ok)
+		assert.True(t, cutoff.IsZero())
+	})
+
+	t.Run("token manager without blacklist", func(t *testing.T) {
+		tm, err := tokens.NewWithKey(key, conf)
+		assert.NoError(t, err)
+
+		err = tm.RevokeUserTokensIssuedBefore(ctx, userID, time.Now())
+		assert.ErrorIs(t, err, tokens.ErrRevocationNotConfigured)
+	})
+
+	t.Run("an unreadable cutoff value is returned as an error", func(t *testing.T) {
+		assert.NoError(t, mr.Set("test:cutoff:cutoff:corrupt", "not-a-timestamp"))
+
+		_, ok, err := bl.RevokedBefore(ctx, "corrupt")
+		assert.Error(t, err)
+		assert.False(t, ok)
+	})
+
+	t.Run("validator fails open when the cutoff cannot be read", func(t *testing.T) {
+		tm, err := tokens.NewWithKey(key, conf)
+		assert.NoError(t, err)
+
+		tm.WithBlacklist(tokens.NewRedisTokenBlacklist(client, "test:failopen"))
+
+		assert.NoError(t, mr.Set("test:failopen:cutoff:"+userID, "not-a-timestamp"))
+
+		_, err = tm.VerifyWithContext(ctx, newToken(tm))
+		assert.NoError(t, err)
+	})
+
+	t.Run("validator matches the cutoff by subject when the token carries no user id", func(t *testing.T) {
+		tm, err := tokens.NewWithKey(key, conf)
+		assert.NoError(t, err)
+
+		tm.WithBlacklist(tokens.NewRedisTokenBlacklist(client, "test:subject"))
+
+		jwtTok, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "subject-only"}})
+		assert.NoError(t, err)
+
+		token, err := tm.Sign(jwtTok)
+		assert.NoError(t, err)
+
+		claims, err := tm.VerifyWithContext(ctx, token)
+		assert.NoError(t, err)
+
+		assert.NoError(t, tm.RevokeUserTokensIssuedBefore(ctx, "subject-only", claims.IssuedAt.Add(time.Second)))
+
+		_, err = tm.VerifyWithContext(ctx, token)
+		assert.ErrorIs(t, err, tokens.ErrTokenInvalid)
+	})
+
+	t.Run("validator rejects tokens issued before the cutoff end to end", func(t *testing.T) {
+		tm, err := tokens.NewWithKey(key, conf)
+		assert.NoError(t, err)
+
+		tm.WithBlacklist(tokens.NewRedisTokenBlacklist(client, "test:e2e"))
+
+		token := newToken(tm)
+
+		claims, err := tm.VerifyWithContext(ctx, token)
+		assert.NoError(t, err)
+
+		issuedAt := claims.IssuedAt.Time
+
+		// a token issued in the cutoff second itself stays valid, as does one issued after the cutoff
+		assert.NoError(t, tm.RevokeUserTokensIssuedBefore(ctx, userID, issuedAt))
+
+		_, err = tm.VerifyWithContext(ctx, token)
+		assert.NoError(t, err)
+
+		// a cutoff one second later invalidates it
+		assert.NoError(t, tm.RevokeUserTokensIssuedBefore(ctx, userID, issuedAt.Add(time.Second)))
+
+		_, err = tm.VerifyWithContext(ctx, token)
+		assert.ErrorIs(t, err, tokens.ErrTokenInvalid)
 	})
 }

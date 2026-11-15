@@ -327,6 +327,18 @@ func (tm *TokenManager) SuspendUser(ctx context.Context, userID string, ttl time
 	return tm.blacklist.RevokeAllForUser(ctx, userID, ttl)
 }
 
+// RevokeUserTokensIssuedBefore revokes every token issued to the user before the cutoff while leaving
+// tokens issued afterwards valid
+func (tm *TokenManager) RevokeUserTokensIssuedBefore(ctx context.Context, userID string, cutoff time.Time) error {
+	if !tm.RevocationEnabled() {
+		logx.FromContext(ctx).Warn().Str("user_id", userID).Msg("user token cutoff revocation requested but no functional blacklist is configured; the user's tokens remain valid until they expire")
+
+		return ErrRevocationNotConfigured
+	}
+
+	return tm.blacklist.RevokeIssuedBefore(ctx, userID, cutoff, tm.Issuer.conf.RefreshDuration)
+}
+
 // GetBlacklist returns the configured blacklist (for internal use)
 func (tm *TokenManager) GetBlacklist() TokenBlacklist {
 	return tm.blacklist

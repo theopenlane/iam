@@ -18,15 +18,15 @@ import (
 // errDeleteSession simulates a backing-store failure when deleting a persisted session
 var errDeleteSession = errors.New("delete failed")
 
-// failingDeleteStore wraps a PersistentStore but always fails DeleteSession, used to exercise the
+// failingDeleteStore wraps a PersistentStore but always fails TakeSession, used to exercise the
 // error path of DestroySession
 type failingDeleteStore struct {
 	sessions.PersistentStore
 }
 
-// DeleteSession always returns an error
-func (failingDeleteStore) DeleteSession(context.Context, string) error {
-	return errDeleteSession
+// TakeSession always returns an error
+func (failingDeleteStore) TakeSession(context.Context, string) (string, error) {
+	return "", errDeleteSession
 }
 
 // newDestroyTestConfig builds a redis-backed session config sharing a single named cookie config
@@ -135,7 +135,7 @@ func TestDestroySession(t *testing.T) {
 
 		req := requestWithSessionCookie(t, sc, "user-err")
 
-		// swap in a store whose DeleteSession always fails
+		// swap in a store whose TakeSession always fails
 		failing := sc
 		failing.RedisStore = failingDeleteStore{PersistentStore: sc.RedisStore}
 
