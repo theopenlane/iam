@@ -162,7 +162,13 @@ func (sc *SessionConfig) SaveAndStoreSession(ctx context.Context, w http.Respons
 	// Add session to context
 	c := session.addSessionDataToContext(ctx)
 
-	if err := sc.RedisStore.StoreSessionWithExpiration(c, sessionID, userID, sc.sessionTTL(createdAt, now)); err != nil {
+	ttl := sc.sessionTTL(createdAt, now)
+
+	if err := sc.RedisStore.StoreSessionWithExpiration(c, sessionID, userID, ttl); err != nil {
+		return c, err
+	}
+
+	if err := sc.RedisStore.AddUserSession(c, userID, sessionID, ttl); err != nil {
 		return c, err
 	}
 
@@ -200,14 +206,28 @@ func (sc *SessionConfig) DestroySession(ctx context.Context, w http.ResponseWrit
 	}
 
 	if sessionID := sc.SessionManager.GetSessionIDFromCookie(session); sessionID != "" && sc.RedisStore != nil {
-		if err := sc.RedisStore.DeleteSession(ctx, sessionID); err != nil {
+		// a session that already expired has nothing left to delete, which keeps logout idempotent
+		userID, err := sc.RedisStore.TakeSession(ctx, sessionID)
+		if err != nil && !errors.Is(err, redis.Nil) {
 			return err
+		}
+
+		if err == nil {
+			if err := sc.RedisStore.RemoveUserSession(ctx, userID, sessionID); err != nil {
+				return err
+			}
 		}
 	}
 
 	RemoveCookie(w, sc.CookieConfig.Name, *sc.CookieConfig)
 
 	return nil
+}
+
+// DestroyUserSessions deletes every persisted session of the user, used on password reset; cookies
+// already issued stop resolving because their session ids are gone
+func (sc *SessionConfig) DestroyUserSessions(ctx context.Context, userID string) error {
+	return sc.RedisStore.DeleteUserSessions(ctx, userID)
 }
 
 // LoadAndSave is a middleware function that loads and saves session data using a
@@ -407,8 +427,16 @@ func (sc *SessionConfig) writeRefreshedSession(ctx context.Context, w http.Respo
 	now := time.Now()
 
 	if now.Sub(loaded.renewedAt) < sc.RenewalInterval {
-		if err := sc.RedisStore.StoreSessionWithExpiration(ctx, loaded.sessionID, loaded.userID, sc.sessionTTL(loaded.createdAt, now)); err != nil {
+		ttl := sc.sessionTTL(loaded.createdAt, now)
+
+		if err := sc.RedisStore.StoreSessionWithExpiration(ctx, loaded.sessionID, loaded.userID, ttl); err != nil {
 			logx.FromContext(ctx).Error().Err(err).Msg("unable to extend session idle deadline")
+
+			return ctx, false
+		}
+
+		if err := sc.RedisStore.AddUserSession(ctx, loaded.userID, loaded.sessionID, ttl); err != nil {
+			logx.FromContext(ctx).Error().Err(err).Msg("unable to extend user session index")
 
 			return ctx, false
 		}
@@ -434,6 +462,11 @@ func (sc *SessionConfig) writeRefreshedSession(ctx context.Context, w http.Respo
 	// the superseded id stays valid only for in-flight requests, not for the remainder of its original ttl
 	if err := sc.RedisStore.StoreSessionWithExpiration(ctx, loaded.sessionID, loaded.userID, sc.RenewalGrace); err != nil {
 		logx.FromContext(ctx).Error().Err(err).Msg("unable to retire superseded session")
+	}
+
+	// the index entry of the superseded id follows its shortened lifetime
+	if err := sc.RedisStore.AddUserSession(ctx, loaded.userID, loaded.sessionID, sc.RenewalGrace); err != nil {
+		logx.FromContext(ctx).Error().Err(err).Msg("unable to retire superseded session in the user session index")
 	}
 
 	markSessionCookieResponse(w)

@@ -2,7 +2,9 @@ package tokens
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -18,6 +20,11 @@ type TokenBlacklist interface {
 	RevokeAllForUser(ctx context.Context, userID string, ttl time.Duration) error
 	// IsUserRevoked checks if all tokens for a user have been revoked (user suspension)
 	IsUserRevoked(ctx context.Context, userID string) (bool, error)
+	// RevokeIssuedBefore revokes every token issued before the cutoff for a user; the cutoff has
+	// one-second granularity because the JWT iat claim is second precision
+	RevokeIssuedBefore(ctx context.Context, userID string, cutoff time.Time, ttl time.Duration) error
+	// RevokedBefore returns the issued-before cutoff for a user, with ok false when none is set
+	RevokedBefore(ctx context.Context, userID string) (cutoff time.Time, ok bool, err error)
 }
 
 // RedisTokenBlacklist implements TokenBlacklist using Redis
@@ -102,6 +109,43 @@ func (r *RedisTokenBlacklist) IsUserRevoked(ctx context.Context, userID string) 
 	return exists > 0, nil
 }
 
+// RevokeIssuedBefore stores a per-user cutoff; tokens whose iat is before it are rejected by the validator
+func (r *RedisTokenBlacklist) RevokeIssuedBefore(ctx context.Context, userID string, cutoff time.Time, ttl time.Duration) error {
+	if userID == "" {
+		return ErrInvalidTokenID
+	}
+
+	if ttl <= 0 {
+		// Already expired, no need to blacklist
+		return nil
+	}
+
+	return r.client.Set(ctx, r.userCutoffKey(userID), cutoff.Unix(), ttl).Err()
+}
+
+// RevokedBefore returns the stored issued-before cutoff for a user, with ok false when none is set
+func (r *RedisTokenBlacklist) RevokedBefore(ctx context.Context, userID string) (time.Time, bool, error) {
+	if userID == "" {
+		return time.Time{}, false, ErrInvalidTokenID
+	}
+
+	val, err := r.client.Get(ctx, r.userCutoffKey(userID)).Result()
+
+	switch {
+	case errors.Is(err, redis.Nil):
+		return time.Time{}, false, nil
+	case err != nil:
+		return time.Time{}, false, err
+	}
+
+	secs, err := strconv.ParseInt(val, 10, 64)
+	if err != nil {
+		return time.Time{}, false, err
+	}
+
+	return time.Unix(secs, 0), true, nil
+}
+
 // blacklistKey generates the Redis key for a blacklisted token
 func (r *RedisTokenBlacklist) blacklistKey(tokenID string) string {
 	return fmt.Sprintf("%s:%s", r.prefix, tokenID)
@@ -110,6 +154,11 @@ func (r *RedisTokenBlacklist) blacklistKey(tokenID string) string {
 // userSuspensionKey generates the Redis key for a suspended user
 func (r *RedisTokenBlacklist) userSuspensionKey(userID string) string {
 	return fmt.Sprintf("%s:user:%s", r.prefix, userID)
+}
+
+// userCutoffKey generates the Redis key for a user's issued-before cutoff
+func (r *RedisTokenBlacklist) userCutoffKey(userID string) string {
+	return fmt.Sprintf("%s:cutoff:%s", r.prefix, userID)
 }
 
 // NoOpTokenBlacklist is a no-op implementation for when Redis is not available
@@ -138,4 +187,14 @@ func (n *NoOpTokenBlacklist) RevokeAllForUser(_ context.Context, _ string, _ tim
 // IsUserRevoked always returns false
 func (n *NoOpTokenBlacklist) IsUserRevoked(_ context.Context, _ string) (bool, error) {
 	return false, nil
+}
+
+// RevokeIssuedBefore is a no-op
+func (n *NoOpTokenBlacklist) RevokeIssuedBefore(_ context.Context, _ string, _ time.Time, _ time.Duration) error {
+	return nil
+}
+
+// RevokedBefore always reports no cutoff
+func (n *NoOpTokenBlacklist) RevokedBefore(_ context.Context, _ string) (time.Time, bool, error) {
+	return time.Time{}, false, nil
 }
