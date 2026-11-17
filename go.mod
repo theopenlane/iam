@@ -5,6 +5,7 @@ go 1.27.3
 require (
 	entgo.io/ent v0.14.6
 	github.com/99designs/gqlgen v0.17.98
+	github.com/Yiling-J/theine-go v0.6.2
 	github.com/alicebob/miniredis/v2 v2.40.0
 	github.com/brianvoe/gofakeit/v7 v7.18.2
 	github.com/go-webauthn/webauthn v0.18.2
@@ -33,11 +34,15 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.45.0
 	github.com/theopenlane/echox v0.3.0
 	github.com/theopenlane/entx v0.38.3
+	github.com/theopenlane/httpsling v0.3.0
 	github.com/theopenlane/logx v0.1.1
 	github.com/theopenlane/utils v0.7.4
 	github.com/urfave/cli/v3 v3.14.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
+	golang.org/x/net v0.62.0
 	golang.org/x/oauth2 v0.38.0
+	golang.org/x/sync v0.24.0
+	golang.org/x/time v0.16.0
 	golang.org/x/tools v0.52.0
 	google.golang.org/api v0.313.0
 	google.golang.org/protobuf v1.36.12
@@ -55,7 +60,6 @@ require (
 	github.com/Microsoft/go-winio v0.6.4 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/XSAM/otelsql v0.44.0 // indirect
-	github.com/Yiling-J/theine-go v0.6.2 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/agnivade/levenshtein v1.2.2 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
@@ -182,7 +186,6 @@ require (
 	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
-	golang.org/x/time v0.16.0 // indirect
 	gonum.org/v1/gonum v0.17.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20261019180522-ce908d29299b // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20261104224025-d1e00e9f33ab // indirect

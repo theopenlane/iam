@@ -407,6 +407,53 @@ func TestHashAPITokenComponents(t *testing.T) {
 	}
 }
 
+func TestParseAPITokenID(t *testing.T) {
+	keyring, err := NewAPITokenKeyring(APITokenKey{Version: "v1", Secret: make([]byte, MinAPITokenSecretLength), Status: KeyStatusActive})
+	if err != nil {
+		t.Fatalf(errCreateKeyringFmt, err)
+	}
+
+	tm := (&TokenManager{}).WithAPITokenKeyring(keyring)
+
+	generated, err := tm.GenerateAPIToken(WithAPITokenPrefix("tst_"))
+	if err != nil {
+		t.Fatalf(errTokenGenerationFmt, err)
+	}
+
+	tests := []struct {
+		name    string
+		value   string
+		prefix  string
+		wantID  ulid.ULID
+		wantErr error
+	}{
+		{name: "matching prefix", value: generated.Value, prefix: "tst_", wantID: generated.TokenID},
+		{name: "wrong prefix", value: generated.Value, prefix: "other_", wantErr: ErrAPITokenInvalidFormat},
+		{name: "malformed token", value: "tst_not-a-token", prefix: "tst_", wantErr: ErrAPITokenInvalidFormat},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			id, err := tm.ParseAPITokenID(tc.value, WithAPITokenPrefix(tc.prefix))
+			if tc.wantErr != nil {
+				if !errors.Is(err, tc.wantErr) {
+					t.Fatalf("expected %v, got %v", tc.wantErr, err)
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected parse to succeed: %v", err)
+			}
+
+			if id != tc.wantID {
+				t.Fatalf("expected id %v, got %v", tc.wantID, id)
+			}
+		})
+	}
+}
+
 func TestLoadAPITokenKeyringFromEnv(t *testing.T) {
 	secretActive := base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0x10}, 32))
 	secretDeprecated := base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0x20}, 32))
