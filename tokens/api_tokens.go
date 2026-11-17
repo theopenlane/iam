@@ -472,12 +472,17 @@ func parseOpaqueTokenWithConfig(value string, cfg APITokenConfig) (ulid.ULID, []
 	idPart := parts[0]
 	secretPart := parts[1]
 
-	tokenID, err := ulid.Parse(idPart)
+	tokenID, err := ulid.ParseStrict(idPart)
 	if err != nil {
 		return ulid.ULID{}, nil, fmt.Errorf(wrappedErrorFormat, ErrAPITokenInvalidFormat, err)
 	}
 
-	secretBytes, err := opaqueEncoding.DecodeString(secretPart)
+	// only the canonical encoding is accepted, so each token has exactly one valid string form
+	if tokenID.String() != idPart {
+		return ulid.ULID{}, nil, ErrAPITokenInvalidFormat
+	}
+
+	secretBytes, err := opaqueEncoding.Strict().DecodeString(secretPart)
 	if err != nil {
 		return ulid.ULID{}, nil, fmt.Errorf(wrappedErrorFormat, ErrAPITokenInvalidFormat, err)
 	}

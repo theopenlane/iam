@@ -420,6 +420,15 @@ func TestParseAPITokenID(t *testing.T) {
 		t.Fatalf(errTokenGenerationFmt, err)
 	}
 
+	if len(generated.Secret)%4 == 0 {
+		t.Fatalf("expected the encoded secret to carry padding bits")
+	}
+
+	const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+
+	last := strings.IndexByte(alphabet, generated.Secret[len(generated.Secret)-1])
+	paddingChanged := generated.Secret[:len(generated.Secret)-1] + string(alphabet[last^1])
+
 	tests := []struct {
 		name    string
 		value   string
@@ -430,6 +439,8 @@ func TestParseAPITokenID(t *testing.T) {
 		{name: "matching prefix", value: generated.Value, prefix: "tst_", wantID: generated.TokenID},
 		{name: "wrong prefix", value: generated.Value, prefix: "other_", wantErr: ErrAPITokenInvalidFormat},
 		{name: "malformed token", value: "tst_not-a-token", prefix: "tst_", wantErr: ErrAPITokenInvalidFormat},
+		{name: "lowercase id", value: "tst_" + strings.ToLower(generated.TokenID.String()) + "." + generated.Secret, prefix: "tst_", wantErr: ErrAPITokenInvalidFormat},
+		{name: "secret with changed padding bits", value: "tst_" + generated.TokenID.String() + "." + paddingChanged, prefix: "tst_", wantErr: ErrAPITokenInvalidFormat},
 	}
 
 	for _, tc := range tests {

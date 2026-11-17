@@ -102,7 +102,7 @@ type Token struct {
 type StoredToken struct {
 	// ID is the stored token ID
 	ID string
-	// Kind is the stored token kind
+	// Kind must come from the stored row, never from Lookup, or a token renamed to another kind's prefix verifies
 	Kind TokenKind
 	// Hash is the stored keyed digest
 	Hash string
@@ -174,7 +174,7 @@ func (i *TokenIssuer) Lookup(raw string) (TokenKind, ulid.ULID, error) {
 	return kind, id, nil
 }
 
-// Verify checks a presented token against its stored record
+// Verify checks a presented token against its stored record, leaving expiry, single use and revocation to the caller
 func (i *TokenIssuer) Verify(raw string, stored StoredToken) error {
 	kind := KindOf(raw)
 	if kind == "" || kind != stored.Kind {

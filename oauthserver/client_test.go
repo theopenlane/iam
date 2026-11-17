@@ -14,8 +14,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Yiling-J/theine-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/singleflight"
 )
 
 func newDocServer(t *testing.T, handler func(w http.ResponseWriter, r *http.Request, base string)) *httptest.Server {
@@ -41,18 +43,24 @@ func testDial(ctx context.Context, network, address string) (net.Conn, error) {
 	return (&net.Dialer{}).DialContext(ctx, network, address)
 }
 
-func refusingDialer(refused error) DialContextFunc {
-	return func(context.Context, string, string) (net.Conn, error) { return nil, refused }
+var errRefusedByDialer = errors.New("refused by test dialer")
+
+func refusingDialer(calls *atomic.Int32) DialContextFunc {
+	return func(context.Context, string, string) (net.Conn, error) {
+		calls.Add(1)
+
+		return nil, errRefusedByDialer
+	}
 }
 
-func expireCachedClient(t *testing.T, r *ClientResolver, clientID string) {
+func expireEntry[T any](t *testing.T, cache *theine.Cache[string, *cachedEntry[T]], key string) {
 	t.Helper()
 
-	cached, ok := r.clients.Get(clientID)
+	cached, ok := cache.Get(key)
 	require.True(t, ok)
 
-	r.clients.SetWithTTL(clientID, &cachedClient{client: cached.client, fetchedAt: time.Now().Add(-metadataCacheTTL - time.Minute)}, 1, metadataMaxStale)
-	r.clients.Wait()
+	cache.SetWithTTL(key, &cachedEntry[T]{value: cached.value, fetchedAt: time.Now().Add(-metadataCacheTTL - time.Minute)}, 1, metadataMaxStale)
+	cache.Wait()
 }
 
 func TestValidateRedirectURI(t *testing.T) {
@@ -75,6 +83,9 @@ func TestValidateRedirectURI(t *testing.T) {
 		{name: "localhost with another path", uri: "http://localhost:5555/other", wantErr: true},
 		{name: "lookalike localhost host", uri: "http://localhost.evil.com/callback", wantErr: true},
 		{name: "https localhost needs an exact match", uri: "https://localhost:5555/callback", wantErr: true},
+		{name: "loopback with userinfo", uri: "http://evil@127.0.0.1:9999/cb", wantErr: true},
+		{name: "loopback with a fragment", uri: "http://127.0.0.1:9999/cb#x", wantErr: true},
+		{name: "loopback with an empty fragment", uri: "http://127.0.0.1:9999/cb#", wantErr: true},
 		{name: "unparsable", uri: "http://[::1", wantErr: true},
 	}
 
@@ -130,7 +141,7 @@ func TestClientValidate(t *testing.T) {
 		{name: "cross-site client_uri", mutate: func(c *Client) { c.URI = "https://claude.ai" }, wantErr: errInvalidClientURI},
 		{name: "javascript client_uri", mutate: func(c *Client) { c.URI = "javascript:alert(1)" }, wantErr: errInvalidClientURI},
 		{name: "http logo", mutate: func(c *Client) { c.LogoURI = "http://cdn.example/logo.png" }, wantErr: errInvalidLogoURI},
-		{name: "control characters in name", mutate: func(c *Client) { c.Name = "Claude‮\n" }, wantErr: errInvalidClientName},
+		{name: "control characters in name", mutate: func(c *Client) { c.Name = "Claude" + string(rune(0x202E)) + "\n" }, wantErr: errInvalidClientName},
 		{name: "name too long", mutate: func(c *Client) { c.Name = strings.Repeat("x", 101) }, wantErr: errInvalidClientName},
 		{name: "blank name", mutate: func(c *Client) { c.Name = "   " }, wantErr: errInvalidClientName},
 	}
@@ -231,8 +242,8 @@ func TestIsHiddenRune(t *testing.T) {
 		{name: "letter", r: 'a'},
 		{name: "space", r: ' '},
 		{name: "newline", r: '\n', want: true},
-		{name: "right-to-left override", r: '‮', want: true},
-		{name: "zero-width joiner", r: '‍', want: true},
+		{name: "right-to-left override", r: rune(0x202E), want: true},
+		{name: "zero-width joiner", r: rune(0x200D), want: true},
 	}
 
 	for _, tc := range tests {
@@ -262,6 +273,89 @@ func TestTransientStatus(t *testing.T) {
 	}
 }
 
+func TestCachedEntryFresh(t *testing.T) {
+	tests := []struct {
+		name string
+		age  time.Duration
+		want bool
+	}{
+		{name: "just fetched", age: 0, want: true},
+		{name: "inside the ttl", age: metadataCacheTTL - time.Minute, want: true},
+		{name: "past the ttl", age: metadataCacheTTL + time.Minute},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			entry := &cachedEntry[string]{value: "doc", fetchedAt: time.Now().Add(-tc.age)}
+
+			assert.Equal(t, tc.want, entry.fresh())
+		})
+	}
+}
+
+func TestCloneClient(t *testing.T) {
+	tests := []struct {
+		name   string
+		client *Client
+	}{
+		{name: "with redirect uris", client: &Client{ID: "https://client.example/c.json", Name: "Example", RedirectURIs: []string{"https://client.example/cb"}}},
+		{name: "without redirect uris", client: &Client{ID: "https://client.example/c.json", Name: "Example"}},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			clone := cloneClient(tc.client)
+			require.Equal(t, tc.client, clone)
+
+			clone.Name = "Changed"
+			if len(clone.RedirectURIs) > 0 {
+				clone.RedirectURIs[0] = "https://evil.example/cb"
+				assert.Equal(t, "https://client.example/cb", tc.client.RedirectURIs[0])
+			}
+
+			assert.Equal(t, "Example", tc.client.Name)
+		})
+	}
+}
+
+func TestShare(t *testing.T) {
+	tests := []struct {
+		name    string
+		timeout time.Duration
+		delay   time.Duration
+		value   string
+		err     error
+		want    string
+		wantErr error
+	}{
+		{name: "returns the fetched value", timeout: time.Second, value: "doc", want: "doc"},
+		{name: "returns the fetch error", timeout: time.Second, err: errRefusedByDialer, wantErr: errRefusedByDialer},
+		{name: "stops waiting when the context ends", timeout: 10 * time.Millisecond, delay: 200 * time.Millisecond, value: "late", wantErr: context.DeadlineExceeded},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var group singleflight.Group
+
+			ctx, cancel := context.WithTimeout(context.Background(), tc.timeout)
+			t.Cleanup(cancel)
+
+			got, err := share(ctx, &group, tc.name, func() (string, error) {
+				time.Sleep(tc.delay)
+
+				return tc.value, tc.err
+			})
+			if tc.wantErr != nil {
+				assert.ErrorIs(t, err, tc.wantErr)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
 func TestIsDotSegment(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -273,6 +367,9 @@ func TestIsDotSegment(t *testing.T) {
 		{name: "empty", segment: ""},
 		{name: "name with dots", segment: "client.json"},
 		{name: "three dots", segment: "..."},
+		{name: "dot dot with a parameter", segment: "..;x=1", want: true},
+		{name: "dot with a parameter", segment: ".;", want: true},
+		{name: "name with a parameter", segment: "client;v=1"},
 	}
 
 	for _, tc := range tests {
@@ -389,14 +486,11 @@ func TestNewClientResolver(t *testing.T) {
 }
 
 func TestResolve(t *testing.T) {
-	refused := errors.New("refused by test dialer")
-
 	tests := []struct {
 		name     string
 		clientID string
 		path     string
 		opts     []ResolverOption
-		dial     DialContextFunc
 		handler  func(w http.ResponseWriter, r *http.Request, base string)
 		wantErr  error
 		wantName string
@@ -474,18 +568,13 @@ func TestResolve(t *testing.T) {
 			},
 			wantErr: ErrClientMetadata,
 		},
-		{
-			name:     "dial refused by the injected dialer",
-			clientID: "http://127.0.0.1:1/client.json",
-			opts:     []ResolverOption{WithInsecureClientIDs()},
-			dial:     refusingDialer(refused),
-			handler:  serveValidDoc,
-			wantErr:  refused,
-		},
 		{name: "not a url", clientID: "not a url", handler: serveValidDoc, wantErr: ErrInvalidClientID},
 		{name: "origin without path", clientID: "https://example.com", handler: serveValidDoc, wantErr: ErrInvalidClientID},
 		{name: "root path", clientID: "https://example.com/", handler: serveValidDoc, wantErr: ErrInvalidClientID},
-		{name: "userinfo", clientID: "https://u:p@example.com/c", handler: serveValidDoc, wantErr: ErrInvalidClientID},
+		{name: "userinfo", clientID: "https://user@example.com/c", handler: serveValidDoc, wantErr: ErrInvalidClientID},
+		{name: "backslash", clientID: "https://example.com/a%5Cb", handler: serveValidDoc, wantErr: ErrInvalidClientID},
+		{name: "empty segment", clientID: "https://example.com//c", handler: serveValidDoc, wantErr: ErrInvalidClientID},
+		{name: "dot-dot segment with a parameter", clientID: "https://example.com/..;/c", handler: serveValidDoc, wantErr: ErrInvalidClientID},
 		{name: "fragment", clientID: "https://example.com/c#frag", handler: serveValidDoc, wantErr: ErrInvalidClientID},
 		{name: "dot segment", clientID: "https://example.com/./c", handler: serveValidDoc, wantErr: ErrInvalidClientID},
 		{name: "dot-dot segment", clientID: "https://example.com/a/../c", handler: serveValidDoc, wantErr: ErrInvalidClientID},
@@ -501,12 +590,7 @@ func TestResolve(t *testing.T) {
 				clientID = srv.URL + tc.path
 			}
 
-			dial := tc.dial
-			if dial == nil {
-				dial = testDial
-			}
-
-			r, err := NewClientResolver(dial, tc.opts...)
+			r, err := NewClientResolver(testDial, tc.opts...)
 			require.NoError(t, err)
 			t.Cleanup(r.Close)
 
@@ -520,6 +604,75 @@ func TestResolve(t *testing.T) {
 			assert.Equal(t, tc.wantName, c.Name)
 		})
 	}
+
+	t.Run("uses the injected dialer", func(t *testing.T) {
+		var calls atomic.Int32
+
+		r, err := NewClientResolver(refusingDialer(&calls), WithInsecureClientIDs())
+		require.NoError(t, err)
+		t.Cleanup(r.Close)
+
+		_, err = r.Resolve(context.Background(), "http://127.0.0.1:1/client.json")
+		assert.ErrorIs(t, err, ErrClientMetadata)
+		assert.NotErrorIs(t, err, errRefusedByDialer)
+		assert.Positive(t, calls.Load())
+	})
+
+	t.Run("returns a copy of the cached client", func(t *testing.T) {
+		srv := newDocServer(t, serveValidDoc)
+
+		r, err := NewClientResolver(testDial, WithInsecureClientIDs())
+		require.NoError(t, err)
+		t.Cleanup(r.Close)
+
+		first, err := r.Resolve(context.Background(), srv.URL+"/client.json")
+		require.NoError(t, err)
+
+		first.Name = "Changed"
+		first.RedirectURIs[0] = "https://evil.example/cb"
+
+		second, err := r.Resolve(context.Background(), srv.URL+"/client.json")
+		require.NoError(t, err)
+		assert.Equal(t, "Test Client", second.Name)
+		assert.Equal(t, []string{"https://client.example/cb"}, second.RedirectURIs)
+	})
+
+	t.Run("caches failed client ids", func(t *testing.T) {
+		var fetches atomic.Int32
+
+		srv := newDocServer(t, func(w http.ResponseWriter, r *http.Request, _ string) {
+			fetches.Add(1)
+			http.NotFound(w, r)
+		})
+
+		r, err := NewClientResolver(testDial, WithInsecureClientIDs())
+		require.NoError(t, err)
+		t.Cleanup(r.Close)
+
+		for range 3 {
+			_, err := r.Resolve(context.Background(), srv.URL+"/client.json")
+			assert.ErrorIs(t, err, ErrClientMetadata)
+		}
+
+		assert.Equal(t, int32(1), fetches.Load())
+	})
+
+	t.Run("stops waiting when the caller's context ends", func(t *testing.T) {
+		srv := newDocServer(t, func(w http.ResponseWriter, r *http.Request, base string) {
+			time.Sleep(200 * time.Millisecond)
+			serveValidDoc(w, r, base)
+		})
+
+		r, err := NewClientResolver(testDial, WithInsecureClientIDs())
+		require.NoError(t, err)
+		t.Cleanup(r.Close)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+		t.Cleanup(cancel)
+
+		_, err = r.Resolve(ctx, srv.URL+"/client.json")
+		assert.ErrorIs(t, err, context.DeadlineExceeded)
+	})
 
 	t.Run("caches documents", func(t *testing.T) {
 		var fetches atomic.Int32
@@ -606,7 +759,7 @@ func TestResolve(t *testing.T) {
 		_, err = r.Resolve(context.Background(), clientID)
 		require.NoError(t, err)
 
-		expireCachedClient(t, r, clientID)
+		expireEntry(t, r.clients, clientID)
 		down.Store(true)
 
 		c, err := r.Resolve(context.Background(), clientID)
@@ -614,8 +767,14 @@ func TestResolve(t *testing.T) {
 		assert.Equal(t, "Test Client", c.Name)
 	})
 
-	t.Run("does not serve a stale document when rate limited", func(t *testing.T) {
-		srv := newDocServer(t, serveValidDoc)
+	t.Run("re-fetches a known client without spending the budget", func(t *testing.T) {
+		var fetches atomic.Int32
+
+		srv := newDocServer(t, func(w http.ResponseWriter, r *http.Request, base string) {
+			fetches.Add(1)
+			serveValidDoc(w, r, base)
+		})
+
 		clientID := srv.URL + "/client.json"
 
 		r, err := NewClientResolver(testDial, WithInsecureClientIDs(), WithFetchRate(0, 1))
@@ -625,10 +784,14 @@ func TestResolve(t *testing.T) {
 		_, err = r.Resolve(context.Background(), clientID)
 		require.NoError(t, err)
 
-		expireCachedClient(t, r, clientID)
+		_, err = r.Resolve(context.Background(), srv.URL+"/other.json")
+		require.ErrorIs(t, err, ErrFetchRateLimited)
+
+		expireEntry(t, r.clients, clientID)
 
 		_, err = r.Resolve(context.Background(), clientID)
-		assert.ErrorIs(t, err, ErrFetchRateLimited)
+		require.NoError(t, err)
+		assert.Equal(t, int32(2), fetches.Load())
 	})
 
 	t.Run("evicts a document that becomes invalid", func(t *testing.T) {
@@ -652,7 +815,7 @@ func TestResolve(t *testing.T) {
 		_, err = r.Resolve(context.Background(), clientID)
 		require.NoError(t, err)
 
-		expireCachedClient(t, r, clientID)
+		expireEntry(t, r.clients, clientID)
 		invalid.Store(true)
 
 		_, err = r.Resolve(context.Background(), clientID)

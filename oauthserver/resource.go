@@ -2,10 +2,12 @@ package oauthserver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"slices"
 	"strings"
+	"time"
 )
 
 // ResourceAllowed reports whether resource exactly matches one of the allowed resource URLs
@@ -40,7 +42,7 @@ const (
 func ResourceMetadataURL(resource string) (string, error) {
 	u, err := url.Parse(resource)
 	if err != nil || u.Host == "" {
-		return "", fmt.Errorf("%w: invalid resource %q", ErrResourceMetadata, resource)
+		return "", fmt.Errorf("%w: invalid resource", ErrResourceMetadata)
 	}
 
 	u.Path = protectedResourceMetadataPath + strings.TrimRight(u.Path, "/")
@@ -49,33 +51,46 @@ func ResourceMetadataURL(resource string) (string, error) {
 	return u.String(), nil
 }
 
-// ResourceScopes returns a resource's RFC 9728 scopes_supported, and callers must only pass resources ResourceAllowed accepts
+// ResourceScopes returns a copy of a resource's RFC 9728 scopes_supported, and callers must only pass resources ResourceAllowed accepts
 func (r *ClientResolver) ResourceScopes(ctx context.Context, resource string) ([]string, error) {
-	if scopes, ok := r.resources.Get(resource); ok {
-		return scopes, nil
+	if cached, ok := r.resources.Get(resource); ok && cached.fresh() {
+		return slices.Clone(cached.value), nil
 	}
 
-	v, err, _ := r.group.Do(resourceFlightPrefix+resource, func() (any, error) { return r.fetchResourceScopes(ctx, resource) })
+	scopes, err := share(ctx, &r.group, resourceFlightPrefix+resource, func() ([]string, error) { return r.refreshResourceScopes(ctx, resource) })
 	if err != nil {
 		return nil, err
 	}
 
-	return v.([]string), nil
+	return slices.Clone(scopes), nil
 }
 
-// fetchResourceScopes loads and caches a resource's RFC 9728 scopes_supported
+// refreshResourceScopes fetches a resource's scopes, serving a stale copy while its host is down
+func (r *ClientResolver) refreshResourceScopes(ctx context.Context, resource string) ([]string, error) {
+	cached, hasCached := r.resources.Get(resource)
+	if hasCached && cached.fresh() {
+		return cached.value, nil
+	}
+
+	// resources come from the operator's allowlist, not the caller, so they skip the fetch budget anyone can spend
+	scopes, err := r.fetchResourceScopes(context.WithoutCancel(ctx), resource)
+	if err != nil {
+		if hasCached && errors.Is(err, errMetadataUnavailable) {
+			return cached.value, nil
+		}
+
+		r.resources.Delete(resource)
+
+		return nil, err
+	}
+
+	r.resources.SetWithTTL(resource, &cachedEntry[[]string]{value: scopes, fetchedAt: time.Now()}, 1, metadataCacheTTL+metadataMaxStale)
+
+	return scopes, nil
+}
+
+// fetchResourceScopes loads a resource's RFC 9728 scopes_supported
 func (r *ClientResolver) fetchResourceScopes(ctx context.Context, resource string) ([]string, error) {
-	if scopes, ok := r.resources.Get(resource); ok {
-		return scopes, nil
-	}
-
-	if !r.allowFetch(resource) {
-		return nil, ErrFetchRateLimited
-	}
-
-	// shared by every waiting caller, so one caller cancelling must not fail the rest
-	ctx = context.WithoutCancel(ctx)
-
 	metadataURL, err := ResourceMetadataURL(resource)
 	if err != nil {
 		return nil, err
@@ -94,8 +109,6 @@ func (r *ClientResolver) fetchResourceScopes(ctx context.Context, resource strin
 	if strings.TrimRight(meta.Resource, "/") != strings.TrimRight(resource, "/") {
 		return nil, fmt.Errorf("%w: resource in metadata does not match", ErrResourceMetadata)
 	}
-
-	r.resources.SetWithTTL(resource, meta.ScopesSupported, 1, metadataCacheTTL)
 
 	return meta.ScopesSupported, nil
 }

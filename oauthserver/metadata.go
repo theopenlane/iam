@@ -14,7 +14,7 @@ const (
 	// AuthorizePath is where clients send users to approve a connection
 	AuthorizePath = "/oauth2/authorize"
 	// TokenPath is where clients exchange codes and refresh tokens
-	TokenPath = "/oauth2/token"
+	TokenPath = "/oauth2/token" //nolint:gosec
 	// RevokePath is where clients revoke tokens (RFC 7009)
 	RevokePath = "/oauth2/revoke"
 	// MetadataPath is the RFC 8414 well-known path of the metadata document

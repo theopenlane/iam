@@ -30,6 +30,8 @@ var (
 	errMetadataUnavailable = errors.New("metadata host unavailable")
 	// errUnexpectedStatus is returned when a metadata URL answers with a status other than 200
 	errUnexpectedStatus = errors.New("unexpected response status")
+	// errMalformedDocument is returned when a metadata document is not valid JSON or exceeds the size cap
+	errMalformedDocument = errors.New("metadata document is malformed")
 	// errInvalidClientName is returned when client_name is empty, too long, or contains hidden characters
 	errInvalidClientName = errors.New("client_name must be 1-100 characters with no control or formatting characters")
 	// errInvalidRedirectScheme is returned when a redirect URI uses a scheme a browser could execute

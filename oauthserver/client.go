@@ -19,6 +19,7 @@ import (
 	"github.com/Yiling-J/theine-go"
 	"github.com/theopenlane/httpsling"
 	"github.com/theopenlane/httpsling/httpclient"
+	"github.com/theopenlane/logx"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/sync/singleflight"
 	"golang.org/x/time/rate"
@@ -35,6 +36,8 @@ const (
 	defaultCacheSize = 1024
 	// metadataMaxStale is how long past its TTL a document is still served while its host is down
 	metadataMaxStale = time.Hour
+	// failedClientTTL is how long a client_id whose document failed to load is answered from cache
+	failedClientTTL = 30 * time.Second
 	// defaultFetchRate is how many metadata fetches per second each registrable domain is allowed
 	defaultFetchRate = rate.Limit(1)
 	// defaultFetchBurst is how many fetches to one registrable domain may run back to back
@@ -55,7 +58,7 @@ const (
 
 // Client is a resolved OAuth client
 type Client struct {
-	// ID is the client_id, which is the URL of its metadata document
+	// ID is the client_id, the URL of its metadata document, whose host the consent screen must show
 	ID string `json:"client_id"`
 	// Name is shown to the user on the consent screen
 	Name string `json:"client_name"`
@@ -76,9 +79,11 @@ type ClientResolver struct {
 	// allowInsecure accepts http client IDs for local development
 	allowInsecure bool
 	// clients caches resolved clients by client_id
-	clients *theine.Cache[string, *cachedClient]
+	clients *theine.Cache[string, *cachedEntry[*Client]]
+	// failures caches recent load failures by client_id so repeats don't fetch again
+	failures *theine.Cache[string, error]
 	// resources caches each resource's scopes_supported
-	resources *theine.Cache[string, []string]
+	resources *theine.Cache[string, *cachedEntry[[]string]]
 	// group shares one fetch between concurrent requests for the same document
 	group singleflight.Group
 	// domainLimiters holds one fetch limiter per registrable domain, so one domain can't spend another's budget
@@ -93,12 +98,17 @@ type ClientResolver struct {
 	fetchBurst int
 }
 
-// cachedClient is a resolved client and when its document was fetched
-type cachedClient struct {
-	// client is the resolved client
-	client *Client
+// cachedEntry is a fetched document and when it was fetched
+type cachedEntry[T any] struct {
+	// value is the fetched document
+	value T
 	// fetchedAt is when the document was fetched, used to decide when to fetch it again
 	fetchedAt time.Time
+}
+
+// fresh reports whether the entry is still within its TTL
+func (e *cachedEntry[T]) fresh() bool {
+	return time.Since(e.fetchedAt) < metadataCacheTTL
 }
 
 // ResolverOption configures a ClientResolver
@@ -178,14 +188,22 @@ func NewClientResolver(dial DialContextFunc, opts ...ResolverOption) (*ClientRes
 		return nil, err
 	}
 
-	clients, err := theine.NewBuilder[string, *cachedClient](int64(o.cacheSize)).Build()
+	clients, err := theine.NewBuilder[string, *cachedEntry[*Client]](int64(o.cacheSize)).Build()
 	if err != nil {
 		return nil, err
 	}
 
-	resources, err := theine.NewBuilder[string, []string](int64(o.cacheSize)).Build()
+	failures, err := theine.NewBuilder[string, error](int64(o.cacheSize)).Build()
 	if err != nil {
 		clients.Close()
+
+		return nil, err
+	}
+
+	resources, err := theine.NewBuilder[string, *cachedEntry[[]string]](int64(o.cacheSize)).Build()
+	if err != nil {
+		clients.Close()
+		failures.Close()
 
 		return nil, err
 	}
@@ -193,6 +211,7 @@ func NewClientResolver(dial DialContextFunc, opts ...ResolverOption) (*ClientRes
 	domainLimiters, err := theine.NewBuilder[string, *rate.Limiter](limiterCacheSize).Build()
 	if err != nil {
 		clients.Close()
+		failures.Close()
 		resources.Close()
 
 		return nil, err
@@ -202,6 +221,7 @@ func NewClientResolver(dial DialContextFunc, opts ...ResolverOption) (*ClientRes
 		requester:      requester,
 		allowInsecure:  o.allowInsecure,
 		clients:        clients,
+		failures:       failures,
 		resources:      resources,
 		domainLimiters: domainLimiters,
 		globalLimiter:  rate.NewLimiter(o.globalFetchRate, o.globalFetchBurst),
@@ -223,6 +243,7 @@ func dialThrough(dial DialContextFunc) httpclient.Option {
 // Close stops the resolver's cache maintenance
 func (r *ClientResolver) Close() {
 	r.clients.Close()
+	r.failures.Close()
 	r.resources.Close()
 	r.domainLimiters.Close()
 }
@@ -267,33 +288,37 @@ func fetchDomain(target string) string {
 	return domain
 }
 
-// Resolve returns the client for a client_id, fetching its metadata document if needed
+// Resolve returns a copy of the client for a client_id, fetching its metadata document if needed
 func (r *ClientResolver) Resolve(ctx context.Context, clientID string) (*Client, error) {
 	if err := r.validateClientID(clientID); err != nil {
 		return nil, err
 	}
 
-	if cached, ok := r.clients.Get(clientID); ok && time.Since(cached.fetchedAt) < metadataCacheTTL {
-		return cached.client, nil
+	if cached, ok := r.clients.Get(clientID); ok && cached.fresh() {
+		return cloneClient(cached.value), nil
 	}
 
-	v, err, _ := r.group.Do(clientID, func() (any, error) { return r.refresh(ctx, clientID) })
+	if err, ok := r.failures.Get(clientID); ok {
+		return nil, err
+	}
+
+	client, err := share(ctx, &r.group, clientID, func() (*Client, error) { return r.refresh(ctx, clientID) })
 	if err != nil {
 		return nil, err
 	}
 
-	return v.(*Client), nil
+	return cloneClient(client), nil
 }
 
 // refresh fetches a document, serving a stale copy only while the client's host is down
 func (r *ClientResolver) refresh(ctx context.Context, clientID string) (*Client, error) {
 	cached, hasCached := r.clients.Get(clientID)
-	if hasCached && time.Since(cached.fetchedAt) < metadataCacheTTL {
-		return cached.client, nil
+	if hasCached && cached.fresh() {
+		return cached.value, nil
 	}
 
-	// a spent budget never serves a stale copy, so draining it can't keep an outdated document in use
-	if !r.allowFetch(clientID) {
+	// only first fetches spend the budget, so draining a domain's budget can't lock out a client already known to be valid
+	if !hasCached && !r.allowFetch(clientID) {
 		return nil, ErrFetchRateLimited
 	}
 
@@ -301,17 +326,42 @@ func (r *ClientResolver) refresh(ctx context.Context, clientID string) (*Client,
 	client, err := r.fetch(context.WithoutCancel(ctx), clientID)
 	if err != nil {
 		if hasCached && errors.Is(err, errMetadataUnavailable) {
-			return cached.client, nil
+			return cached.value, nil
 		}
 
 		r.clients.Delete(clientID)
+		r.failures.SetWithTTL(clientID, err, 1, failedClientTTL)
 
 		return nil, err
 	}
 
-	r.clients.SetWithTTL(clientID, &cachedClient{client: client, fetchedAt: time.Now()}, 1, metadataCacheTTL+metadataMaxStale)
+	r.clients.SetWithTTL(clientID, &cachedEntry[*Client]{value: client, fetchedAt: time.Now()}, 1, metadataCacheTTL+metadataMaxStale)
 
 	return client, nil
+}
+
+// share runs fetch once per key across concurrent callers, and each caller stops waiting when its own context ends
+func share[T any](ctx context.Context, group *singleflight.Group, key string, fetch func() (T, error)) (T, error) {
+	var zero T
+
+	select {
+	case result := <-group.DoChan(key, func() (any, error) { return fetch() }):
+		if result.Err != nil {
+			return zero, result.Err
+		}
+
+		return result.Val.(T), nil
+	case <-ctx.Done():
+		return zero, ctx.Err()
+	}
+}
+
+// cloneClient returns a copy of c so callers can't change a cached client
+func cloneClient(c *Client) *Client {
+	clone := *c
+	clone.RedirectURIs = slices.Clone(c.RedirectURIs)
+
+	return &clone
 }
 
 // validateClientID checks that a client_id is an https URL with a path and no userinfo or fragment
@@ -330,17 +380,19 @@ func (r *ClientResolver) validateClientID(clientID string) error {
 		return ErrInvalidClientID
 	}
 
-	// the spec also forbids dot segments, which could make one document claim another path's client ID
-	if slices.ContainsFunc(strings.Split(u.Path, "/"), isDotSegment) {
+	// dot segments, backslashes and empty segments could make one document claim another path's client ID on hosts that normalize paths
+	if strings.Contains(u.Path, `\`) || strings.Contains(u.Path, "//") || slices.ContainsFunc(strings.Split(u.Path, "/"), isDotSegment) {
 		return ErrInvalidClientID
 	}
 
 	return nil
 }
 
-// isDotSegment reports whether a path segment is "." or ".."
+// isDotSegment reports whether a path segment is "." or "..", ignoring any path parameters some servers strip
 func isDotSegment(segment string) bool {
-	return segment == "." || segment == ".."
+	name, _, _ := strings.Cut(segment, ";")
+
+	return name == "." || name == ".."
 }
 
 // fetch loads and validates the metadata document served at clientID
@@ -375,22 +427,33 @@ func (r *ClientResolver) getJSON(ctx context.Context, target string, into any) e
 	ctx, cancel := context.WithTimeout(ctx, metadataTimeout)
 	defer cancel()
 
+	// errors carry fixed text only, since the URL and dialer error can reveal internal addresses to the caller
 	resp, err := r.requester.SendWithContext(ctx, httpsling.Get(), httpsling.URL(target))
 	if err != nil {
-		return fmt.Errorf("%w: %w", errMetadataUnavailable, err)
+		logx.FromContext(ctx).Debug().Err(err).Str("url", target).Msg("metadata fetch failed")
+
+		return errMetadataUnavailable
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		logx.FromContext(ctx).Debug().Int("status", resp.StatusCode).Str("url", target).Msg("metadata fetch returned an unexpected status")
+
 		if transientStatus(resp.StatusCode) {
-			return fmt.Errorf("%w: %w: %s returned %s", errMetadataUnavailable, errUnexpectedStatus, target, resp.Status)
+			return fmt.Errorf("%w: %w", errMetadataUnavailable, errUnexpectedStatus)
 		}
 
-		return fmt.Errorf("%w: %s returned %s", errUnexpectedStatus, target, resp.Status)
+		return errUnexpectedStatus
 	}
 
 	// httpsling's Receive reads the whole body, so decode here to keep the size cap on attacker-hosted documents
-	return json.NewDecoder(io.LimitReader(resp.Body, maxMetadataBytes)).Decode(into)
+	if err := json.NewDecoder(io.LimitReader(resp.Body, maxMetadataBytes)).Decode(into); err != nil {
+		logx.FromContext(ctx).Debug().Err(err).Str("url", target).Msg("metadata document is not valid json")
+
+		return errMalformedDocument
+	}
+
+	return nil
 }
 
 // transientStatus reports responses that suggest the host is briefly unavailable rather than the document being gone
@@ -410,7 +473,7 @@ func (c *Client) validate() error {
 
 	for _, uri := range c.RedirectURIs {
 		if !validRedirectScheme(uri) {
-			return fmt.Errorf("%w: %q", errInvalidRedirectScheme, uri)
+			return errInvalidRedirectScheme
 		}
 	}
 
@@ -472,14 +535,15 @@ func ValidRedirect(raw string) bool {
 	return validRedirectScheme(raw)
 }
 
-// ValidateRedirectURI checks redirectURI against the registered list, ignoring the port only for loopback http (RFC 8252 §7.3)
+// ValidateRedirectURI checks redirectURI against the registered list, and errors may only be redirected to a URI it accepts
 func (c *Client) ValidateRedirectURI(redirectURI string) error {
 	if slices.Contains(c.RedirectURIs, redirectURI) {
 		return nil
 	}
 
+	// the port-agnostic loopback match never accepts userinfo or a fragment
 	req, err := url.Parse(redirectURI)
-	if err != nil || !isHTTPLoopback(req) {
+	if err != nil || req.User != nil || strings.Contains(redirectURI, "#") || !isHTTPLoopback(req) {
 		return ErrInvalidRedirectURI
 	}
 

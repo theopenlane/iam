@@ -3,7 +3,6 @@ package oauthserver
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"sync/atomic"
 	"testing"
@@ -112,13 +111,10 @@ func TestResourceMetadataURL(t *testing.T) {
 }
 
 func TestResourceScopes(t *testing.T) {
-	refused := errors.New("refused by test dialer")
-
 	tests := []struct {
 		name     string
 		resource string
 		path     string
-		dial     DialContextFunc
 		handler  func(w http.ResponseWriter, r *http.Request, base string)
 		want     []string
 		wantErr  error
@@ -142,7 +138,6 @@ func TestResourceScopes(t *testing.T) {
 			wantErr: ErrResourceMetadata,
 		},
 		{name: "not a url", resource: "not a url", handler: serveResourceMetadata, wantErr: ErrResourceMetadata},
-		{name: "dial refused by the injected dialer", resource: "http://127.0.0.1:1/mcp", dial: refusingDialer(refused), handler: serveResourceMetadata, wantErr: refused},
 	}
 
 	for _, tc := range tests {
@@ -154,12 +149,7 @@ func TestResourceScopes(t *testing.T) {
 				resource = srv.URL + tc.path
 			}
 
-			dial := tc.dial
-			if dial == nil {
-				dial = testDial
-			}
-
-			r, err := NewClientResolver(dial)
+			r, err := NewClientResolver(testDial)
 			require.NoError(t, err)
 			t.Cleanup(r.Close)
 
@@ -199,19 +189,77 @@ func TestResourceScopes(t *testing.T) {
 		assert.Equal(t, int32(1), fetches.Load())
 	})
 
-	t.Run("rate limits fetches", func(t *testing.T) {
-		srv := newDocServer(t, func(w http.ResponseWriter, _ *http.Request, _ string) {
-			w.WriteHeader(http.StatusInternalServerError)
-		})
+	t.Run("uses the injected dialer", func(t *testing.T) {
+		var calls atomic.Int32
 
-		r, err := NewClientResolver(testDial, WithFetchRate(0, 1))
+		r, err := NewClientResolver(refusingDialer(&calls))
 		require.NoError(t, err)
 		t.Cleanup(r.Close)
 
-		_, err = r.ResourceScopes(context.Background(), srv.URL+"/mcp")
+		_, err = r.ResourceScopes(context.Background(), "http://127.0.0.1:1/mcp")
 		assert.ErrorIs(t, err, ErrResourceMetadata)
+		assert.NotErrorIs(t, err, errRefusedByDialer)
+		assert.Positive(t, calls.Load())
+	})
 
-		_, err = r.ResourceScopes(context.Background(), srv.URL+"/mcp")
-		assert.ErrorIs(t, err, ErrFetchRateLimited)
+	t.Run("is not rate limited", func(t *testing.T) {
+		srv := newDocServer(t, serveResourceMetadata)
+
+		r, err := NewClientResolver(testDial, WithFetchRate(0, 1), WithGlobalFetchRate(0, 1))
+		require.NoError(t, err)
+		t.Cleanup(r.Close)
+
+		require.True(t, r.allowFetch(srv.URL+"/client.json"))
+
+		scopes, err := r.ResourceScopes(context.Background(), srv.URL+"/mcp")
+		require.NoError(t, err)
+		assert.Equal(t, []string{"app:read", "control:write"}, scopes)
+	})
+
+	t.Run("serves stale scopes while the host is down", func(t *testing.T) {
+		var down atomic.Bool
+
+		srv := newDocServer(t, func(w http.ResponseWriter, r *http.Request, base string) {
+			if down.Load() {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
+			}
+
+			serveResourceMetadata(w, r, base)
+		})
+
+		resource := srv.URL + "/mcp"
+
+		r, err := NewClientResolver(testDial)
+		require.NoError(t, err)
+		t.Cleanup(r.Close)
+
+		_, err = r.ResourceScopes(context.Background(), resource)
+		require.NoError(t, err)
+
+		expireEntry(t, r.resources, resource)
+		down.Store(true)
+
+		scopes, err := r.ResourceScopes(context.Background(), resource)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"app:read", "control:write"}, scopes)
+	})
+
+	t.Run("returns a copy of the cached scopes", func(t *testing.T) {
+		srv := newDocServer(t, serveResourceMetadata)
+		resource := srv.URL + "/mcp"
+
+		r, err := NewClientResolver(testDial)
+		require.NoError(t, err)
+		t.Cleanup(r.Close)
+
+		first, err := r.ResourceScopes(context.Background(), resource)
+		require.NoError(t, err)
+
+		first[0] = "admin:write"
+
+		second, err := r.ResourceScopes(context.Background(), resource)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"app:read", "control:write"}, second)
 	})
 }
