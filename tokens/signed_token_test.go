@@ -165,3 +165,70 @@ func TestCreateSignedToken(t *testing.T) {
 		require.ErrorIs(t, err, tokens.ErrSigningAlgorithmMismatch)
 	})
 }
+
+// TestVerifySignedToken verifies config-derived verification of minted tokens on the token manager
+func TestVerifySignedToken(t *testing.T) {
+	key, err := rsa.GenerateKey(rand.Reader, mintRSAKeySize)
+	require.NoError(t, err)
+
+	manager := signedTokenManager(t, key)
+
+	t.Run("returns the claims of a token minted for the same audience", func(t *testing.T) {
+		signed, err := manager.CreateSignedToken(
+			tokens.WithSubject(mintSubject),
+			tokens.WithAudience(mintFederationAudience),
+			tokens.WithClaim("organization_id", mintSubject),
+		)
+		require.NoError(t, err)
+
+		claims, err := manager.VerifySignedToken(signed, tokens.WithAudience(mintFederationAudience))
+		require.NoError(t, err)
+
+		assert.Equal(t, mintIssuer, claims["iss"])
+		assert.Equal(t, mintSubject, claims["sub"])
+		assert.Equal(t, mintSubject, claims["organization_id"])
+	})
+
+	t.Run("defaults to the configured audience", func(t *testing.T) {
+		signed, err := manager.CreateSignedToken()
+		require.NoError(t, err)
+
+		_, err = manager.VerifySignedToken(signed)
+		require.NoError(t, err)
+	})
+
+	t.Run("rejects a different audience", func(t *testing.T) {
+		signed, err := manager.CreateSignedToken(tokens.WithAudience(mintFederationAudience))
+		require.NoError(t, err)
+
+		_, err = manager.VerifySignedToken(signed)
+		require.ErrorIs(t, err, jwt.ErrTokenInvalidAudience)
+	})
+
+	t.Run("rejects a different issuer", func(t *testing.T) {
+		signed, err := manager.CreateSignedToken()
+		require.NoError(t, err)
+
+		_, err = manager.VerifySignedToken(signed, tokens.WithIssuer("https://other.example.com"))
+		require.ErrorIs(t, err, jwt.ErrTokenInvalidIssuer)
+	})
+
+	t.Run("rejects an expired token", func(t *testing.T) {
+		signed, err := manager.CreateSignedToken(tokens.WithAccessDuration(-time.Minute))
+		require.NoError(t, err)
+
+		_, err = manager.VerifySignedToken(signed)
+		require.ErrorIs(t, err, jwt.ErrTokenExpired)
+	})
+
+	t.Run("rejects a token signed by another manager", func(t *testing.T) {
+		otherKey, err := rsa.GenerateKey(rand.Reader, mintRSAKeySize)
+		require.NoError(t, err)
+
+		signed, err := signedTokenManager(t, otherKey).CreateSignedToken()
+		require.NoError(t, err)
+
+		_, err = manager.VerifySignedToken(signed)
+		require.Error(t, err)
+	})
+}

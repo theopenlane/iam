@@ -304,3 +304,81 @@ func TestDownloadToken(t *testing.T) {
 		require.ErrorIs(t, err, tokens.ErrDownloadTokenMissingObjectURI)
 	})
 }
+
+func TestShareToken(t *testing.T) {
+	shareID := ulids.New().String()
+	orgID := ulids.New()
+
+	t.Run("Sign And Verify", func(t *testing.T) {
+		expiresIn := 30 * time.Minute
+
+		token, err := tokens.NewShareToken(shareID, orgID, expiresIn)
+		require.NoError(t, err, "could not create share token")
+
+		require.Equal(t, shareID, token.ShareID)
+		require.Equal(t, orgID, token.OrgID)
+		require.WithinDuration(t, time.Now().Add(expiresIn), token.ExpiresAt, time.Second)
+
+		signature, secret, err := token.Sign()
+		require.NoError(t, err, "failed to sign share token")
+		require.NotEmpty(t, signature)
+		require.Len(t, secret, 128)
+
+		rehydrated := &tokens.ShareToken{
+			ShareID:     token.ShareID,
+			OrgID:       token.OrgID,
+			SigningInfo: tokens.SigningInfo{ExpiresAt: token.ExpiresAt},
+		}
+
+		require.NoError(t, rehydrated.Verify(signature, secret), "expected successful verification")
+
+		rehydrated.ShareID = ulids.New().String()
+		require.ErrorIs(t, rehydrated.Verify(signature, secret), tokens.ErrTokenInvalid, "expected error when share id differs")
+
+		rehydrated.ShareID = token.ShareID
+		rehydrated.OrgID = ulids.New()
+		require.ErrorIs(t, rehydrated.Verify(signature, secret), tokens.ErrTokenInvalid, "expected error when org id differs")
+	})
+
+	t.Run("Wrong Secret", func(t *testing.T) {
+		token, err := tokens.NewShareToken(shareID, orgID, time.Minute)
+		require.NoError(t, err, "could not create share token")
+
+		signature, _, err := token.Sign()
+		require.NoError(t, err, "failed to sign share token")
+
+		otherToken, err := tokens.NewShareToken(shareID, orgID, time.Minute)
+		require.NoError(t, err, "could not create share token")
+
+		_, otherSecret, err := otherToken.Sign()
+		require.NoError(t, err, "failed to sign share token")
+
+		require.ErrorIs(t, token.Verify(signature, otherSecret), tokens.ErrTokenInvalid, "expected error when wrong secret is used")
+	})
+
+	t.Run("Expired", func(t *testing.T) {
+		token, err := tokens.NewShareToken(shareID, orgID, time.Minute)
+		require.NoError(t, err, "could not create share token")
+
+		signature, secret, err := token.Sign()
+		require.NoError(t, err, "failed to sign share token")
+
+		token.ExpiresAt = time.Now().Add(-time.Minute)
+		require.ErrorIs(t, token.Verify(signature, secret), tokens.ErrTokenExpired)
+	})
+
+	t.Run("Missing Share ID", func(t *testing.T) {
+		_, err := tokens.NewShareToken("", orgID, time.Minute)
+		require.ErrorIs(t, err, tokens.ErrShareTokenMissingShareID)
+	})
+
+	t.Run("Missing Org ID", func(t *testing.T) {
+		_, err := tokens.NewShareToken(shareID, ulids.Null, time.Minute)
+		require.ErrorIs(t, err, tokens.ErrShareTokenMissingOrgID)
+	})
+
+	t.Run("Missing Expiration", func(t *testing.T) {
+		_, err := tokens.NewShareToken(shareID, orgID, 0)
+		require.ErrorIs(t, err, tokens.ErrExpirationIsRequired)
+	})
+}

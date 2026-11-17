@@ -45,6 +45,7 @@ var (
 	_ URLToken = (*ResetToken)(nil)
 	_ URLToken = (*OrgInviteToken)(nil)
 	_ URLToken = (*DownloadToken)(nil)
+	_ URLToken = (*ShareToken)(nil)
 )
 
 // NewVerificationToken creates a token struct from an email address that expires
@@ -401,5 +402,52 @@ func (t *DownloadToken) Validate() error {
 
 // Verify checks that the signature and secret are valid for the token.
 func (t *DownloadToken) Verify(signature string, secret []byte) error {
+	return verifyURLToken(t, signature, secret)
+}
+
+// NewShareToken creates a token for the share identified by shareID in the organization that expires
+// after the provided duration
+func NewShareToken(shareID string, orgID ulid.ULID, expiresIn time.Duration) (*ShareToken, error) {
+	if shareID == "" {
+		return nil, ErrShareTokenMissingShareID
+	}
+
+	if ulids.IsZero(orgID) {
+		return nil, ErrShareTokenMissingOrgID
+	}
+
+	return initializeURLToken(&ShareToken{ShareID: shareID, OrgID: orgID}, expiresIn)
+}
+
+// ShareToken packages a share identifier and its organization with random data and an expiration time
+// so that it can be signed into a token carried by a share URL
+type ShareToken struct {
+	ShareID string    `msgpack:"share_id"`
+	OrgID   ulid.ULID `msgpack:"organization_id"`
+	SigningInfo
+}
+
+// Sign creates a base64 encoded string from the token data so that it can be carried by a share URL.
+// The returned secret should be stored in the database so that the string can be recomputed when
+// verifying a presented token
+func (t *ShareToken) Sign() (string, []byte, error) {
+	return signURLToken(t)
+}
+
+// Validate checks that the token has required fields
+func (t *ShareToken) Validate() error {
+	if t.ShareID == "" {
+		return ErrShareTokenMissingShareID
+	}
+
+	if ulids.IsZero(t.OrgID) {
+		return ErrShareTokenMissingOrgID
+	}
+
+	return nil
+}
+
+// Verify checks that a token was signed with the secret and is not expired
+func (t *ShareToken) Verify(signature string, secret []byte) error {
 	return verifyURLToken(t, signature, secret)
 }

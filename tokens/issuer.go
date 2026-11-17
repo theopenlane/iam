@@ -228,6 +228,26 @@ func (i *Issuer) CreateSignedToken(opts ...ConfigOpt) (string, error) {
 	return i.Sign(jwt.NewWithClaims(method, claims))
 }
 
+// VerifySignedToken verifies a token minted by CreateSignedToken and returns its claims
+func (i *Issuer) VerifySignedToken(tks string, opts ...ConfigOpt) (jwt.MapClaims, error) {
+	conf := i.Config().derive(opts...)
+
+	parser := jwt.NewParser(
+		jwt.WithValidMethods(allowedAlgorithms),
+		jwt.WithIssuer(conf.Issuer),
+		jwt.WithAudience(conf.Audience),
+		jwt.WithExpirationRequired(),
+	)
+
+	claims := jwt.MapClaims{}
+
+	if _, err := parser.ParseWithClaims(tks, claims, i.keyFunc); err != nil {
+		return nil, err
+	}
+
+	return claims, nil
+}
+
 // CreateRefreshToken creates a refresh token from an access token.
 func (i *Issuer) CreateRefreshToken(accessToken *jwt.Token) (*jwt.Token, error) {
 	accessClaims, ok := accessToken.Claims.(*Claims)
