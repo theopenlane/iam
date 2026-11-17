@@ -71,6 +71,8 @@ var (
 	ErrIssuerRequired = errors.New("issuer is required")
 	// ErrSigningAlgorithmMismatch is returned when the current signing key does not use the algorithm the operation requires
 	ErrSigningAlgorithmMismatch = errors.New("current signing key does not use the required algorithm")
+	// ErrSignedTokenUseMismatch is returned when a token presented for signed token verification was not minted with WithSignedTokenUse
+	ErrSignedTokenUseMismatch = errors.New("token was not minted as a signed token")
 	// ErrAPITokenMultipleActive is returned when multiple keys are marked as active
 	ErrAPITokenMultipleActive = errors.New("only one api token key can be active at a time")
 	// ErrAPITokenNoActive is returned when API tokens are enabled but no active key exists
@@ -124,6 +126,10 @@ var (
 	ErrDownloadTokenMissingObjectURI = errors.New("download token is missing object key")
 	// ErrDownloadTokenMissingTokenID is returned when the download token is missing the token id
 	ErrDownloadTokenMissingTokenID = errors.New("download token is missing token id")
+	// ErrShareTokenMissingShareID is returned when the share token is missing the share id
+	ErrShareTokenMissingShareID = errors.New("share token is missing share id")
+	// ErrShareTokenMissingOrgID is returned when the share token is missing the org id
+	ErrShareTokenMissingOrgID = errors.New("share token is missing org id")
 	// ErrExpirationIsRequired is returned when signing info is provided a zero-value expiration
 	ErrExpirationIsRequired = errors.New("signing info requires a non-zero expiration")
 	// ErrFailedSigning is returned when an error occurs when trying to generate signing info with expiration

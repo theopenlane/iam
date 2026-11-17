@@ -78,6 +78,8 @@ type Config struct {
 	ExtraClaims map[string]any `json:"-" koanf:"-"`
 	// RequiredAlgorithm refuses signing when the current key uses a different algorithm
 	RequiredAlgorithm string `json:"-" koanf:"-"`
+	// StampSignedTokenUse mints the token use claim VerifySignedToken requires, set per operation
+	StampSignedTokenUse bool `json:"-" koanf:"-"`
 }
 
 // ConfigOpt customizes a Config at construction or derives a per-operation copy
@@ -143,6 +145,13 @@ func WithClaim(name string, value any) ConfigOpt {
 func WithRequiredAlgorithm(alg string) ConfigOpt {
 	return func(c *Config) {
 		c.RequiredAlgorithm = alg
+	}
+}
+
+// WithSignedTokenUse stamps the token use claim so the minted token can be verified with VerifySignedToken
+func WithSignedTokenUse() ConfigOpt {
+	return func(c *Config) {
+		c.StampSignedTokenUse = true
 	}
 }
 

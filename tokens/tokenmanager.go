@@ -26,6 +26,13 @@ var (
 	allowedAlgorithms = []string{"EdDSA", "RS256", "RS384", "RS512"}
 )
 
+const (
+	// SignedTokenUseClaim is the claim CreateSignedToken stamps on tokens minted with WithSignedTokenUse
+	SignedTokenUseClaim = "token_use"
+	// SignedTokenUse is the value of the token use claim on tokens minted with WithSignedTokenUse
+	SignedTokenUse = "signed"
+)
+
 type loadedKey struct {
 	kid     string
 	ulid    ulid.ULID
