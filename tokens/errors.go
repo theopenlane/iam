@@ -71,6 +71,8 @@ var (
 	ErrIssuerRequired = errors.New("issuer is required")
 	// ErrSigningAlgorithmMismatch is returned when the current signing key does not use the algorithm the operation requires
 	ErrSigningAlgorithmMismatch = errors.New("current signing key does not use the required algorithm")
+	// ErrSignedTokenUseMismatch is returned when a token presented for signed token verification was not minted with WithSignedTokenUse
+	ErrSignedTokenUseMismatch = errors.New("token was not minted as a signed token")
 	// ErrAPITokenMultipleActive is returned when multiple keys are marked as active
 	ErrAPITokenMultipleActive = errors.New("only one api token key can be active at a time")
 	// ErrAPITokenNoActive is returned when API tokens are enabled but no active key exists

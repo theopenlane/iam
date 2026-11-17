@@ -195,7 +195,7 @@ func (i *Issuer) CreateAccessToken(claims *Claims, opts ...ConfigOpt) (*jwt.Toke
 }
 
 // CreateSignedToken mints and signs a token from the derived config; the iat, nbf,
-// and jti claims are always server-derived
+// and jti claims are always server-derived, and the token use claim is only stamped by WithSignedTokenUse
 func (i *Issuer) CreateSignedToken(opts ...ConfigOpt) (string, error) {
 	conf := i.Config().derive(opts...)
 
@@ -225,6 +225,13 @@ func (i *Issuer) CreateSignedToken(opts ...ConfigOpt) (string, error) {
 		claims["sub"] = conf.Subject
 	}
 
+	// the token use claim is only ever set by WithSignedTokenUse, never by an extra claim
+	delete(claims, SignedTokenUseClaim)
+
+	if conf.StampSignedTokenUse {
+		claims[SignedTokenUseClaim] = SignedTokenUse
+	}
+
 	return i.Sign(jwt.NewWithClaims(method, claims))
 }
 
@@ -243,6 +250,11 @@ func (i *Issuer) VerifySignedToken(tks string, opts ...ConfigOpt) (jwt.MapClaims
 
 	if _, err := parser.ParseWithClaims(tks, claims, i.keyFunc); err != nil {
 		return nil, err
+	}
+
+	// access, refresh, impersonation, and unstamped signed tokens share the keys and issuer but never carry the token use claim
+	if claims[SignedTokenUseClaim] != SignedTokenUse {
+		return nil, ErrSignedTokenUseMismatch
 	}
 
 	return claims, nil
