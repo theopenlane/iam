@@ -67,26 +67,29 @@ func NewIntegrationCaller(orgID string) *Caller {
 	}
 }
 
-// EnsureIntegrationCaller fills the integration actor identity on subject-less callers, retaining attributed ones, granting audit-log bypass either way so integration-driven
-// writes skip history tables
+// EnsureIntegrationCaller replaces the caller with the integration actor pinned to orgID so integration runs never act with a user's identity or role,
+// granting audit-log bypass so integration-driven writes skip history tables
 func EnsureIntegrationCaller(ctx context.Context, orgID string) context.Context {
 	caller, ok := CallerFromContext(ctx)
 	if !ok {
 		return WithCaller(ctx, NewIntegrationCaller(orgID))
 	}
 
-	if caller.SubjectID != "" {
-		attributed := *caller
-		attributed.Capabilities |= CapBypassAuditLog
-
-		return EnsureCallerOrg(WithCaller(ctx, &attributed), orgID)
-	}
-
 	attributed := *caller
 	attributed.SubjectID = IntegrationSubjectID
 	attributed.SubjectName = IntegrationDisplayName
 	attributed.SubjectEmail = IntegrationEmail
-	attributed.Capabilities |= CapIntegrationActor | CapBypassAuditLog
 
-	return EnsureCallerOrg(WithCaller(ctx, &attributed), orgID)
+	// clear organization role from original caller
+	attributed.OrganizationRole = ""
+
+	// because we are acting on behalf of the org and not as a user, we need to set CapInternalOperation
+	attributed.Capabilities |= CapIntegrationActor | CapInternalOperation | CapBypassAuditLog
+
+	if orgID != "" {
+		attributed.OrganizationID = orgID
+		attributed.OrganizationIDs = []string{orgID}
+	}
+
+	return WithCaller(ctx, &attributed)
 }

@@ -123,7 +123,7 @@ func TestNewIntegrationCaller(t *testing.T) {
 	}
 }
 
-// TestEnsureIntegrationCaller verifies identity is filled only when no attributed caller is present
+// TestEnsureIntegrationCaller verifies every caller is replaced by the integration actor pinned to the org
 func TestEnsureIntegrationCaller(t *testing.T) {
 	t.Run("no caller sets the full integration caller", func(t *testing.T) {
 		got, ok := CallerFromContext(EnsureIntegrationCaller(context.Background(), "org-1"))
@@ -136,24 +136,35 @@ func TestEnsureIntegrationCaller(t *testing.T) {
 		}
 	})
 
-	t.Run("caller with subject is retained aside from org", func(t *testing.T) {
+	t.Run("caller with subject is replaced by integration actor", func(t *testing.T) {
 		ctx := WithCaller(context.Background(), &Caller{
-			SubjectID:    "user-1",
-			SubjectName:  "Real User",
-			Capabilities: CapBypassFeatureCheck,
+			SubjectID:        "user-1",
+			SubjectName:      "Real User",
+			OrganizationID:   "org-2",
+			OrganizationIDs:  []string{"org-2", "org-1"},
+			OrganizationRole: AdminRole,
+			Capabilities:     CapBypassFeatureCheck,
 		})
 		got, _ := CallerFromContext(EnsureIntegrationCaller(ctx, "org-1"))
 
-		if got.SubjectID != "user-1" || got.SubjectName != "Real User" {
-			t.Errorf("subject identity must be retained, got %s / %s", got.SubjectID, got.SubjectName)
+		if got.SubjectID != IntegrationSubjectID || got.SubjectName != IntegrationDisplayName {
+			t.Errorf("identity: want %s / %s, got %s / %s", IntegrationSubjectID, IntegrationDisplayName, got.SubjectID, got.SubjectName)
 		}
 
-		if got.Has(CapIntegrationActor) {
-			t.Error("capabilities of an authenticated caller must not be expanded")
+		if got.OrganizationRole != "" {
+			t.Errorf("OrganizationRole: want empty, got %s", got.OrganizationRole)
 		}
 
-		if got.OrganizationID != "org-1" {
-			t.Errorf("OrganizationID: want org-1, got %s", got.OrganizationID)
+		if !got.Has(CapIntegrationActor) || !got.Has(CapInternalOperation) || !got.Has(CapBypassAuditLog) {
+			t.Error("expected integration actor, internal operation, and audit log bypass capabilities")
+		}
+
+		if got.Has(CapBypassOrgFilter) {
+			t.Error("must not gain CapBypassOrgFilter")
+		}
+
+		if got.OrganizationID != "org-1" || len(got.OrganizationIDs) != 1 || got.OrganizationIDs[0] != "org-1" {
+			t.Errorf("org scope: want org-1 only, got %s / %v", got.OrganizationID, got.OrganizationIDs)
 		}
 	})
 

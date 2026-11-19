@@ -349,6 +349,7 @@ func TestIsUserlessContext(t *testing.T) {
 		{name: "user", ctx: auth.WithCaller(context.Background(), &auth.Caller{SubjectID: "user-1", AuthenticationType: auth.JWTAuthentication}), want: false},
 		{name: "api token", ctx: auth.WithCaller(context.Background(), &auth.Caller{SubjectID: "token-1", AuthenticationType: auth.APITokenAuthentication}), want: true},
 		{name: "org support", ctx: auth.WithCaller(context.Background(), auth.NewOrgSupportCaller("org-1", "support-1", "Support", "support@example.com")), want: true},
+		{name: "integration actor", ctx: auth.EnsureIntegrationCaller(auth.WithCaller(context.Background(), &auth.Caller{SubjectID: "user-1", AuthenticationType: auth.JWTAuthentication}), "org-1"), want: true},
 	}
 
 	for _, tc := range tests {
