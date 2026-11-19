@@ -207,7 +207,7 @@ func HasOrganizationContextHeader(c echo.Context) bool {
 }
 
 // IsUserlessContext returns true for any auth type that is not associated with a real user ID.
-// this includes API tokens, support users via impersonation
+// this includes API tokens, support users via impersonation, and the integration actor
 func IsUserlessContext(ctx context.Context) bool {
-	return IsAPITokenAuthentication(ctx) || HasInContextCaller(ctx, CapOrgSupport)
+	return IsAPITokenAuthentication(ctx) || HasInContextCaller(ctx, CapOrgSupport) || HasInContextCaller(ctx, CapIntegrationActor)
 }
