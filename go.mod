@@ -6,7 +6,7 @@ require (
 	entgo.io/ent v0.14.6
 	github.com/99designs/gqlgen v0.17.98
 	github.com/alicebob/miniredis/v2 v2.40.0
-	github.com/brianvoe/gofakeit/v7 v7.18.2
+	github.com/brianvoe/gofakeit/v7 v7.18.3
 	github.com/go-webauthn/webauthn v0.18.2
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v93 v93.0.0
@@ -32,7 +32,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.45.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.45.0
 	github.com/theopenlane/echox v0.3.0
-	github.com/theopenlane/entx v0.38.3
+	github.com/theopenlane/entx v0.38.4
 	github.com/theopenlane/logx v0.1.1
 	github.com/theopenlane/utils v0.7.4
 	github.com/urfave/cli/v3 v3.14.0
