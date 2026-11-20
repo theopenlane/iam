@@ -1,6 +1,7 @@
 package oauthserver
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,6 +40,24 @@ func TestNewError(t *testing.T) {
 
 			assert.Equal(t, tc.code, got.Code)
 			assert.Equal(t, tc.description, got.Description)
+		})
+	}
+}
+
+func TestOAuthErrorStatus(t *testing.T) {
+	tests := []struct {
+		name string
+		code string
+		want int
+	}{
+		{name: "invalid client", code: ErrCodeInvalidClient, want: http.StatusUnauthorized},
+		{name: "server error", code: ErrCodeServerError, want: http.StatusInternalServerError},
+		{name: "invalid grant", code: ErrCodeInvalidGrant, want: http.StatusBadRequest},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, NewError(tc.code, "").Status())
 		})
 	}
 }

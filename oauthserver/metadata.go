@@ -1,6 +1,7 @@
 package oauthserver
 
 import (
+	"mime"
 	"net/http"
 	"net/url"
 	"slices"
@@ -31,7 +32,63 @@ const (
 	GrantTypeRefreshToken = "refresh_token"
 	// AuthMethodNone is the only client authentication method, since every client is public
 	AuthMethodNone = "none"
+	// TokenTypeBearer is the token_type of issued access tokens
+	TokenTypeBearer = "Bearer"
 )
+
+// Request and response parameter names
+const (
+	// ParamClientID is the client's identifier
+	ParamClientID = "client_id"
+	// ParamRedirectURI is where the authorization response is sent
+	ParamRedirectURI = "redirect_uri"
+	// ParamResponseType is the requested authorization response type
+	ParamResponseType = "response_type"
+	// ParamCodeChallenge is the PKCE code challenge (RFC 7636)
+	ParamCodeChallenge = "code_challenge"
+	// ParamCodeChallengeMethod is the PKCE code challenge method (RFC 7636)
+	ParamCodeChallengeMethod = "code_challenge_method"
+	// ParamCodeVerifier is the PKCE code verifier (RFC 7636)
+	ParamCodeVerifier = "code_verifier"
+	// ParamState is the client's opaque value echoed back on the redirect
+	ParamState = "state"
+	// ParamScope is the space-delimited requested scopes
+	ParamScope = "scope"
+	// ParamResource is the resource indicator (RFC 8707)
+	ParamResource = "resource"
+	// ParamGrantType is the token endpoint grant type
+	ParamGrantType = "grant_type"
+	// ParamCode is the authorization code
+	ParamCode = "code"
+	// ParamRefreshToken is the refresh token
+	ParamRefreshToken = "refresh_token"
+	// ParamToken is the token to revoke (RFC 7009)
+	ParamToken = "token"
+	// ParamError is the authorization response error code
+	ParamError = "error"
+	// ParamIssuer is the authorization response parameter naming the issuer (RFC 9207)
+	ParamIssuer = "iss"
+)
+
+// AuthorizeParams are the authorize endpoint parameters that must not be repeated (RFC 6749 §3.1)
+var AuthorizeParams = []string{ParamClientID, ParamRedirectURI, ParamResponseType, ParamCodeChallenge, ParamCodeChallengeMethod, ParamState, ParamScope}
+
+// TokenParams are the token endpoint parameters that must not be repeated (RFC 6749 §3.1)
+var TokenParams = []string{ParamGrantType, ParamCode, ParamRedirectURI, ParamClientID, ParamCodeVerifier, ParamRefreshToken, ParamResource}
+
+// TokenResponse is the RFC 6749 §5.1 token response
+type TokenResponse struct {
+	// AccessToken is the issued access token
+	AccessToken string `json:"access_token"`
+	// TokenType is always Bearer
+	TokenType string `json:"token_type"`
+	// ExpiresIn is the access token lifetime in seconds
+	ExpiresIn int64 `json:"expires_in"`
+	// RefreshToken is the issued refresh token
+	RefreshToken string `json:"refresh_token"`
+	// Scope is the space-delimited scopes the tokens carry
+	Scope string `json:"scope"`
+}
 
 const (
 	// cacheControlNoStore forbids caching a response that carries tokens
@@ -120,4 +177,39 @@ func SingleValued(form url.Values, names ...string) error {
 func NoStore(h http.Header) {
 	h.Set(httpsling.HeaderCacheControl, cacheControlNoStore)
 	h.Set(httpsling.HeaderPragma, pragmaNoCache)
+}
+
+// ParseForm returns a form-encoded request body, the only body format the token and revocation endpoints accept
+func ParseForm(r *http.Request) (url.Values, *OAuthError) {
+	mediaType, _, err := mime.ParseMediaType(r.Header.Get(httpsling.HeaderContentType))
+	if err != nil || mediaType != httpsling.ContentTypeForm {
+		return nil, NewError(ErrCodeInvalidRequest, "the request body must be "+httpsling.ContentTypeForm)
+	}
+
+	if err := r.ParseForm(); err != nil {
+		return nil, NewError(ErrCodeInvalidRequest, "malformed form body")
+	}
+
+	return r.PostForm, nil
+}
+
+// RedirectURL adds the non-empty params and the issuer (RFC 9207) to a client redirect URI, keeping its query
+func RedirectURL(redirectURI, issuer string, params url.Values) (string, error) {
+	u, err := url.Parse(redirectURI)
+	if err != nil {
+		return "", err
+	}
+
+	q := u.Query()
+
+	for k := range params {
+		if v := params.Get(k); v != "" {
+			q.Set(k, v)
+		}
+	}
+
+	q.Set(ParamIssuer, issuer)
+	u.RawQuery = q.Encode()
+
+	return u.String(), nil
 }

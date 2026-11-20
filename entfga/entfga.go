@@ -28,6 +28,8 @@ type Config struct {
 	GeneratedPath string
 	// GeneratedPkg is the package that the generated code will be placed in
 	GeneratedPkg string
+	// BuildFlags are passed to the go tool when loading the schema, such as -tags=codegen
+	BuildFlags []string
 }
 
 func (c Config) Name() string {
@@ -94,11 +96,18 @@ func WithGeneratedPkg(generatedPkg string) ConfigOption {
 	}
 }
 
+// WithBuildFlags sets the go build flags used when loading the schema, so it can match the flags of the main codegen run
+func WithBuildFlags(flags ...string) ConfigOption {
+	return func(c *Config) {
+		c.BuildFlags = flags
+	}
+}
+
 // GenerateAuthzChecks generates the authz checks for the ent schema
 // this is separate to allow the function to be called outside the entc generation
 // due to dependencies between the ent policies and the authz checks
 func (e *AuthzExtension) GenerateAuthzChecks() error {
-	graph, err := entc.LoadGraph(e.config.SchemaPath, &gen.Config{})
+	graph, err := entc.LoadGraph(e.config.SchemaPath, &gen.Config{BuildFlags: e.config.BuildFlags})
 	if err != nil {
 		return fmt.Errorf("%w: failed loading ent graph: %v", ErrFailedToGenerateTemplate, err)
 	}

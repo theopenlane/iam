@@ -1,6 +1,9 @@
 package oauthserver
 
-import "errors"
+import (
+	"errors"
+	"net/http"
+)
 
 var (
 	// ErrDialerRequired is returned when a resolver is built without a dialer
@@ -23,6 +26,8 @@ var (
 	ErrTokenInvalid = errors.New("invalid oauth token")
 	// ErrTokenKindMismatch is returned when a presented token's prefix doesn't match its stored record's kind
 	ErrTokenKindMismatch = errors.New("oauth token kind does not match its stored record")
+	// ErrInvalidTokenKind is returned when a value is not a known token kind
+	ErrInvalidTokenKind = errors.New("invalid oauth token kind")
 )
 
 var (
@@ -57,6 +62,18 @@ func (e *OAuthError) Error() string {
 	}
 
 	return e.Code + ": " + e.Description
+}
+
+// Status returns the HTTP status for the error: 401 for invalid_client, 500 for server_error, and 400 otherwise
+func (e *OAuthError) Status() int {
+	switch e.Code {
+	case ErrCodeInvalidClient:
+		return http.StatusUnauthorized
+	case ErrCodeServerError:
+		return http.StatusInternalServerError
+	default:
+		return http.StatusBadRequest
+	}
 }
 
 // NewError returns an OAuthError

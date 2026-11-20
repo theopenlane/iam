@@ -2,7 +2,9 @@ package oauthserver
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -126,6 +128,67 @@ func TestNoStore(t *testing.T) {
 
 			assert.Equal(t, cacheControlNoStore, tc.header.Get(httpsling.HeaderCacheControl))
 			assert.Equal(t, pragmaNoCache, tc.header.Get(httpsling.HeaderPragma))
+		})
+	}
+}
+
+func TestParseForm(t *testing.T) {
+	tests := []struct {
+		name        string
+		contentType string
+		body        string
+		wantErr     bool
+		wantCode    string
+	}{
+		{name: "form body", contentType: httpsling.ContentTypeForm, body: "code=abc", wantCode: "abc"},
+		{name: "form body with charset", contentType: httpsling.ContentTypeForm + "; charset=utf-8", body: "code=abc", wantCode: "abc"},
+		{name: "json body", contentType: httpsling.ContentTypeJSON, body: `{"code":"abc"}`, wantErr: true},
+		{name: "no content type", body: "code=abc", wantErr: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, TokenPath, strings.NewReader(tc.body))
+			req.Header.Set(httpsling.HeaderContentType, tc.contentType)
+
+			form, oerr := ParseForm(req)
+			if tc.wantErr {
+				require.NotNil(t, oerr)
+				assert.Equal(t, ErrCodeInvalidRequest, oerr.Code)
+
+				return
+			}
+
+			require.Nil(t, oerr)
+			assert.Equal(t, tc.wantCode, form.Get("code"))
+		})
+	}
+}
+
+func TestRedirectURL(t *testing.T) {
+	tests := []struct {
+		name        string
+		redirectURI string
+		params      url.Values
+		want        string
+		wantErr     bool
+	}{
+		{name: "adds params and issuer", redirectURI: "https://client.example/cb", params: url.Values{"code": {"abc"}, "state": {"xyz"}}, want: "https://client.example/cb?code=abc&iss=https%3A%2F%2Fapi.example.com&state=xyz"},
+		{name: "keeps existing query", redirectURI: "https://client.example/cb?app=1", params: url.Values{"code": {"abc"}}, want: "https://client.example/cb?app=1&code=abc&iss=https%3A%2F%2Fapi.example.com"},
+		{name: "skips empty params", redirectURI: "http://127.0.0.1:8080/cb", params: url.Values{"error": {ErrCodeAccessDenied}, "state": {""}}, want: "http://127.0.0.1:8080/cb?error=access_denied&iss=https%3A%2F%2Fapi.example.com"},
+		{name: "unparsable redirect", redirectURI: "http://[::1", wantErr: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := RedirectURL(tc.redirectURI, "https://api.example.com", tc.params)
+			if tc.wantErr {
+				assert.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, got)
 		})
 	}
 }

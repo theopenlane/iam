@@ -2,6 +2,8 @@ package oauthserver
 
 import (
 	"fmt"
+	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -57,6 +59,28 @@ var prefixes = map[TokenKind]string{
 // Prefix returns the prefix of tokens of this kind
 func (k TokenKind) Prefix() string {
 	return prefixes[k]
+}
+
+// Values returns every token kind, so TokenKind can back an ent enum field
+func (TokenKind) Values() []string {
+	return []string{string(KindRequest), string(KindCode), string(KindAccess), string(KindRefresh)}
+}
+
+// MarshalGQL implements the gqlgen Marshaler interface, which ent requires of enum field types
+func (k TokenKind) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(string(k))) //nolint:errcheck
+}
+
+// UnmarshalGQL implements the gqlgen Unmarshaler interface, which ent requires of enum field types
+func (k *TokenKind) UnmarshalGQL(v any) error {
+	s, ok := v.(string)
+	if !ok || !TokenKind(s).Valid() {
+		return ErrInvalidTokenKind
+	}
+
+	*k = TokenKind(s)
+
+	return nil
 }
 
 // Valid reports whether the kind is known

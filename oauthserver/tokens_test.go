@@ -1,6 +1,7 @@
 package oauthserver
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"strings"
@@ -78,6 +79,52 @@ func TestTokenKindValid(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, tc.kind.Valid())
+		})
+	}
+}
+
+func TestTokenKindValues(t *testing.T) {
+	values := TokenKind("").Values()
+
+	assert.ElementsMatch(t, []string{"REQUEST", "CODE", "ACCESS", "REFRESH"}, values)
+
+	for _, v := range values {
+		assert.True(t, TokenKind(v).Valid(), v)
+	}
+}
+
+func TestTokenKindMarshalGQL(t *testing.T) {
+	var buf bytes.Buffer
+
+	KindAccess.MarshalGQL(&buf)
+
+	assert.Equal(t, `"ACCESS"`, buf.String())
+}
+
+func TestTokenKindUnmarshalGQL(t *testing.T) {
+	tests := []struct {
+		name    string
+		value   any
+		want    TokenKind
+		wantErr bool
+	}{
+		{name: "known kind", value: "REFRESH", want: KindRefresh},
+		{name: "unknown kind", value: "BOGUS", wantErr: true},
+		{name: "not a string", value: 1, wantErr: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var k TokenKind
+
+			err := k.UnmarshalGQL(tc.value)
+			if tc.wantErr {
+				assert.ErrorIs(t, err, ErrInvalidTokenKind)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, k)
 		})
 	}
 }
