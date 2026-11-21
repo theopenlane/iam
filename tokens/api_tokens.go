@@ -399,6 +399,21 @@ func (tm *TokenManager) VerifyAPIToken(tokenValue string, storedHash string, key
 	return tokenID, nil
 }
 
+// ParseAPITokenID returns the ID embedded in an opaque token so the caller can load its stored hash and key version
+func (tm *TokenManager) ParseAPITokenID(tokenValue string, opts ...APITokenOption) (ulid.ULID, error) {
+	cfg, err := tm.resolveAPITokenConfig(opts...)
+	if err != nil {
+		return ulid.ULID{}, err
+	}
+
+	tokenID, _, err := parseOpaqueTokenWithConfig(tokenValue, cfg)
+	if err != nil {
+		return ulid.ULID{}, err
+	}
+
+	return tokenID, nil
+}
+
 // HashAPITokenComponents recomputes the stored hash for an existing token using the provided key version
 // This is useful during key rotation where tokens should be rehashed lazily as they are presented
 func (tm *TokenManager) HashAPITokenComponents(tokenID ulid.ULID, secret string, keyVersion string, opts ...APITokenOption) (string, error) {
@@ -457,12 +472,17 @@ func parseOpaqueTokenWithConfig(value string, cfg APITokenConfig) (ulid.ULID, []
 	idPart := parts[0]
 	secretPart := parts[1]
 
-	tokenID, err := ulid.Parse(idPart)
+	tokenID, err := ulid.ParseStrict(idPart)
 	if err != nil {
 		return ulid.ULID{}, nil, fmt.Errorf(wrappedErrorFormat, ErrAPITokenInvalidFormat, err)
 	}
 
-	secretBytes, err := opaqueEncoding.DecodeString(secretPart)
+	// only the canonical encoding is accepted, so each token has exactly one valid string form
+	if tokenID.String() != idPart {
+		return ulid.ULID{}, nil, ErrAPITokenInvalidFormat
+	}
+
+	secretBytes, err := opaqueEncoding.Strict().DecodeString(secretPart)
 	if err != nil {
 		return ulid.ULID{}, nil, fmt.Errorf(wrappedErrorFormat, ErrAPITokenInvalidFormat, err)
 	}
