@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 
@@ -693,7 +692,7 @@ func TestRevokeIssuedBefore(t *testing.T) {
 
 		tm.WithBlacklist(tokens.NewRedisTokenBlacklist(client, "test:subject"))
 
-		jwtTok, err := tm.CreateAccessToken(&tokens.Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "subject-only"}})
+		jwtTok, err := tm.CreateAccessToken(&tokens.Claims{Subject: "subject-only"})
 		assert.NoError(t, err)
 
 		token, err := tm.Sign(jwtTok)
