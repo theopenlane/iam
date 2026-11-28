@@ -5,17 +5,17 @@ go 1.27.3
 require (
 	entgo.io/ent v0.14.6
 	github.com/99designs/gqlgen v0.17.98
-	github.com/Yiling-J/theine-go v0.6.2
+	github.com/Yiling-J/theine-go v0.6.3
 	github.com/alicebob/miniredis/v2 v2.40.0
-	github.com/brianvoe/gofakeit/v7 v7.18.2
+	github.com/brianvoe/gofakeit/v7 v7.18.10
 	github.com/go-webauthn/webauthn v0.18.2
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v93 v93.0.0
 	github.com/gorilla/securecookie v1.1.2
-	github.com/gqlgo/gqlgenc v0.44.0
+	github.com/gqlgo/gqlgenc v0.44.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jwx-go/jwkfetch/v4 v4.0.4
-	github.com/labstack/echo/v5 v5.4.5
+	github.com/labstack/echo/v5 v5.4.7
 	github.com/lestrrat-go/httprc/v3 v3.0.6
 	github.com/lestrrat-go/jwx/v4 v4.6.0
 	github.com/moby/moby/api v1.56.1
@@ -33,7 +33,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.45.0
 	github.com/testcontainers/testcontainers-go/modules/openfga v0.45.0
 	github.com/theopenlane/echox v0.3.0
-	github.com/theopenlane/entx v0.38.3
+	github.com/theopenlane/entx v0.38.4
 	github.com/theopenlane/httpsling v0.3.0
 	github.com/theopenlane/logx v0.1.1
 	github.com/theopenlane/utils v0.7.4
